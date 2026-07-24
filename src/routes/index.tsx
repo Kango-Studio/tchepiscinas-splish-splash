@@ -97,8 +97,10 @@ function LandingPage() {
       <Products />
       <LoyaltyBenefit />
       <SocialProof />
+      <Team />
       <Differentials />
       <FAQ />
+      <Sponsors />
       <FinalCTA />
       <Footer />
       <FloatingWhatsApp />
@@ -589,6 +591,43 @@ function SocialProof() {
   );
 }
 
+/* ------------------------------ TEAM ------------------------------- */
+function Team() {
+  const members = [
+    { name: "Rafael", role: "Técnico líder", desc: "Especialista em química e equipamentos, cuida dos casos mais complexos." },
+    { name: "Bruna", role: "Atendimento", desc: "Tira dúvidas, agenda visitas e acompanha cada cliente de perto." },
+    { name: "Lucas", role: "Operacional", desc: "Garante limpeza, aspiração e manutenção no padrão Tchê." },
+    { name: "Fernanda", role: "Gestão", desc: "Responsável pela qualidade, treinamentos e relacionamento com condomínios." },
+  ];
+  return (
+    <section id="equipe" className="py-20 sm:py-28">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-14 reveal">
+          <span className="text-sm font-bold uppercase tracking-wider text-pool">Quem cuida da sua piscina</span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold mt-3 mb-4">
+            Conheça a <span className="text-gradient-pool">nossa equipe</span>
+          </h2>
+          <p className="text-muted-foreground">
+            Gente de verdade, treinada e comprometida em deixar sua piscina impecável.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {members.map((m, i) => (
+            <div key={i} className="reveal bg-card rounded-2xl p-6 border border-border text-center hover:shadow-pool transition-shadow">
+              <div className="mx-auto size-20 rounded-full bg-gradient-pool text-white flex items-center justify-center text-2xl font-extrabold mb-4">
+                {m.name.charAt(0)}
+              </div>
+              <h3 className="font-bold text-lg text-pool-deep">{m.name}</h3>
+              <div className="text-sm font-semibold text-pool mb-2">{m.role}</div>
+              <p className="text-sm text-muted-foreground leading-relaxed">{m.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* -------------------------- DIFFERENTIALS ------------------------ */
 function Differentials() {
   const items = [
@@ -661,6 +700,42 @@ function FAQ() {
             </AccordionItem>
           ))}
         </Accordion>
+      </div>
+    </section>
+  );
+}
+
+/* ---------------------------- SPONSORS ---------------------------- */
+function Sponsors() {
+  const sponsors = [
+    { name: "SUALL PISCINAS", role: "Parceira técnica" },
+    { name: "SILLENTY BRASIL", role: "Patrocinadora oficial" },
+  ];
+  return (
+    <section id="patrocinadores" className="py-16 sm:py-22 bg-muted/50">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-10 reveal">
+          <span className="inline-flex items-center gap-2 bg-pool-mist text-pool-deep px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
+            <Award className="size-3.5" /> Apoio e credibilidade
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-extrabold mb-3">
+            Nossos <span className="text-gradient-pool">patrocinadores</span>
+          </h2>
+          <p className="text-muted-foreground">
+            Contamos com o apoio de empresas sérias que fortalecem nossa qualidade e confiança.
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
+          {sponsors.map((s, i) => (
+            <div key={i} className="reveal bg-card rounded-2xl px-8 py-10 border border-border flex flex-col items-center justify-center text-center hover:border-pool-light hover:shadow-pool transition-all">
+              <div className="size-16 rounded-2xl bg-gradient-pool text-white flex items-center justify-center mb-4 shadow-pool">
+                <Award className="size-8" />
+              </div>
+              <h3 className="text-xl font-extrabold text-pool-deep tracking-tight">{s.name}</h3>
+              <p className="text-sm text-muted-foreground mt-1">{s.role}</p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );
