@@ -712,7 +712,7 @@ function Sponsors() {
     { name: "SILLENTY BRASIL", role: "Patrocinadora oficial" },
   ];
   return (
-    <section id="patrocinadores" className="py-16 sm:py-22 bg-muted/50">
+    <section id="patrocinadores" className="py-16 sm:py-20 bg-muted/50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-10 reveal">
           <span className="inline-flex items-center gap-2 bg-pool-mist text-pool-deep px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
