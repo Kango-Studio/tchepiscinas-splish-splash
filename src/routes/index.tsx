@@ -303,19 +303,6 @@ function HowItWorks() {
 function Plans() {
   const plans = [
     {
-      name: "Residencial",
-      audience: "Casas e piscinas particulares",
-      freq: "Visita semanal",
-      features: [
-        "Análise química completa (cloro, pH, alcalinidade)",
-        "Aspiração e limpeza de bordas",
-        "Retrolavagem do filtro",
-        "Relatório em cada visita",
-      ],
-      diff: "Ideal pra quem quer piscina sempre pronta pro fim de semana",
-      highlight: false,
-    },
-    {
       name: "Manutenções",
       audience: "Quem precisa de flexibilidade",
       freq: "Sob demanda ou quinzenal",
@@ -324,6 +311,19 @@ function Plans() {
         "Tratamento de choque quando pedir",
         "Diagnóstico e reparo de equipamentos",
         "Sem fidelidade obrigatória",
+      ],
+      diff: "Flexibilidade sem compromisso",
+      highlight: false,
+    },
+    {
+      name: "Residencial",
+      audience: "Casas e piscinas particulares",
+      freq: "Visita semanal",
+      features: [
+        "Análise química completa (cloro, pH, alcalinidade)",
+        "Aspiração e limpeza de bordas",
+        "Retrolavagem do filtro",
+        "Relatório em cada visita",
       ],
       diff: "O mais popular entre nossos clientes",
       highlight: true,
