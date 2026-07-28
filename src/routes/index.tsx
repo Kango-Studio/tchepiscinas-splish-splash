@@ -672,7 +672,7 @@ function FAQ() {
   const qs = [
     { q: "Como funciona o plano de manutenção?", a: "Você escolhe a modalidade (Residencial, Manutenções ou Condomínios), a gente agenda as visitas na frequência combinada e cuida de tudo: química da água, limpeza, filtro e diagnóstico do equipamento. Você recebe relatório a cada visita." },
     { q: "Preciso ficar em casa durante o atendimento?", a: "Não. Basta liberar o acesso à área da piscina. Nossa equipe é uniformizada, identificada e envia foto/relatório do serviço executado." },
-    { q: "Posso cancelar o plano a qualquer momento?", a: "Sim. A gente trabalha com transparência e sem letras miúdas. O plano 'Manutenções' inclusive é sob demanda, sem fidelidade obrigatória." },
+    { q: "Posso cancelar o plano a qualquer momento?", a: "Sim. A gente trabalha com transparência e sem letras miúdas. Já o serviço de 'Manutenções' (reparos e conserto de maquinários) é sob demanda, com orçamento aprovado antes de qualquer serviço." },
     { q: "Vocês atendem minha cidade?", a: "Atendemos Porto Alegre e diversas cidades da região metropolitana. Manda uma mensagem no WhatsApp com seu bairro que a gente confirma na hora." },
     { q: "Quanto custa um plano?", a: "O valor depende do tamanho da piscina, tipo de tratamento e frequência das visitas. Chama a gente no WhatsApp com uma foto da piscina que enviamos o orçamento sem compromisso." },
     { q: "A avaliação do maquinário é mesmo gratuita?", a: "É sim. Sem custo e sem compromisso. Fazemos o diagnóstico, apontamos o que está bom e o que precisa de reparo, e você decide se quer contratar." },
