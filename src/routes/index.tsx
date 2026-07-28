@@ -193,12 +193,13 @@ function Hero() {
               Fale com um especialista agora
             </a>
             <a
-              href="#avaliacao"
+              href="#planos"
               className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur text-white font-semibold px-6 py-4 rounded-full ring-1 ring-white/30 hover:bg-white/20 transition-colors"
             >
-              Avaliação gratuita do meu equipamento
+              Ver planos de atendimento
             </a>
           </div>
+
           <div className="mt-8 flex flex-wrap items-center gap-5 text-sm text-white/80">
             <span className="inline-flex items-center gap-2"><CheckCircle2 className="size-4 text-sun" /> Equipe própria</span>
             <span className="inline-flex items-center gap-2"><CheckCircle2 className="size-4 text-sun" /> Atendimento rápido</span>
