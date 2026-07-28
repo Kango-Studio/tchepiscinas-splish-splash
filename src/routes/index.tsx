@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/accordion";
 import heroPool from "@/assets/hero-pool.jpg";
 import logo from "@/assets/logo.png";
+import suallLogo from "@/assets/suall.png.asset.json";
+import syllentLogo from "@/assets/syllent.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
