@@ -307,17 +307,18 @@ function Plans() {
   const plans = [
     {
       name: "Manutenções",
-      audience: "Quem precisa de flexibilidade",
-      freq: "Sob demanda ou quinzenal",
+      audience: "Reparos e conserto de maquinários",
+      freq: "Sob demanda, com orçamento antes",
       features: [
-        "Visitas conforme a sua necessidade",
-        "Tratamento de choque quando pedir",
-        "Diagnóstico e reparo de equipamentos",
-        "Sem fidelidade obrigatória",
+        "Diagnóstico técnico de bombas e motores",
+        "Conserto de filtros, quadros e tubulações",
+        "Troca de peças e reparo de vazamentos",
+        "Instalação e troca de equipamentos",
       ],
-      diff: "Flexibilidade sem compromisso",
+      diff: "Seu maquinário funcionando como novo",
       highlight: false,
     },
+
     {
       name: "Residencial",
       audience: "Casas e piscinas particulares",
