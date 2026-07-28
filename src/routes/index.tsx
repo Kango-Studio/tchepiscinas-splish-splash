@@ -25,6 +25,7 @@ import {
   Zap,
   Calendar,
   ArrowRight,
+  X,
 } from "lucide-react";
 import {
   Accordion,
@@ -36,6 +37,10 @@ import heroPool from "@/assets/hero-pool.jpg";
 import logo from "@/assets/logo.png";
 import suallLogo from "@/assets/suall.png.asset.json";
 import syllentLogo from "@/assets/syllent.png.asset.json";
+import problemGreenWater from "@/assets/problem-green-water.jpg";
+import problemChemicals from "@/assets/problem-chemicals.jpg";
+import problemEquipment from "@/assets/problem-equipment.jpg";
+import problemCleaning from "@/assets/problem-cleaning.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
