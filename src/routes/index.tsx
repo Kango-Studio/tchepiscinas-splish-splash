@@ -25,6 +25,7 @@ import {
   Zap,
   Calendar,
   ArrowRight,
+  X,
 } from "lucide-react";
 import {
   Accordion,
@@ -36,6 +37,10 @@ import heroPool from "@/assets/hero-pool.jpg";
 import logo from "@/assets/logo.png";
 import suallLogo from "@/assets/suall.png.asset.json";
 import syllentLogo from "@/assets/syllent.png.asset.json";
+import problemGreenWater from "@/assets/problem-green-water.jpg";
+import problemChemicals from "@/assets/problem-chemicals.jpg";
+import problemEquipment from "@/assets/problem-equipment.jpg";
+import problemCleaning from "@/assets/problem-cleaning.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -240,10 +245,10 @@ function Hero() {
 /* --------------------------- PROBLEMS --------------------------- */
 function Problems() {
   const items = [
-    { icon: Droplets, title: "Água verde do nada", text: "Você limpa hoje e amanhã a piscina já está esverdeada — cansa e dá vergonha das visitas." },
-    { icon: FlaskConical, title: "Produtos errados", text: "Cloro demais, algicida de menos… um erro na dosagem gasta seu dinheiro e piora a água." },
-    { icon: Wrench, title: "Equipamento quebra sem aviso", text: "Bomba e filtro estragam justo no auge do verão, quando o conserto sai mais caro." },
-    { icon: Clock, title: "Perda de tempo todo fim de semana", text: "Em vez de aproveitar, você passa horas escovando, aspirando e pesquisando o que fazer." },
+    { icon: Droplets, title: "Água verde do nada", text: "Você limpa hoje e amanhã a piscina já está esverdeada — cansa e dá vergonha das visitas.", img: problemGreenWater, alt: "Piscina com água verde tomada por algas" },
+    { icon: FlaskConical, title: "Produtos errados", text: "Cloro demais, algicida de menos… um erro na dosagem gasta seu dinheiro e piora a água.", img: problemChemicals, alt: "Produtos químicos de piscina largados na borda" },
+    { icon: Wrench, title: "Equipamento quebra sem aviso", text: "Bomba e filtro estragam justo no auge do verão, quando o conserto sai mais caro.", img: problemEquipment, alt: "Bomba e filtro de piscina com tubulação" },
+    { icon: Clock, title: "Perda de tempo todo fim de semana", text: "Em vez de aproveitar, você passa horas escovando, aspirando e pesquisando o que fazer.", img: problemCleaning, alt: "Peneira retirando folhas da piscina" },
   ];
   return (
     <section className="py-20 sm:py-28 bg-muted/50">
@@ -257,12 +262,25 @@ function Problems() {
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {items.map((it, i) => (
-            <div key={i} className="reveal bg-card rounded-2xl p-6 border border-border hover:border-pool-light hover:shadow-pool transition-all">
+            <div key={i} className="reveal bg-card rounded-2xl p-6 border border-border hover:border-pool-light hover:shadow-pool transition-all flex flex-col">
               <div className="inline-flex items-center justify-center size-12 rounded-xl bg-pool-mist text-pool-deep mb-4">
                 <it.icon className="size-6" />
               </div>
               <h3 className="font-bold text-lg mb-2">{it.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{it.text}</p>
+              <div className="relative mt-5 rotate-[-1.5deg] hover:rotate-0 transition-transform">
+                <img
+                  src={it.img}
+                  alt={it.alt}
+                  loading="lazy"
+                  width={800}
+                  height={600}
+                  className="w-full h-36 object-cover rounded-xl border border-border shadow-sun"
+                />
+                <span className="absolute -bottom-2 -right-2 inline-flex items-center justify-center size-9 rounded-full bg-pool-deep text-primary-foreground border-2 border-card shadow-pool">
+                  <X className="size-5" strokeWidth={3} />
+                </span>
+              </div>
             </div>
           ))}
         </div>
