@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/accordion";
 import heroPool from "@/assets/hero-pool.jpg";
 import logo from "@/assets/logo.png";
+import suallLogo from "@/assets/suall.png.asset.json";
+import syllentLogo from "@/assets/syllent.png.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -193,12 +195,13 @@ function Hero() {
               Fale com um especialista agora
             </a>
             <a
-              href="#avaliacao"
+              href="#planos"
               className="inline-flex items-center justify-center gap-2 bg-white/10 backdrop-blur text-white font-semibold px-6 py-4 rounded-full ring-1 ring-white/30 hover:bg-white/20 transition-colors"
             >
-              Avaliação gratuita do meu equipamento
+              Ver planos de atendimento
             </a>
           </div>
+
           <div className="mt-8 flex flex-wrap items-center gap-5 text-sm text-white/80">
             <span className="inline-flex items-center gap-2"><CheckCircle2 className="size-4 text-sun" /> Equipe própria</span>
             <span className="inline-flex items-center gap-2"><CheckCircle2 className="size-4 text-sun" /> Atendimento rápido</span>
@@ -306,17 +309,18 @@ function Plans() {
   const plans = [
     {
       name: "Manutenções",
-      audience: "Quem precisa de flexibilidade",
-      freq: "Sob demanda ou quinzenal",
+      audience: "Reparos e conserto de maquinários",
+      freq: "Sob demanda, com orçamento antes",
       features: [
-        "Visitas conforme a sua necessidade",
-        "Tratamento de choque quando pedir",
-        "Diagnóstico e reparo de equipamentos",
-        "Sem fidelidade obrigatória",
+        "Diagnóstico técnico de bombas e motores",
+        "Conserto de filtros, quadros e tubulações",
+        "Troca de peças e reparo de vazamentos",
+        "Instalação e troca de equipamentos",
       ],
-      diff: "Flexibilidade sem compromisso",
+      diff: "Seu maquinário funcionando como novo",
       highlight: false,
     },
+
     {
       name: "Residencial",
       audience: "Casas e piscinas particulares",
@@ -670,7 +674,7 @@ function FAQ() {
   const qs = [
     { q: "Como funciona o plano de manutenção?", a: "Você escolhe a modalidade (Residencial, Manutenções ou Condomínios), a gente agenda as visitas na frequência combinada e cuida de tudo: química da água, limpeza, filtro e diagnóstico do equipamento. Você recebe relatório a cada visita." },
     { q: "Preciso ficar em casa durante o atendimento?", a: "Não. Basta liberar o acesso à área da piscina. Nossa equipe é uniformizada, identificada e envia foto/relatório do serviço executado." },
-    { q: "Posso cancelar o plano a qualquer momento?", a: "Sim. A gente trabalha com transparência e sem letras miúdas. O plano 'Manutenções' inclusive é sob demanda, sem fidelidade obrigatória." },
+    { q: "Posso cancelar o plano a qualquer momento?", a: "Sim. A gente trabalha com transparência e sem letras miúdas. Já o serviço de 'Manutenções' (reparos e conserto de maquinários) é sob demanda, com orçamento aprovado antes de qualquer serviço." },
     { q: "Vocês atendem minha cidade?", a: "Atendemos Porto Alegre e diversas cidades da região metropolitana. Manda uma mensagem no WhatsApp com seu bairro que a gente confirma na hora." },
     { q: "Quanto custa um plano?", a: "O valor depende do tamanho da piscina, tipo de tratamento e frequência das visitas. Chama a gente no WhatsApp com uma foto da piscina que enviamos o orçamento sem compromisso." },
     { q: "A avaliação do maquinário é mesmo gratuita?", a: "É sim. Sem custo e sem compromisso. Fazemos o diagnóstico, apontamos o que está bom e o que precisa de reparo, e você decide se quer contratar." },
@@ -708,16 +712,14 @@ function FAQ() {
 /* ---------------------------- SPONSORS ---------------------------- */
 function Sponsors() {
   const sponsors = [
-    { name: "SUALL PISCINAS", role: "Parceira técnica" },
-    { name: "SILLENTY BRASIL", role: "Patrocinadora oficial" },
+    { name: "SUALL PISCINAS", role: "Parceira técnica", img: suallLogo.url },
+    { name: "SYLLENT BRASIL", role: "Patrocinadora oficial", img: syllentLogo.url },
   ];
+  const track = [...sponsors, ...sponsors, ...sponsors, ...sponsors];
   return (
     <section id="patrocinadores" className="py-16 sm:py-20 bg-muted/50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-10 reveal">
-          <span className="inline-flex items-center gap-2 bg-pool-mist text-pool-deep px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
-            <Award className="size-3.5" /> Apoio e credibilidade
-          </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold mb-3">
             Nossos <span className="text-gradient-pool">patrocinadores</span>
           </h2>
@@ -725,14 +727,23 @@ function Sponsors() {
             Contamos com o apoio de empresas sérias que fortalecem nossa qualidade e confiança.
           </p>
         </div>
-        <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          {sponsors.map((s, i) => (
-            <div key={i} className="reveal bg-card rounded-2xl px-8 py-10 border border-border flex flex-col items-center justify-center text-center hover:border-pool-light hover:shadow-pool transition-all">
-              <div className="size-16 rounded-2xl bg-gradient-pool text-white flex items-center justify-center mb-4 shadow-pool">
-                <Award className="size-8" />
-              </div>
-              <h3 className="text-xl font-extrabold text-pool-deep tracking-tight">{s.name}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{s.role}</p>
+      </div>
+
+      <div className="relative overflow-hidden group [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+        <div className="flex w-max gap-6 animate-marquee group-hover:[animation-play-state:paused]">
+          {track.map((s, i) => (
+            <div
+              key={i}
+              className="w-64 shrink-0 bg-card rounded-2xl px-8 py-8 border border-border flex flex-col items-center justify-center text-center hover:border-pool-light hover:shadow-pool transition-all"
+            >
+              <img
+                src={s.img}
+                alt={`Logo ${s.name}`}
+                loading="lazy"
+                className="h-20 w-auto object-contain mb-4"
+              />
+              <h3 className="text-base font-extrabold text-pool-deep tracking-tight">{s.name}</h3>
+              <p className="text-xs text-muted-foreground mt-1">{s.role}</p>
             </div>
           ))}
         </div>
@@ -740,6 +751,7 @@ function Sponsors() {
     </section>
   );
 }
+
 
 /* ----------------------------- FINAL CTA -------------------------- */
 function FinalCTA() {
