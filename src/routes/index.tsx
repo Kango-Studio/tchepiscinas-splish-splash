@@ -245,10 +245,10 @@ function Hero() {
 /* --------------------------- PROBLEMS --------------------------- */
 function Problems() {
   const items = [
-    { icon: Droplets, title: "Água verde do nada", text: "Você limpa hoje e amanhã a piscina já está esverdeada — cansa e dá vergonha das visitas." },
-    { icon: FlaskConical, title: "Produtos errados", text: "Cloro demais, algicida de menos… um erro na dosagem gasta seu dinheiro e piora a água." },
-    { icon: Wrench, title: "Equipamento quebra sem aviso", text: "Bomba e filtro estragam justo no auge do verão, quando o conserto sai mais caro." },
-    { icon: Clock, title: "Perda de tempo todo fim de semana", text: "Em vez de aproveitar, você passa horas escovando, aspirando e pesquisando o que fazer." },
+    { icon: Droplets, title: "Água verde do nada", text: "Você limpa hoje e amanhã a piscina já está esverdeada — cansa e dá vergonha das visitas.", img: problemGreenWater, alt: "Piscina com água verde tomada por algas" },
+    { icon: FlaskConical, title: "Produtos errados", text: "Cloro demais, algicida de menos… um erro na dosagem gasta seu dinheiro e piora a água.", img: problemChemicals, alt: "Produtos químicos de piscina largados na borda" },
+    { icon: Wrench, title: "Equipamento quebra sem aviso", text: "Bomba e filtro estragam justo no auge do verão, quando o conserto sai mais caro.", img: problemEquipment, alt: "Bomba e filtro de piscina com tubulação" },
+    { icon: Clock, title: "Perda de tempo todo fim de semana", text: "Em vez de aproveitar, você passa horas escovando, aspirando e pesquisando o que fazer.", img: problemCleaning, alt: "Peneira retirando folhas da piscina" },
   ];
   return (
     <section className="py-20 sm:py-28 bg-muted/50">
