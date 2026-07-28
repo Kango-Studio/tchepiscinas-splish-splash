@@ -712,16 +712,14 @@ function FAQ() {
 /* ---------------------------- SPONSORS ---------------------------- */
 function Sponsors() {
   const sponsors = [
-    { name: "SUALL PISCINAS", role: "Parceira técnica" },
-    { name: "SILLENTY BRASIL", role: "Patrocinadora oficial" },
+    { name: "SUALL PISCINAS", role: "Parceira técnica", img: suallLogo.url },
+    { name: "SYLLENT BRASIL", role: "Patrocinadora oficial", img: syllentLogo.url },
   ];
+  const track = [...sponsors, ...sponsors, ...sponsors, ...sponsors];
   return (
     <section id="patrocinadores" className="py-16 sm:py-20 bg-muted/50">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-10 reveal">
-          <span className="inline-flex items-center gap-2 bg-pool-mist text-pool-deep px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider mb-4">
-            <Award className="size-3.5" /> Apoio e credibilidade
-          </span>
           <h2 className="text-3xl sm:text-4xl font-extrabold mb-3">
             Nossos <span className="text-gradient-pool">patrocinadores</span>
           </h2>
@@ -729,14 +727,23 @@ function Sponsors() {
             Contamos com o apoio de empresas sérias que fortalecem nossa qualidade e confiança.
           </p>
         </div>
-        <div className="grid sm:grid-cols-2 gap-6 max-w-3xl mx-auto">
-          {sponsors.map((s, i) => (
-            <div key={i} className="reveal bg-card rounded-2xl px-8 py-10 border border-border flex flex-col items-center justify-center text-center hover:border-pool-light hover:shadow-pool transition-all">
-              <div className="size-16 rounded-2xl bg-gradient-pool text-white flex items-center justify-center mb-4 shadow-pool">
-                <Award className="size-8" />
-              </div>
-              <h3 className="text-xl font-extrabold text-pool-deep tracking-tight">{s.name}</h3>
-              <p className="text-sm text-muted-foreground mt-1">{s.role}</p>
+      </div>
+
+      <div className="relative overflow-hidden group [mask-image:linear-gradient(to_right,transparent,black_8%,black_92%,transparent)]">
+        <div className="flex w-max gap-6 animate-marquee group-hover:[animation-play-state:paused]">
+          {track.map((s, i) => (
+            <div
+              key={i}
+              className="w-64 shrink-0 bg-card rounded-2xl px-8 py-8 border border-border flex flex-col items-center justify-center text-center hover:border-pool-light hover:shadow-pool transition-all"
+            >
+              <img
+                src={s.img}
+                alt={`Logo ${s.name}`}
+                loading="lazy"
+                className="h-20 w-auto object-contain mb-4"
+              />
+              <h3 className="text-base font-extrabold text-pool-deep tracking-tight">{s.name}</h3>
+              <p className="text-xs text-muted-foreground mt-1">{s.role}</p>
             </div>
           ))}
         </div>
@@ -744,6 +751,7 @@ function Sponsors() {
     </section>
   );
 }
+
 
 /* ----------------------------- FINAL CTA -------------------------- */
 function FinalCTA() {
