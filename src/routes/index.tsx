@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { SITE_URL } from "./__root";
 import {
   Droplets,
   Waves,
@@ -50,6 +51,31 @@ import residentialPool1 from "@/assets/residential-pool-1.jpg";
 import residentialPool2 from "@/assets/residential-pool-2.jpg";
 import residentialPool3 from "@/assets/residential-pool-3.jpg";
 
+const LOCAL_BUSINESS_JSON_LD = {
+  "@context": "https://schema.org",
+  "@type": "HomeAndConstructionBusiness",
+  name: "Tchê Piscinas",
+  image: `${SITE_URL}/og-image.jpg`,
+  url: `${SITE_URL}/`,
+  telephone: "+55-51-99175-7029",
+  email: "contato@tchepiscinas.com",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Porto Alegre",
+    addressRegion: "RS",
+    addressCountry: "BR",
+  },
+  areaServed: [
+    "Porto Alegre",
+    "Viamão",
+    "Gravataí",
+    "Região Metropolitana de Porto Alegre",
+  ],
+  sameAs: ["https://instagram.com/tchepiscina"],
+  description:
+    "Manutenção, limpeza e tratamento de piscinas residenciais e de condomínios em Porto Alegre e região metropolitana.",
+};
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
@@ -60,7 +86,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Planos de manutenção, produtos e avaliação gratuita de maquinário. Piscina cristalina o verão inteiro em Porto Alegre e região.",
+          "Manutenção, limpeza e tratamento de piscinas residenciais e de condomínios em Porto Alegre e região metropolitana. Equipe própria, produtos profissionais e avaliação gratuita de maquinário. Peça um orçamento pelo WhatsApp.",
       },
       {
         property: "og:title",
@@ -70,6 +96,21 @@ export const Route = createFileRoute("/")({
         property: "og:description",
         content:
           "Planos residenciais, condomínios e produtos para piscina. Atendimento em Porto Alegre e região.",
+      },
+      {
+        name: "twitter:title",
+        content: "Tchê Piscinas | Piscina cristalina o verão inteiro",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Manutenção, limpeza e tratamento de piscinas residenciais e de condomínios em Porto Alegre e região.",
+      },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(LOCAL_BUSINESS_JSON_LD),
       },
     ],
   }),
@@ -132,7 +173,7 @@ function Header() {
           <img
             src={logo}
             alt="Tchê Piscinas"
-            className="h-8 md:h-10 w-auto shrink-0"
+            className="h-10 md:h-12 w-auto shrink-0"
           />
         </a>
         <nav className="hidden md:flex items-center gap-7 text-sm font-medium text-muted-foreground">
@@ -791,7 +832,7 @@ function Footer() {
     <footer className="bg-white text-foreground py-8 md:py-10 border-t border-border">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 grid md:grid-cols-3 gap-6 md:gap-8">
         <div>
-          <img src={logo} alt="Tchê Piscinas" className="h-9 md:h-12 w-auto mb-3 md:mb-4" />
+          <img src={logo} alt="Tchê Piscinas" className="h-12 md:h-16 w-auto mb-3 md:mb-4" />
           <p className="text-sm max-w-xs text-muted-foreground">
             Manutenção, limpeza e produtos para piscinas. Água cristalina o ano
             todo, com quem entende de verdade.

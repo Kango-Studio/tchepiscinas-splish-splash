@@ -72,6 +72,8 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   );
 }
 
+export const SITE_URL = "https://tchepiscinas.com";
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -81,21 +83,39 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Planos de manutenção, limpeza e produtos para piscinas em Porto Alegre e região. Água cristalina o ano todo com a equipe especializada da Tchê Piscinas.",
+          "Manutenção, limpeza e tratamento de piscinas residenciais e de condomínios em Porto Alegre e região metropolitana. Equipe própria, produtos profissionais e água cristalina o ano todo. Peça um orçamento gratuito no WhatsApp.",
       },
+      {
+        name: "keywords",
+        content:
+          "manutenção de piscinas, limpeza de piscina, tratamento de piscina, piscina condomínio, piscina residencial, Porto Alegre, Viamão, Gravataí",
+      },
+      { name: "author", content: "Tchê Piscinas" },
+      { name: "robots", content: "index, follow" },
+      { name: "theme-color", content: "#005a94" },
+
       { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Tchê Piscinas" },
+      { property: "og:locale", content: "pt_BR" },
+      { property: "og:url", content: `${SITE_URL}/` },
       { property: "og:title", content: "Tchê Piscinas | Piscina cristalina o verão inteiro" },
       {
         property: "og:description",
         content:
           "Planos residenciais, condomínios e avaliação gratuita de maquinário. Atendimento em Porto Alegre e região.",
       },
+      { property: "og:image", content: `${SITE_URL}/og-image.jpg` },
+      { property: "og:image:width", content: "1600" },
+      { property: "og:image:height", content: "1200" },
+      { property: "og:image:alt", content: "Piscina cristalina cuidada pela Tchê Piscinas" },
+
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "Tchê Piscinas | Piscina cristalina o verão inteiro" },
       {
         name: "twitter:description",
         content: "Manutenção especializada de piscinas em Porto Alegre e região.",
       },
+      { name: "twitter:image", content: `${SITE_URL}/og-image.jpg` },
     ],
     links: [
       {
@@ -103,6 +123,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "canonical", href: `${SITE_URL}/` },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -119,7 +140,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <head>
         <HeadContent />
       </head>
