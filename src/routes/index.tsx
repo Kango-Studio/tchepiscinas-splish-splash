@@ -172,10 +172,10 @@ function Hero() {
             Porto Alegre e região metropolitana
           </span>
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.05] mb-5">
-            Sua piscina sempre limpa, tratada e pronta pra usar.
+            Sua piscina sempre <span className="text-sun">limpa, tratada e pronta pra usar.</span>
           </h1>
           <p className="text-lg sm:text-xl text-white/90 mb-8 max-w-xl">
-            Enquanto tu descansa, a gente cuida da tua piscina
+            Enquanto tu descansa, a gente cuida da tua piscina com
             limpeza, manutenção e produtos, tudo incluso.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
