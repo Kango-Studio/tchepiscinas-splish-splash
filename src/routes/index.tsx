@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   Droplets,
   Waves,
@@ -24,6 +24,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from "@/components/ui/carousel";
 import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 import { PoolStoreSection } from "@/components/PoolStoreSection";
 import { ComparisonSection } from "@/components/ComparisonSection";
@@ -34,6 +42,13 @@ import syllentLogo from "@/assets/syllent.png";
 import teamGroup from "@/assets/team-group.jpg";
 import teamAction from "@/assets/team-action.jpg";
 import technicianKit from "@/assets/technician-kit.jpg";
+import condoPool1 from "@/assets/condo-pool-1.jpg";
+import condoPool2 from "@/assets/condo-pool-2.jpg";
+import condoPool3 from "@/assets/condo-pool-3.jpg";
+import condoPool4 from "@/assets/condo-pool-4.jpg";
+import residentialPool1 from "@/assets/residential-pool-1.jpg";
+import residentialPool2 from "@/assets/residential-pool-2.jpg";
+import residentialPool3 from "@/assets/residential-pool-3.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -469,37 +484,31 @@ function Plans() {
 
 /* -------------------------- SOCIAL PROOF ------------------------- */
 function SocialProof() {
+  const [api, setApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    if (!api) return;
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap());
+    api.on("select", () => setCurrent(api.selectedScrollSnap()));
+  }, [api]);
+
   const stats = [
     { n: "4+", t: "anos de experiência" },
     { n: "500+", t: "piscinas atendidas" },
     { n: "2h", t: "resposta no WhatsApp" },
     { n: "4.7", t: "satisfação dos clientes", icon: Star },
   ];
-  const testimonials = [
-    {
-      name: "Alice Dapper",
-      text: "Melhor equipe! Atendimento impecável, a equipe da Tchê Piscinas simplesmente salvaram minha piscina da enchente, achei que não teria salvação, e os rapazes foram impecáveis com a limpeza, água cristalina novamente. Eles utilizam os melhores produtos do mercado, qualidade + preço justo = serviço de excelência.",
-    },
-    {
-      name: "Matheus Oliveira dos Santos",
-      text: "Minha piscina estava abandonada, cheia de lodo e mosquitos. Depois da primeira visita, a transformação foi impressionante! Aplicaram tratamento de choque, aspiraram tudo com calma e ainda ajustaram o pH certinho. Agora a água parece de hotel!",
-    },
-    {
-      name: "Ana Caroline Soares Gall",
-      text: "Quero deixar meu agradecimento à Tchê Piscinas pelo excelente trabalho na manutenção da nossa piscina. Sempre pontuais, atenciosos e muito caprichosos no que fazem. A água está sempre cristalina, limpa e bem cuidada. Recomendo de olhos fechados. 🤩👏",
-    },
-    {
-      name: "Eduarda Oliveira",
-      text: "Serviço excelente... Profissionais muito capacitados, cuidadosos e caprichosos. A piscina ficou impecável!",
-    },
-    {
-      name: "Roberto Jobim De Oliveira",
-      text: "Profissionais muito competentes, educados e atenciosos, deixaram a água da minha piscina perfeita em 3 visitas e hoje tenho plano mensal com a empresa. Super recomendo!",
-    },
-    {
-      name: "Gabriela Oliveira",
-      text: "Um trabalho de muita responsabilidade, com efetivação de qualidade e excelência!",
-    },
+  const poolPhotos = [
+    { img: residentialPool1, alt: "Banheira de hidromassagem residencial com água tratada e cristalina" },
+    { img: condoPool1, alt: "Piscina de condomínio com vista para a arena, água cristalina ao entardecer" },
+    { img: residentialPool2, alt: "Piscina residencial de fibra azul com deck de madeira" },
+    { img: condoPool2, alt: "Piscina infantil de condomínio com escorregador em formato de sapo" },
+    { img: residentialPool3, alt: "Piscina residencial com parede de pedra e jardim ao redor" },
+    { img: condoPool3, alt: "Piscinas de fibra em área comum de condomínio residencial" },
+    { img: condoPool4, alt: "Piscina coberta de condomínio com raia e vista para a cidade" },
   ];
   return (
     <section className="py-12 md:py-20 bg-[#eef9ff]">
@@ -521,23 +530,51 @@ function SocialProof() {
 
         <div className="text-center mb-6 md:mb-10 reveal">
           <h2 className="text-2xl md:text-4xl font-extrabold">
-            O que quem já é cliente <span className="text-gradient-pool">diz sobre a gente</span>
+            Piscinas que a <span className="text-gradient-pool">Tchê cuida</span>
           </h2>
-          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Avaliações reais, direto do Google.</p>
+          <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Fotos reais de trabalhos residenciais e em condomínios de Porto Alegre e região.</p>
         </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
-          {testimonials.map((t, i) => (
-            <div key={i} className="reveal flex flex-col bg-card rounded-xl md:rounded-2xl p-4 md:p-6 border border-border">
-              <div className="flex gap-0.5 text-sun mb-2 md:mb-3">
-                {Array.from({ length: 5 }).map((_, k) => <Star key={k} className="size-3.5 md:size-4 fill-current" />)}
+        <div className="reveal">
+          <Carousel
+            setApi={setApi}
+            opts={{ align: "start", loop: true }}
+            className="px-1"
+          >
+            <CarouselContent className="-ml-3 md:-ml-5">
+              {poolPhotos.map((p, i) => (
+                <CarouselItem key={i} className="pl-3 md:pl-5 basis-[68%] sm:basis-1/2 lg:basis-1/3">
+                  <div className="overflow-hidden rounded-xl md:rounded-2xl border border-border shadow-sm aspect-[3/4]">
+                    <img
+                      src={p.img}
+                      alt={p.alt}
+                      loading="lazy"
+                      width={720}
+                      height={960}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+
+            <div className="flex items-center justify-center gap-4 mt-6 md:mt-8">
+              <CarouselPrevious className="static size-9 translate-y-0 border-border bg-card text-pool-deep hover:bg-pool-mist hover:text-pool-deep" />
+              <div className="flex items-center gap-1.5">
+                {Array.from({ length: count }).map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    aria-label={`Ir para depoimento ${i + 1}`}
+                    onClick={() => api?.scrollTo(i)}
+                    className={`h-1.5 rounded-full transition-all ${
+                      i === current ? "w-5 bg-pool-deep" : "w-1.5 bg-pool-light/40"
+                    }`}
+                  />
+                ))}
               </div>
-              <p className="text-sm mb-3 md:mb-5 leading-relaxed flex-1">"{t.text}"</p>
-              <div>
-                <div className="font-bold text-pool-deep">{t.name}</div>
-                <div className="text-xs text-muted-foreground">Avaliação verificada no Google</div>
-              </div>
+              <CarouselNext className="static size-9 translate-y-0 border-border bg-card text-pool-deep hover:bg-pool-mist hover:text-pool-deep" />
             </div>
-          ))}
+          </Carousel>
         </div>
       </div>
     </section>
