@@ -139,7 +139,7 @@ export function ComparisonSection() {
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-[52px] font-extrabold mt-1.5 mb-1.5 leading-[1.05]">
             Com a Tchê Piscinas,{" "}
-            <span className="text-gradient-pool">tu só aproveita.</span>.
+            <span className="text-gradient-pool">tu só aproveita.</span>
           </h2>
           <p className="text-base lg:text-lg text-muted-foreground">
             Cuidar da piscina parece simples, mas pequenos erros custam tempo e dinheiro.
@@ -173,7 +173,7 @@ export function ComparisonSection() {
 
             <ComparisonColumn
               variant="tche"
-              badgeLabel="Com a Tchê Piscinas"
+              badgeLabel="Cliente Tchê Piscinas"
               subtitle="Mais tranquilidade, economia e uma piscina pronta para aproveitar."
               image={heroPool}
               imageAlt="Piscina cristalina, azul e perfeitamente tratada"
