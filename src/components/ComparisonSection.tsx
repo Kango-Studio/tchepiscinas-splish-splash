@@ -138,12 +138,11 @@ export function ComparisonSection() {
             Qual é a melhor escolha?
           </span>
           <h2 className="text-3xl sm:text-4xl lg:text-[52px] font-extrabold mt-1.5 mb-1.5 leading-[1.05]">
-            A diferença entre se preocupar com a piscina e{" "}
-            <span className="text-gradient-pool">simplesmente aproveitar</span>.
+            Com a Tchê Piscinas,{" "}
+            <span className="text-gradient-pool">tu só aproveita.</span>.
           </h2>
           <p className="text-base lg:text-lg text-muted-foreground">
-            Cuidar da piscina parece simples, mas pequenos erros custam tempo, dinheiro e
-            tranquilidade.
+            Cuidar da piscina parece simples, mas pequenos erros custam tempo e dinheiro.
           </p>
         </motion.div>
 
