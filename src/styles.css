@@ -134,14 +134,21 @@
   from { transform: translateX(0); }
   to { transform: translateX(calc(-50% - 0.75rem)); }
 }
+@keyframes nav-enter {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 @utility animate-float { animation: float-slow 6s ease-in-out infinite; }
 @utility animate-ripple { animation: ripple 2.4s ease-out infinite; }
 @utility animate-rise { animation: rise 0.7s ease-out both; }
 @utility animate-marquee { animation: marquee 22s linear infinite; }
+@utility animate-nav-enter { animation: nav-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
 
 .reveal { opacity: 0; transform: translateY(18px); transition: opacity 0.6s ease, transform 0.6s ease; }
 .reveal.in { opacity: 1; transform: translateY(0); }
+
+section[id] { scroll-margin-top: 6rem; }
 
 .timeline-fill { width: 0%; transition: width 1.3s cubic-bezier(0.4, 0, 0.2, 1) 0.3s; }
 .timeline-wrap.in .timeline-fill { width: 100%; }

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Fragment } from "react";
 import {
+  ArrowRight,
   CheckCircle2,
   Droplets,
   FlaskConical,
@@ -242,13 +243,15 @@ export function ComparisonSection() {
           className="mt-5 flex justify-center"
         >
           <a
-            href={waLink("Olá! Quero deixar a Tchê Piscinas cuidar da minha piscina.")}
+            href={waLink("Olá! Quero minha piscina sempre pronta com a Tchê Piscinas.")}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex lg:inline-flex w-full max-w-sm lg:w-auto items-center justify-center gap-2 bg-pool-deep hover:bg-pool text-white font-bold text-[15px] md:text-base h-12 lg:h-auto px-5 lg:px-6 lg:py-3 rounded-full shadow-pool transition-colors"
+            className="inline-flex h-12 w-full max-w-sm items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-[#075F9F] px-7 text-sm font-bold text-white shadow-[0_12px_30px_-12px_rgba(7,95,159,0.55)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#064F86] hover:shadow-[0_18px_38px_-14px_rgba(7,95,159,0.65)] active:translate-y-0 sm:w-auto sm:text-base"
           >
-            <WhatsappIcon className="size-4" />
-            Quero deixar a Tchê cuidar da minha piscina
+            <WhatsappIcon className="size-[18px]" />
+            <span className="max-[380px]:hidden">Quero minha piscina sempre pronta</span>
+            <span className="hidden max-[380px]:inline">Quero minha piscina pronta</span>
+            <ArrowRight className="size-[18px]" />
           </a>
         </motion.div>
       </div>
