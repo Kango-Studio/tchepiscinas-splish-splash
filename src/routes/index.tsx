@@ -4,8 +4,6 @@ import {
   Droplets,
   Waves,
   AlertTriangle,
-  Wrench,
-  Clock,
   ShieldCheck,
   CheckCircle2,
   Star,
@@ -13,14 +11,12 @@ import {
   Instagram,
   Mail,
   Phone,
-  FlaskConical,
   Sun,
   Users,
   Award,
   Calendar,
   ArrowRight,
   Heart,
-  X,
 } from "lucide-react";
 import {
   Accordion,
@@ -29,16 +25,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
-import { PlanBenefitsSection } from "@/components/PlanBenefitsSection";
 import { PoolStoreSection } from "@/components/PoolStoreSection";
+import { ComparisonSection } from "@/components/ComparisonSection";
 import heroPool from "@/assets/hero-pool.jpg";
 import logo from "@/assets/logo.png";
 import suallLogo from "@/assets/suall.png";
 import syllentLogo from "@/assets/syllent.png";
-import problemGreenWater from "@/assets/problem-green-water.jpg";
-import problemChemicals from "@/assets/problem-chemicals.jpg";
-import problemEquipment from "@/assets/problem-equipment.jpg";
-import problemCleaning from "@/assets/problem-cleaning.jpg";
 import teamGroup from "@/assets/team-group.jpg";
 import teamAction from "@/assets/team-action.jpg";
 import technicianKit from "@/assets/technician-kit.jpg";
@@ -98,11 +90,10 @@ function LandingPage() {
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <Header />
       <Hero />
-      <Problems />
-      <HowItWorks />
+      <ComparisonSection />
       <Plans />
+      <HowItWorks />
       <div className="h-16 sm:h-20 bg-gradient-to-b from-white to-[#eef9ff]" aria-hidden />
-      <PlanBenefitsSection />
       <SocialProof />
       <PoolStoreSection />
       <div className="h-16 bg-gradient-to-b from-[#eef9ff] to-white" aria-hidden />
@@ -228,65 +219,6 @@ function Hero() {
           <div className="absolute -top-4 -right-4 bg-sun rounded-2xl shadow-sun p-3 rotate-6">
             <Sun className="size-8 text-foreground" />
           </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/* --------------------------- PROBLEMS --------------------------- */
-function Problems() {
-  const items = [
-    { icon: Droplets, title: "Água verde/turva", text: "Hoje tá limpa, amanhã já ficou esverdeada. E aí, quando tem visita em casa, é vergonha na certa.", img: problemGreenWater, alt: "Piscina com água verde tomada por algas" },
-    { icon: FlaskConical, title: "Produto errado, prejuízo certo", text: "Cloro demais, algicida de menos — um erro na dosagem gasta teu dinheiro e ainda piora a água.", img: problemChemicals, alt: "Produtos químicos de piscina largados na borda" },
-    { icon: Wrench, title: "Equipamento quebra sem avisar", text: "Bomba e filtro estragam bem na hora que tu mais precisa deles, no auge do verão, e o conserto sai bem mais caro.", img: problemEquipment, alt: "Bomba e filtro de piscina com tubulação" },
-    { icon: Clock, title: "Teu fim de semana vira faxina", text: "Em vez de aproveitar, tu passa horas escovando, aspirando e pesquisando \"como resolver\" no YouTube.", img: problemCleaning, alt: "Escova aspiradora limpando o fundo da piscina" },
-  ];
-  return (
-    <section className="py-14 sm:py-20 bg-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-16 reveal">
-          <span className="text-sm font-bold uppercase tracking-wider text-pool">Cansado disso?</span>
-          <h2 className="text-3xl sm:text-4xl font-extrabold mt-3 mb-4">
-            Cuidar da piscina sozinho <span className="text-gradient-pool">custa mais caro do que parece</span>
-          </h2>
-          <p className="text-muted-foreground">Os problemas mais comuns de quem tenta fazer tudo por conta própria:</p>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-          {items.map((it, i) => {
-            const tilt = i % 2 === 0 ? "-rotate-2" : "rotate-2";
-            const shadowTilt = i % 2 === 0 ? "rotate-3" : "-rotate-3";
-            return (
-              <div key={i} className="reveal group relative">
-                <div
-                  className={`absolute inset-0 rounded-2xl bg-pool/20 ${shadowTilt} translate-x-2.5 translate-y-2.5 transition-transform duration-300 group-hover:translate-x-3.5 group-hover:translate-y-3.5`}
-                  aria-hidden
-                />
-                <div
-                  className={`relative h-full flex flex-col bg-card rounded-2xl p-6 border border-border shadow-sm transition-all duration-300 ${tilt} group-hover:rotate-0 group-hover:-translate-y-2`}
-                >
-                  <div className="inline-flex items-center justify-center size-12 rounded-xl bg-pool text-white mb-4 shadow-pool">
-                    <it.icon className="size-6" />
-                  </div>
-                  <h3 className="font-bold text-lg mb-2">{it.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-5">{it.text}</p>
-                  <div className="relative mt-auto">
-                    <img
-                      src={it.img}
-                      alt={it.alt}
-                      loading="lazy"
-                      width={800}
-                      height={600}
-                      className="w-full h-32 object-cover rounded-xl border border-border"
-                    />
-                    <span className="absolute -bottom-3 -right-3 inline-flex items-center justify-center size-9 rounded-full bg-pool text-white border-2 border-card shadow-pool">
-                      <X className="size-5" strokeWidth={3} />
-                    </span>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
     </section>
