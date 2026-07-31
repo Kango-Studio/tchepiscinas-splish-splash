@@ -546,16 +546,10 @@ function SocialProof() {
 
 /* ------------------------------ TEAM ------------------------------- */
 function Team() {
-  const members = [
-    { name: "Lorem ipsum", role: "Lorem ipsum", desc: "Lorem ipsumLorem ipsumLorem ipsumLorem ipsum." },
-    { name: "Lorem ipsuma", role: "Lorem ipsum", desc: "Lorem ipsumLorem ipsumLorem ipsumLorem ipsum." },
-    { name: "Lorem ipsum", role: "Lorem ipsum", desc: "Lorem ipsumLorem ipsumLorem ipsumLorem ipsumLorem ipsum." },
-    { name: "Lorem ipsum", role: "Lorem ipsum", desc: "Lorem ipsumLorem ipsumLorem ipsumLorem ipsum." },
-  ];
   return (
     <section id="equipe" className="py-14 sm:py-20 bg-white">
       <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-20">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
           <div className="reveal text-center lg:text-left">
             <span className="text-sm font-bold uppercase tracking-wider text-pool">Quem cuida da tua piscina</span>
             <h2 className="text-3xl sm:text-4xl font-extrabold mt-3 mb-4">
@@ -583,30 +577,6 @@ function Team() {
               />
             </div>
           </div>
-        </div>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-6">
-          {members.map((m, i) => {
-            const shadowTilt = i % 2 === 0 ? "rotate-2" : "-rotate-2";
-            return (
-              <div key={i} className="reveal group relative">
-                <div
-                  className={`absolute inset-0 rounded-2xl bg-pool-mist ${shadowTilt} translate-x-2 translate-y-2 transition-transform duration-300 group-hover:translate-x-3 group-hover:translate-y-3`}
-                  aria-hidden
-                />
-                <div className="relative bg-card rounded-2xl p-6 pt-10 border border-border text-center transition-transform duration-300 group-hover:-translate-y-1">
-                  <div className="mx-auto size-16 relative mb-5 mt-2">
-                    <div className="absolute inset-0 rounded-xl bg-gradient-pool rotate-45 shadow-pool transition-transform duration-300 group-hover:rotate-[60deg]" aria-hidden />
-                    <div className="absolute inset-0 flex items-center justify-center text-white text-xl font-extrabold">
-                      {m.name.charAt(0)}
-                    </div>
-                  </div>
-                  <h3 className="font-bold text-lg text-pool-deep">{m.name}</h3>
-                  <div className="text-sm font-semibold text-pool mb-2">{m.role}</div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{m.desc}</p>
-                </div>
-              </div>
-            );
-          })}
         </div>
       </div>
     </section>
