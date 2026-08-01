@@ -149,8 +149,8 @@ export function PoolStoreSection() {
         <div className="mt-6 md:mt-8 flex justify-center lg:hidden">
           <a
             href={createWhatsAppLink(
-                  "Olá! 👋 Vim pelo site da Tchê Piscinas e gostaria de conhecer os produtos e equipamentos disponíveis. Podem me ajudar?",
-                )}
+              "Olá! 👋 Vim pelo site da Tchê Piscinas e gostaria de conhecer os produtos e equipamentos disponíveis. Podem me ajudar?",
+            )}
             target="_blank"
             rel="noreferrer"
             className="inline-flex h-11 md:h-13 items-center justify-center gap-2 rounded-full bg-pool-deep px-6 md:px-7 text-sm md:text-base font-bold text-white shadow-lg shadow-pool-deep/20 transition hover:-translate-y-1 hover:bg-pool"
