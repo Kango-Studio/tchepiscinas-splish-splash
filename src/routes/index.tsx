@@ -189,15 +189,15 @@ function Header() {
       }`}
     >
       <div
-        className={`mx-auto max-w-[1200px] px-6 md:px-8 grid grid-cols-[auto_1fr_auto] items-center gap-6 transition-[padding] duration-300 ${
-          scrolled ? "py-2 md:py-2.5" : "py-3 md:py-4"
+        className={`mx-auto max-w-[1200px] px-6 md:px-8 grid grid-cols-1 md:grid-cols-[auto_1fr_auto] items-center gap-6 transition-[padding] duration-300 ${
+          scrolled ? "py-2 md:py-2.5" : "py-2 md:py-4"
         }`}
       >
-        <a href="#top" className="flex items-center gap-2 min-w-0">
+        <a href="#top" className="flex items-center gap-2 min-w-0 justify-self-center md:justify-self-start">
           <img
             src={logo}
             alt="Tchê Piscinas"
-            className={`h-14 md:h-16 w-auto shrink-0 transition-all duration-300 ${
+            className={`h-15 md:h-16 w-auto shrink-0 transition-all duration-300 ${
               scrolled ? "" : "[filter:drop-shadow(0_0_3px_rgba(255,255,255,0.9))_drop-shadow(0_0_8px_rgba(255,255,255,0.55))]"
             }`}
           />
@@ -260,16 +260,16 @@ function Hero() {
         />
       </svg>
 
-      <div className="relative mx-auto max-w-310 px-4 sm:px-6 pt-24 pb-14 md:pt-25 md:pb-35 grid lg:grid-cols-[1.1fr_0.9fr] gap-6 md:gap-10 items-center">
+      <div className="relative mx-auto max-w-310 px-4 sm:px-6 pt-19 pb-15 md:pt-25 md:pb-35 grid lg:grid-cols-[1.1fr_0.9fr] gap-6 md:gap-10 items-center">
         <div className="text-white animate-rise">
-          <span className="inline-flex items-center gap-2 bg-white/15 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4 md:mb-5 ring-1 ring-white/20">
-            <Sun className="size-3.5 text-sun" />
+          <span className="inline-flex items-center gap-1.5 md:gap-2 bg-white/15 backdrop-blur px-2.5 md:px-3 py-0.5 md:py-1 rounded-full text-[10px] md:text-xs font-semibold uppercase tracking-wider mb-5 ring-1 ring-white/20">
+            <Sun className="size-2.5 md:size-3.5 text-sun" />
             Porto Alegre e região metropolitana
           </span>
-          <h1 className="text-[28px] leading-[1.15] md:text-5xl md:leading-[1.05] lg:text-6xl font-extrabold mb-4 md:mb-5">
+          <h1 className="text-[25px] leading-[1.3] md:text-5xl md:leading-[1.05] lg:text-6xl font-extrabold mb-5 text-balance md:text-wrap">
             Tua piscina sempre <span className="text-sun">limpa, tratada e pronta pra usar</span>
           </h1>
-          <p className="text-base md:text-xl text-white/90 mb-6 md:mb-8 max-w-xl">
+          <p className="text-[15px] leading-normal md:text-xl md:leading-[1.4] text-white/90 mb-6 md:mb-8 max-w-82.5 md:max-w-xl">
             A gente cuida de cada detalhe da tua piscina: Limpeza, equipamentos e produtos.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -277,14 +277,14 @@ function Hero() {
               href={createWhatsAppLink("Olá! Quero falar com um especialista da Tchê Piscinas.")}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-gradient-sun text-foreground font-bold px-[22px] py-3 text-[15px] md:px-6 md:py-4 md:text-base rounded-full shadow-sun hover:scale-[1.03] transition-transform"
+              className="inline-flex items-center justify-center gap-2 bg-gradient-sun text-foreground font-bold px-5 py-2 text-[15px] md:px-6 md:py-4 md:text-base rounded-2xl md:rounded-full shadow-sun hover:scale-[1.03] transition-transform"
             >
-              <WhatsappIcon className="size-4 md:size-5" />
+              <WhatsappIcon className="size-3.5 md:size-5" />
               Solicitar atendimento
             </a>
           </div>
 
-          <div className="mt-4 md:mt-5 flex items-center gap-2 text-sm text-white/80">
+          <div className="mt-4 md:mt-5 flex items-center gap-2 text-sm text-white/90 md:text-white/80">
             <CheckCircle2 className="size-4 text-sun" /> Orçamento gratuito e sem compromisso
           </div>
         </div>
