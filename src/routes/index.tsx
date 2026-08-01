@@ -272,7 +272,7 @@ function Hero() {
             Sua piscina sempre <span className="text-sun">limpa, tratada e pronta pra usar</span>
           </h1>
           <p className="text-base md:text-xl text-white/90 mb-6 md:mb-8 max-w-xl">
-            A gente cuida de cada detalhe da tua piscina: Limpeza, equipamento e produtos.
+            A gente cuida de cada detalhe da tua piscina: Limpeza, equipamentos e produtos.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <a
@@ -458,6 +458,20 @@ function HowItWorks() {
               </div>
             </div>
           ))}
+        </div>
+
+        <div className="mt-8 md:mt-10 flex justify-center reveal">
+          <a
+            href={waLink("Olá! Quero conhecer os planos de atendimento da Tchê Piscinas.")}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-12 w-full max-w-sm items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-gradient-sun px-7 text-sm font-bold text-foreground shadow-sun transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-10px_rgba(255,193,7,0.55)] active:translate-y-0 sm:w-auto sm:text-base"
+          >
+            <WhatsappIcon className="size-4.5" />
+            <span className="max-[380px]:hidden">Conhecer planos de atendimento</span>
+            <span className="hidden max-[380px]:inline">Conhecer planos</span>
+            <ArrowRight className="size-4.5" />
+          </a>
         </div>
       </div>
     </section>
