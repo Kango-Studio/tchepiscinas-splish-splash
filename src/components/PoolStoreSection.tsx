@@ -44,7 +44,7 @@ const productCards: ProductCard[] = [
 
 export function PoolStoreSection() {
   return (
-    <section id="produtos" className="bg-[#eef9ff] px-4 py-10 sm:px-6 md:px-6 md:py-16 lg:px-8">
+    <section id="produtos" className="bg-[#eef9ff] px-4 pt-8 pb-10 sm:px-6 md:px-6 md:pt-10 md:pb-15 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
         {/* Cabeçalho */}
         <header className="mx-auto max-w-3xl text-center">
@@ -66,7 +66,7 @@ export function PoolStoreSection() {
         </header>
 
         {/* Composição principal */}
-        <div className="mt-7 md:mt-12 grid gap-4 md:gap-6 lg:grid-cols-[1.45fr_1fr]">
+        <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 lg:grid-cols-[1.45fr_1fr]">
           {/* Destaque institucional */}
           <article className="group relative min-h-[280px] md:min-h-[520px] overflow-hidden rounded-[22px] md:rounded-[32px] border border-white/80 bg-slate-950 shadow-[0_30px_80px_-35px_rgba(2,132,199,0.5)]">
             <img

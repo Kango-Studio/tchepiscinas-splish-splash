@@ -79,15 +79,15 @@ function ItemRow({
 
 export function ComparisonSection() {
   return (
-    <section className="py-10 md:py-16 bg-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section className="pt-8 pb-12 md:pt-10 md:pb-17 bg-white">
+      <div className="mx-auto max-w-310 px-4 sm:px-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.4 }}
           transition={{ duration: 0.4, ease: "easeOut" }}
-          className="text-center max-w-2xl mx-auto mb-5 md:mb-8"
+          className="text-center max-w-2xl mx-auto mb-5"
         >
           <span className="text-xs font-bold uppercase tracking-wider text-pool">
             Qual é a melhor escolha?
@@ -106,7 +106,7 @@ export function ComparisonSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.1 }}
           transition={{ duration: 0.45, ease: "easeOut" }}
-          className="hidden lg:block relative mx-auto max-w-6xl overflow-visible rounded-[28px] border border-sky-100 bg-white shadow-sm"
+          className="hidden lg:block relative mx-auto max-w-310 overflow-visible rounded-[28px] border border-sky-100 bg-white shadow-sm"
         >
           <div className="grid lg:grid-cols-2">
             {/* Left header + image */}

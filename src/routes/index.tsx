@@ -149,10 +149,10 @@ function LandingPage() {
       <ComparisonSection />
       <Plans />
       <HowItWorks />
-      <div className="h-10 md:h-20 bg-gradient-to-b from-white to-[#eef9ff]" aria-hidden />
+      <div className="h-6 md:h-10 bg-gradient-to-b from-white to-[#eef9ff]" aria-hidden />
       <SocialProof />
       <PoolStoreSection />
-      <div className="h-10 md:h-16 bg-gradient-to-b from-[#eef9ff] to-white" aria-hidden />
+      <div className="h-6 md:h-8 bg-gradient-to-b from-[#eef9ff] to-white" aria-hidden />
       <Sponsors />
       <Team />
       <Differentials />
@@ -262,7 +262,7 @@ function Hero() {
         />
       </svg>
 
-      <div className="relative mx-auto max-w-6xl px-4 sm:px-6 pt-24 pb-16 md:pt-28 md:pb-40 grid lg:grid-cols-[1.1fr_0.9fr] gap-6 md:gap-10 items-center">
+      <div className="relative mx-auto max-w-310 px-4 sm:px-6 pt-24 pb-14 md:pt-25 md:pb-35 grid lg:grid-cols-[1.1fr_0.9fr] gap-6 md:gap-10 items-center">
         <div className="text-white animate-rise">
           <span className="inline-flex items-center gap-2 bg-white/15 backdrop-blur px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider mb-4 md:mb-5 ring-1 ring-white/20">
             <Sun className="size-3.5 text-sun" />
@@ -352,9 +352,9 @@ function HowItWorks() {
   ];
 
   return (
-    <section id="como-funciona" className="py-12 md:py-20 bg-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-10 md:mb-16 reveal">
+    <section id="como-funciona" className="pt-10 pb-12 md:pt-12 md:pb-17 bg-white">
+      <div className="mx-auto max-w-310 px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-8 md:mb-10 reveal">
           <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-pool">Processo simples</span>
           <h2 className="text-2xl md:text-4xl font-extrabold mt-2 md:mt-3 mb-3 md:mb-4">
             Da contratação ao <span className="text-gradient-pool">primeiro mergulho</span>.
@@ -505,9 +505,9 @@ function Plans() {
     },
   ];
   return (
-    <section id="planos" className="py-12 md:py-20 bg-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-8 md:mb-14 reveal">
+    <section id="planos" className="pt-10 pb-12 md:pt-12 md:pb-17 bg-white">
+      <div className="mx-auto max-w-310 px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-8 reveal">
           <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-pool">Modalidades de Atendimento</span>
           <h2 className="text-2xl md:text-4xl font-extrabold mt-2 md:mt-3 mb-3 md:mb-4">
             Modalidades pensadas para piscinas <span className="text-gradient-pool">residenciais e condomínios</span>!
@@ -593,12 +593,12 @@ function SocialProof() {
     { img: condoPool4, alt: "Piscina coberta de condomínio com raia e vista para a cidade" },
   ];
   return (
-    <section id="avaliacoes" className="py-12 md:py-20 bg-[#eef9ff]">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center mb-6 md:mb-10 reveal">
+    <section id="avaliacoes" className="pt-8 pb-10 md:pt-10 md:pb-15 bg-[#eef9ff]">
+      <div className="mx-auto max-w-310 px-4 sm:px-6">
+        <div className="text-center mb-5 md:mb-6 reveal">
           <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-pool">Quem confia na Tchê Piscinas não larga</span>
         </div>
-        <div className="reveal grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8 md:mb-14">
+        <div className="reveal grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-14">
           {stats.map((s, i) => (
             <div key={i} className="bg-card rounded-xl md:rounded-2xl p-4 md:p-6 text-center border border-border">
               <div className="text-2xl md:text-4xl font-extrabold text-gradient-pool inline-flex items-center justify-center gap-1">
@@ -610,7 +610,7 @@ function SocialProof() {
           ))}
         </div>
 
-        <div className="text-center mb-6 md:mb-10 reveal">
+        <div className="text-center mb-5 md:mb-6 reveal">
           <h2 className="text-2xl md:text-4xl font-extrabold">
             Piscinas que a <span className="text-gradient-pool">Tchê cuida</span>
           </h2>
@@ -666,8 +666,8 @@ function SocialProof() {
 /* ------------------------------ TEAM ------------------------------- */
 function Team() {
   return (
-    <section id="equipe" className="py-12 md:py-20 bg-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
+    <section id="equipe" className="pt-8 pb-8 md:pt-9 md:pb-14 bg-white">
+      <div className="mx-auto max-w-310 px-4 sm:px-6">
         <div className="grid lg:grid-cols-2 gap-6 md:gap-12 lg:gap-16 items-center">
           <div className="reveal text-center lg:text-left">
             <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-pool">Quem cuida da tua piscina</span>
@@ -713,9 +713,9 @@ function Differentials() {
     { icon: Waves, t: "Anos de experiência", d: "Cuidando de piscinas de todos os tipos, tamanhos e formas." },
   ];
   return (
-    <section className="py-12 md:py-20 bg-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-8 md:mb-14 reveal">
+    <section className="pt-8 pb-8 md:pt-9 md:pb-14 bg-white">
+      <div className="mx-auto max-w-310 px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-8 reveal">
           <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-pool">Por que a Tchê</span>
           <h2 className="text-2xl md:text-4xl font-extrabold mt-2 md:mt-3">
             A Tchê vai além de <span className="text-gradient-pool"> só passar a rede na tua piscina</span>
@@ -748,9 +748,9 @@ function FAQ() {
     { q: "Não quero plano fixo, dá pra chamar só uma vez?", a: "Depende do serviço. Limpeza da piscina só fazemos dentro dos planos. Já reparo e conserto de equipamento (manutenção) tu pode chamar a qualquer momento, sem precisar de plano." },
   ];
   return (
-    <section id="faq" className="py-12 md:py-20 bg-white">
+    <section id="faq" className="pt-8 pb-7 md:pt-9 md:pb-13 bg-white">
       <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        <div className="text-center mb-8 md:mb-12 reveal">
+        <div className="text-center mb-6 md:mb-8 reveal">
           <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-pool">Dúvidas frequentes</span>
           <h2 className="text-2xl md:text-4xl font-extrabold mt-2 md:mt-3">
             Tudo o que tu quer saber antes de decidir
@@ -785,9 +785,9 @@ function Sponsors() {
   ];
   const track = [...sponsors, ...sponsors, ...sponsors, ...sponsors];
   return (
-    <section id="patrocinadores" className="py-10 md:py-16 bg-white">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-6 md:mb-10 reveal">
+    <section id="patrocinadores" className="pt-7 pb-8 md:pt-8 md:pb-14 bg-white">
+      <div className="mx-auto max-w-310 px-4 sm:px-6">
+        <div className="text-center max-w-2xl mx-auto mb-5 md:mb-6 reveal">
           <h2 className="text-2xl md:text-4xl font-extrabold mb-2 md:mb-3">
             Nossos <span className="text-gradient-pool">parceiros</span>
           </h2>
@@ -824,7 +824,7 @@ function Sponsors() {
 /* ----------------------------- FINAL CTA -------------------------- */
 function FinalCTA() {
   return (
-    <section className="relative py-12 md:py-20 overflow-hidden bg-gradient-pool text-white">
+    <section className="relative py-10 md:py-14 overflow-hidden bg-gradient-pool text-white">
       <svg
         className="absolute top-0 left-0 w-full text-pool-deep rotate-180"
         viewBox="0 0 1440 100"
@@ -871,7 +871,7 @@ function FinalCTA() {
 function Footer() {
   return (
     <footer className="bg-white text-foreground py-8 md:py-10 border-t border-border">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 grid md:grid-cols-3 gap-6 md:gap-8">
+      <div className="mx-auto max-w-310 px-4 sm:px-6 grid md:grid-cols-3 gap-6 md:gap-8">
         <div>
           <img src={logo} alt="Tchê Piscinas" className="h-12 md:h-16 w-auto mb-3 md:mb-4" />
           <p className="text-sm max-w-xs text-muted-foreground">
@@ -907,7 +907,7 @@ function Footer() {
           </p>
         </div>
       </div>
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 mt-10 pt-6 border-t border-border text-xs text-muted-foreground flex flex-col sm:flex-row gap-2 justify-between">
+      <div className="mx-auto max-w-310 px-4 sm:px-6 mt-10 pt-6 border-t border-border text-xs text-muted-foreground flex flex-col sm:flex-row gap-2 justify-between">
         <span>© {new Date().getFullYear()} Tchê Piscinas — Todos os direitos reservados.</span>
         <span className="inline-flex items-center gap-1.5">
           Feito com <Heart className="size-3.5 text-sun fill-current" /> em Porto Alegre
