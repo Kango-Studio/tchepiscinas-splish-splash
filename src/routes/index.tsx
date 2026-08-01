@@ -184,8 +184,8 @@ function Header() {
     <header
       className={`fixed top-0 inset-x-0 z-50 animate-nav-enter transition-all duration-300 ${
         scrolled
-          ? "bg-white/85 backdrop-blur-md shadow-[0_10px_30px_-18px_rgba(0,90,148,0.35)] border-b border-border/50"
-          : "bg-transparent border-b border-transparent"
+          ? "bg-white/85 backdrop-blur-md shadow-[0_10px_30px_-18px_rgba(0,90,148,0.35)]"
+          : "bg-transparent"
       }`}
     >
       <div
@@ -280,7 +280,7 @@ function Hero() {
               className="inline-flex items-center justify-center gap-2 bg-gradient-sun text-foreground font-bold px-[22px] py-3 text-[15px] md:px-6 md:py-4 md:text-base rounded-full shadow-sun hover:scale-[1.03] transition-transform"
             >
               <WhatsappIcon className="size-4 md:size-5" />
-              Solicitar atendimento no WhatsApp
+              Solicitar atendimento
             </a>
           </div>
 
@@ -848,12 +848,12 @@ function FinalCTA() {
         <path fill="currentColor" d="M0,64L80,58.7C160,53,320,43,480,48C640,53,800,75,960,74.7C1120,75,1280,53,1360,42.7L1440,32L1440,100L0,100Z" />
       </svg>
       <svg
-        className="absolute bottom-0 left-0 w-full text-white"
+        className="absolute bottom-0 left-0 w-full overflow-visible text-white"
         viewBox="0 0 1440 100"
         preserveAspectRatio="none"
         aria-hidden
       >
-        <path fill="currentColor" d="M0,64L80,58.7C160,53,320,43,480,48C640,53,800,75,960,74.7C1120,75,1280,53,1360,42.7L1440,32L1440,100L0,100Z" />
+        <path fill="currentColor" d="M0,64L80,58.7C160,53,320,43,480,48C640,53,800,75,960,74.7C1120,75,1280,53,1360,42.7L1440,32L1440,120L0,120Z" />
       </svg>
       <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center reveal">
         <span className="inline-flex items-center gap-2 bg-sun text-foreground px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold uppercase tracking-wider mb-4 md:mb-5 shadow-sun">
