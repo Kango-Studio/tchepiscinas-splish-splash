@@ -71,7 +71,7 @@ const LOCAL_BUSINESS_JSON_LD = {
     "Gravataí",
     "Região Metropolitana de Porto Alegre",
   ],
-  sameAs: ["https://instagram.com/tchepiscina"],
+  sameAs: ["https://www.instagram.com/tchepiscina/"],
   description:
     "Manutenção, limpeza e tratamento de piscinas residenciais e de condomínios em Porto Alegre e região metropolitana.",
 };
@@ -269,11 +269,10 @@ function Hero() {
             Porto Alegre e região metropolitana
           </span>
           <h1 className="text-[28px] leading-[1.15] md:text-5xl md:leading-[1.05] lg:text-6xl font-extrabold mb-4 md:mb-5">
-            Sua piscina sempre <span className="text-sun">limpa, tratada e pronta pra usar.</span>
+            Sua piscina sempre <span className="text-sun">limpa, tratada e pronta pra usar</span>
           </h1>
           <p className="text-base md:text-xl text-white/90 mb-6 md:mb-8 max-w-xl">
-            Enquanto tu descansa, a gente cuida da tua piscina com
-            limpeza, manutenção e produtos, tudo incluso.
+            A gente cuida de cada detalhe da tua piscina: Limpeza, equipamento e produtos.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <a
@@ -361,7 +360,7 @@ function HowItWorks() {
           </h2>
           <p className="text-sm md:text-base text-muted-foreground">
             Em três etapas, você deixa toda a manutenção com a nossa equipe e aproveita uma piscina sempre
-            limpa, segura e pronta para uso.
+            limpa, segura e pronta para uso
           </p>
         </div>
 
@@ -598,17 +597,6 @@ function SocialProof() {
         <div className="text-center mb-5 md:mb-6 reveal">
           <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-pool">Quem confia na Tchê Piscinas não larga</span>
         </div>
-        <div className="reveal grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-14">
-          {stats.map((s, i) => (
-            <div key={i} className="bg-card rounded-xl md:rounded-2xl p-4 md:p-6 text-center border border-border">
-              <div className="text-2xl md:text-4xl font-extrabold text-gradient-pool inline-flex items-center justify-center gap-1">
-                {s.n}
-                {s.icon && <s.icon className="size-5 md:size-7 fill-current" />}
-              </div>
-              <div className="text-sm text-muted-foreground mt-1">{s.t}</div>
-            </div>
-          ))}
-        </div>
 
         <div className="text-center mb-5 md:mb-6 reveal">
           <h2 className="text-2xl md:text-4xl font-extrabold">
@@ -616,7 +604,7 @@ function SocialProof() {
           </h2>
           <p className="text-sm md:text-base text-muted-foreground mt-1 md:mt-2">Fotos reais de trabalhos residenciais e em condomínios de Porto Alegre e região.</p>
         </div>
-        <div className="reveal">
+        <div className="reveal mb-8 md:mb-14">
           <Carousel
             setApi={setApi}
             opts={{ align: "start", loop: true }}
@@ -657,6 +645,18 @@ function SocialProof() {
               <CarouselNext className="static size-9 translate-y-0 border-border bg-card text-pool-deep hover:bg-pool-mist hover:text-pool-deep" />
             </div>
           </Carousel>
+        </div>
+
+        <div className="reveal grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+          {stats.map((s, i) => (
+            <div key={i} className="bg-card rounded-xl md:rounded-2xl p-4 md:p-6 text-center border border-border">
+              <div className="text-2xl md:text-4xl font-extrabold text-gradient-pool inline-flex items-center justify-center gap-1">
+                {s.n}
+                {s.icon && <s.icon className="size-5 md:size-7 fill-current" />}
+              </div>
+              <div className="text-sm text-muted-foreground mt-1">{s.t}</div>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -716,9 +716,9 @@ function Differentials() {
     <section className="pt-8 pb-8 md:pt-9 md:pb-14 bg-white">
       <div className="mx-auto max-w-310 px-4 sm:px-6">
         <div className="text-center max-w-2xl mx-auto mb-6 md:mb-8 reveal">
-          <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-pool">Por que a Tchê</span>
+          <span className="text-xs md:text-sm font-bold uppercase tracking-wider text-pool">Por que a Tchê?</span>
           <h2 className="text-2xl md:text-4xl font-extrabold mt-2 md:mt-3">
-            A Tchê vai além de <span className="text-gradient-pool"> só passar a rede na tua piscina</span>
+           Nós vamos além de <span className="text-gradient-pool"> só passar a rede na tua piscina</span>
           </h2>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-5">
@@ -893,7 +893,7 @@ function Footer() {
               </a>
             </li>
             <li>
-              <a href="https://instagram.com/tchepiscina" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-muted-foreground hover:text-pool-deep transition-colors">
+              <a href="https://www.instagram.com/tchepiscina/" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-muted-foreground hover:text-pool-deep transition-colors">
                 <Instagram className="size-4" /> @tchepiscina
               </a>
             </li>

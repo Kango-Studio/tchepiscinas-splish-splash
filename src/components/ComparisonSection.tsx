@@ -179,7 +179,7 @@ export function ComparisonSection() {
               <h3 className="text-lg font-extrabold leading-tight text-foreground">Cuidando sozinho</h3>
             </div>
             <p className="text-sm leading-5 text-muted-foreground mb-3">
-              Mais preocupação, mais gastos e menos tempo para aproveitar.
+              Mais preocupação, gastos e menos tempo para aproveitar.
             </p>
             <img
               src={problemGreenWater}
