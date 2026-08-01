@@ -42,7 +42,7 @@ import suallLogo from "@/assets/suall.png";
 import syllentLogo from "@/assets/syllent.png";
 import teamGroup from "@/assets/team-group.jpg";
 import teamAction from "@/assets/team-action.jpg";
-import technicianKit from "@/assets/technician-kit.jpg";
+import condoPoolArena from "@/assets/condo-pool-arena.jpg";
 import condoPool1 from "@/assets/condo-pool-1.jpg";
 import condoPool2 from "@/assets/condo-pool-2.jpg";
 import condoPool3 from "@/assets/condo-pool-3.jpg";
@@ -338,8 +338,8 @@ function HowItWorks() {
       title: "Nós cuidamos de tudo",
       text: "Realizamos limpeza, aspiração, tratamento químico e revisão dos equipamentos em visitas programadas.",
       tags: ["Produtos profissionais", "Técnicos especializados", "Relatório mensal"],
-      img: technicianKit,
-      alt: "Técnico da Tchê Piscinas com kit completo de limpeza e tratamento",
+      img: condoPoolArena,
+      alt: "Piscina de condomínio com vista para a arena, água cristalina ao entardecer",
     },
     {
       icon: Waves,
