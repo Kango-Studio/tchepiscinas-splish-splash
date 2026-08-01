@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SITE_URL } from "./__root";
+import { createWhatsAppLink } from "@/lib/whatsapp";
 import {
   Droplets,
   Waves,
@@ -117,9 +118,6 @@ export const Route = createFileRoute("/")({
   component: LandingPage,
 });
 
-const WHATSAPP = "https://wa.me/5551991757029";
-const waLink = (msg: string) =>
-  `${WHATSAPP}?text=${encodeURIComponent(msg)}`;
 
 function useReveal() {
   useEffect(() => {
@@ -222,7 +220,7 @@ function Header() {
         </nav>
 
         <a
-          href={waLink("Olá! Quero solicitar um orçamento com a Tchê Piscinas.")}
+          href={createWhatsAppLink("Olá! Quero solicitar um orçamento com a Tchê Piscinas.")}
           target="_blank"
           rel="noopener noreferrer"
           className="hidden md:inline-flex justify-self-end items-center gap-2 bg-gradient-sun text-foreground font-bold px-6 py-3 rounded-full shadow-sun hover:shadow-[0_16px_32px_-10px_rgba(255,193,7,0.55)] hover:-translate-y-0.5 transition-all duration-300 text-sm whitespace-nowrap"
@@ -276,18 +274,18 @@ function Hero() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <a
-              href={waLink("Olá! Quero falar com um especialista da Tchê Piscinas.")}
+              href={createWhatsAppLink("Olá! Quero falar com um especialista da Tchê Piscinas.")}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 bg-gradient-sun text-foreground font-bold px-[22px] py-3 text-[15px] md:px-6 md:py-4 md:text-base rounded-full shadow-sun hover:scale-[1.03] transition-transform"
             >
               <WhatsappIcon className="size-4 md:size-5" />
-              Fale com um especialista agora
+              Solicitar atendimento no WhatsApp
             </a>
           </div>
 
           <div className="mt-4 md:mt-5 flex items-center gap-2 text-sm text-white/80">
-            <CheckCircle2 className="size-4 text-sun" /> Resposta rápida no WhatsApp
+            <CheckCircle2 className="size-4 text-sun" /> Orçamento gratuito e sem compromisso
           </div>
         </div>
 
@@ -462,7 +460,9 @@ function HowItWorks() {
 
         <div className="mt-8 md:mt-10 flex justify-center reveal">
           <a
-            href={waLink("Olá! Quero conhecer os planos de atendimento da Tchê Piscinas.")}
+            href={createWhatsAppLink(
+              "Olá! 👋 Vim pelo site da Tchê Piscinas e gostaria de conhecer os planos de limpeza. Podem me indicar a melhor opção para a minha piscina?",
+            )}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex h-12 w-full max-w-sm items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-gradient-sun px-7 text-sm font-bold text-foreground shadow-sun transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_32px_-10px_rgba(255,193,7,0.55)] active:translate-y-0 sm:w-auto sm:text-base"
@@ -557,7 +557,7 @@ function Plans() {
                 ))}
               </ul>
               <a
-                href={waLink(`Olá! Quero saber mais sobre o plano ${p.name}.`)}
+                href={createWhatsAppLink(`Olá! Quero saber mais sobre o plano ${p.name}.`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`inline-flex items-center justify-center gap-2 rounded-full py-2.5 md:py-3 text-[15px] md:text-base font-bold transition-transform hover:scale-[1.02] ${
@@ -867,7 +867,9 @@ function FinalCTA() {
           vaga na agenda antes que o calor aperte.
         </p>
         <a
-          href={waLink("Olá! Quero garantir minha vaga na agenda da Tchê Piscinas.")}
+          href={createWhatsAppLink(
+            "Olá! 👋 Vim pelo site da Tchê Piscinas e gostaria de solicitar um orçamento para manter minha piscina sempre limpa, cristalina e com a manutenção em dia.",
+          )}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-3 bg-gradient-sun text-foreground font-extrabold text-[15px] md:text-lg px-6 py-3.5 md:px-8 md:py-5 rounded-full shadow-sun hover:scale-[1.03] transition-transform"
@@ -935,7 +937,7 @@ function Footer() {
 function FloatingWhatsApp() {
   return (
     <a
-      href={waLink("Olá! Vim pelo site da Tchê Piscinas.")}
+      href={createWhatsAppLink("Olá! Vim pelo site da Tchê Piscinas.")}
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Fale conosco no WhatsApp"

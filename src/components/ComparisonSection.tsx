@@ -12,11 +12,9 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
+import { createWhatsAppLink } from "@/lib/whatsapp";
 import problemGreenWater from "@/assets/problem-green-water.jpg";
 import heroPool from "@/assets/hero-pool.jpg";
-
-const WHATSAPP = "https://wa.me/5551991757029";
-const waLink = (msg: string) => `${WHATSAPP}?text=${encodeURIComponent(msg)}`;
 
 type ComparisonItem = {
   icon: LucideIcon;
@@ -243,7 +241,9 @@ export function ComparisonSection() {
           className="mt-5 flex justify-center"
         >
           <a
-            href={waLink("Olá! Quero conhecer os planos de atendimento da Tchê Piscinas.")}
+            href={createWhatsAppLink(
+              "Olá! 👋 Vim pelo site da Tchê Piscinas e gostaria de conhecer os planos de limpeza. Podem me indicar a melhor opção para a minha piscina?",
+            )}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex h-12 w-full max-w-sm items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-[#075F9F] px-7 text-sm font-bold text-white shadow-[0_12px_30px_-12px_rgba(7,95,159,0.55)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#064F86] hover:shadow-[0_18px_38px_-14px_rgba(7,95,159,0.65)] active:translate-y-0 sm:w-auto sm:text-base"

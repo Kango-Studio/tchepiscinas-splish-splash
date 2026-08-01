@@ -6,13 +6,11 @@ import {
   Settings,
   ShieldCheck,
 } from "lucide-react";
+import { createWhatsAppLink } from "@/lib/whatsapp";
 import productSuallKit from "@/assets/product-suall-kit.jpg";
 import productPraticPool from "@/assets/product-pratic-pool.jpg";
 import equipmentSyllent from "@/assets/equipment-syllent.jpg";
 import problemCleaning from "@/assets/problem-cleaning.jpg";
-
-const WHATSAPP = "https://wa.me/5551991757029";
-const waLink = (msg: string) => `${WHATSAPP}?text=${encodeURIComponent(msg)}`;
 
 type ProductCard = {
   title: string;
@@ -93,7 +91,9 @@ export function PoolStoreSection() {
               </p>
 
               <a
-                href={waLink("Olá! Gostaria de consultar produtos para minha piscina.")}
+                href={createWhatsAppLink(
+                  "Olá! 👋 Vim pelo site da Tchê Piscinas e gostaria de conhecer os produtos e equipamentos disponíveis. Podem me ajudar?",
+                )}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-4 md:mt-6 inline-flex h-11 md:h-13 items-center justify-center gap-2 rounded-full bg-white px-5 md:px-6 text-sm md:text-base font-bold text-pool-deep shadow-lg transition hover:-translate-y-1 hover:bg-pool-mist"
@@ -148,7 +148,9 @@ export function PoolStoreSection() {
         {/* CTA mobile/apoio */}
         <div className="mt-6 md:mt-8 flex justify-center lg:hidden">
           <a
-            href={waLink("Olá! Gostaria de consultar produtos para minha piscina.")}
+            href={createWhatsAppLink(
+                  "Olá! 👋 Vim pelo site da Tchê Piscinas e gostaria de conhecer os produtos e equipamentos disponíveis. Podem me ajudar?",
+                )}
             target="_blank"
             rel="noreferrer"
             className="inline-flex h-11 md:h-13 items-center justify-center gap-2 rounded-full bg-pool-deep px-6 md:px-7 text-sm md:text-base font-bold text-white shadow-lg shadow-pool-deep/20 transition hover:-translate-y-1 hover:bg-pool"
