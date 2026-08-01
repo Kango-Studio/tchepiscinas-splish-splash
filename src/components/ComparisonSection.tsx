@@ -90,13 +90,13 @@ export function ComparisonSection() {
           className="text-center max-w-2xl mx-auto mb-5"
         >
           <span className="text-xs font-bold uppercase tracking-wider text-pool">
-            Qual é a melhor escolha?
+            A Tchê é a escolha mais inteligente
           </span>
           <h2 className="text-2xl md:text-4xl lg:text-5xl font-extrabold mt-2 mb-2 leading-[1.1] md:leading-[1.05]">
-            Com a Tchê Piscinas, <span className="text-gradient-pool">tu só aproveita.</span>
+            Com a Tchê Piscinas, <span className="text-gradient-pool">tu só aproveita</span>
           </h2>
           <p className="text-sm md:text-lg text-muted-foreground">
-            Cuidar da piscina parece simples, mas pequenos erros custam tempo e dinheiro.
+            Veja a diferença entre fazer tudo sozinho e deixar a limpeza e manutenção nas mãos de quem entende do assunto.
           </p>
         </motion.div>
 
@@ -116,7 +116,7 @@ export function ComparisonSection() {
                 <h3 className="text-base font-extrabold text-foreground">Cuidando sozinho</h3>
               </div>
               <p className="text-sm text-muted-foreground mb-3">
-                Mais preocupação, mais gastos e menos tempo para aproveitar.
+                Mais preocupação, gastos e menos tempo para aproveitar.
               </p>
               <img
                 src={problemGreenWater}
