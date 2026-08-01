@@ -243,14 +243,14 @@ export function ComparisonSection() {
           className="mt-5 flex justify-center"
         >
           <a
-            href={waLink("Olá! Quero minha piscina sempre pronta com a Tchê Piscinas.")}
+            href={waLink("Olá! Quero conhecer os planos de atendimento da Tchê Piscinas.")}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex h-12 w-full max-w-sm items-center justify-center gap-2.5 whitespace-nowrap rounded-full bg-[#075F9F] px-7 text-sm font-bold text-white shadow-[0_12px_30px_-12px_rgba(7,95,159,0.55)] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#064F86] hover:shadow-[0_18px_38px_-14px_rgba(7,95,159,0.65)] active:translate-y-0 sm:w-auto sm:text-base"
           >
             <WhatsappIcon className="size-[18px]" />
-            <span className="max-[380px]:hidden">Quero minha piscina sempre pronta</span>
-            <span className="hidden max-[380px]:inline">Quero minha piscina pronta</span>
+            <span className="max-[380px]:hidden">Conhecer planos de atendimento</span>
+            <span className="hidden max-[380px]:inline">Conhecer planos</span>
             <ArrowRight className="size-[18px]" />
           </a>
         </motion.div>
