@@ -857,14 +857,13 @@ function FinalCTA() {
       </svg>
       <div className="relative mx-auto max-w-3xl px-4 sm:px-6 text-center reveal">
         <span className="inline-flex items-center gap-2 bg-sun text-foreground px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[11px] md:text-xs font-bold uppercase tracking-wider mb-4 md:mb-5 shadow-sun">
-          <Sun className="size-3.5" /> O verão está chegando · Vagas limitadas na agenda
+          <Sun className="size-3.5" /> O verão está chegando
         </span>
         <h2 className="text-[26px] md:text-5xl font-extrabold mb-3 md:mb-5 leading-tight">
-          Para de perder fim de semana com a piscina.
+          Deixe a tua piscina com quem entende do assunto!
         </h2>
         <p className="text-sm md:text-lg text-white/90 mb-5 md:mb-8 max-w-xl mx-auto">
-          Fala agora com um especialista da Tchê Piscinas e garante tua
-          vaga na agenda antes que o calor aperte.
+          Fala agora com o nosso time e vire cliente antes do verão para garantir ofertas imperdíveis. 
         </p>
         <a
           href={createWhatsAppLink(
@@ -926,7 +925,7 @@ function Footer() {
       <div className="mx-auto max-w-310 px-4 sm:px-6 mt-10 pt-6 border-t border-border text-xs text-muted-foreground flex flex-col sm:flex-row gap-2 justify-between">
         <span>© {new Date().getFullYear()} Tchê Piscinas — Todos os direitos reservados.</span>
         <span className="inline-flex items-center gap-1.5">
-          Feito com <Heart className="size-3.5 text-sun fill-current" /> em Porto Alegre
+          Feito com <Heart className="size-3.5 text-sun fill-current" /> por Kango Studio.
         </span>
       </div>
     </footer>
