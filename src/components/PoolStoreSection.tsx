@@ -114,7 +114,7 @@ export function PoolStoreSection() {
                 <article
                   key={product.title}
                   className={`group grid content-start lg:content-stretch overflow-hidden rounded-3xl lg:rounded-[26px] border border-white/90 bg-white/90 shadow-[0_22px_60px_-35px_rgba(2,132,199,0.5)] backdrop-blur-sm transition duration-500 hover:-translate-y-1 hover:shadow-[0_28px_70px_-30px_rgba(2,132,199,0.6)] lg:grid-cols-[180px_1fr] ${
-                    isLast ? "col-span-2 grid-cols-[110px_1fr]" : ""
+                    isLast ? "col-span-2 grid-cols-[110px_1fr] lg:col-span-1" : ""
                   }`}
                 >
                   <div className="relative h-24 overflow-hidden lg:h-auto lg:min-h-full">

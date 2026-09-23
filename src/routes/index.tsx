@@ -249,7 +249,7 @@ function Hero() {
       </div>
       {/* Decorative wave bottom */}
       <svg
-        className="absolute bottom-0 left-0 w-full text-background"
+        className="absolute -bottom-px left-0 w-full text-background"
         viewBox="0 0 1440 100"
         preserveAspectRatio="none"
         aria-hidden
@@ -285,7 +285,7 @@ function Hero() {
           </div>
 
           <div className="mt-4 md:mt-5 flex items-center gap-2 text-sm text-white/90 md:text-white/80">
-            <CheckCircle2 className="size-4 text-sun" /> Orçamento gratuito e sem compromisso
+            <CheckCircle2 className="size-4 text-sun" /> Orçamento e sem compromisso
           </div>
         </div>
 
