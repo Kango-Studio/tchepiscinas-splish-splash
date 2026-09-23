@@ -267,10 +267,10 @@ function Hero() {
             Porto Alegre e região metropolitana
           </span>
           <h1 className="text-[25px] leading-[1.3] md:text-5xl md:leading-[1.05] lg:text-6xl font-extrabold mb-5 text-balance md:text-wrap">
-            Tua piscina sempre <span className="text-sun">limpa, tratada e pronta pra usar</span>
+            O Hub da <span className="text-sun">Tua Piscina</span>
           </h1>
           <p className="text-[15px] leading-normal md:text-xl md:leading-[1.4] text-white/90 mb-6 md:mb-8 max-w-82.5 md:max-w-xl">
-            A gente cuida de cada detalhe da tua piscina: Limpeza, equipamentos e produtos.
+            Limpeza semanal, manutenção, reparos, produtos e acessórios. Tudo o que tua piscina precisa, em um só lugar.
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <a
@@ -510,8 +510,12 @@ function Plans() {
       audience: "Reparo pontual, sem contrato mensal",
       features: [
         "Diagnóstico técnico direto na causa do problema",
-        "Orçamento gratuito, fechado antes de começar qualquer serviço",
-        "Reparo do equipamento diretamente com o nosso técnico",
+        "Bombas e equipamentos",
+        "Hidráulica e tubulações",
+        "Elétrica",
+        "Pisos e reparos",
+        "Produtos para piscina",
+        "Acessórios",
       ],
       cta: "Quero um orçamento",
       highlight: false,
