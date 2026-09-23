@@ -270,7 +270,7 @@ function Hero() {
             O Hub da <span className="text-sun">Tua Piscina</span>
           </h1>
           <p className="text-[15px] leading-normal md:text-xl md:leading-[1.4] text-white/90 mb-6 md:mb-8 max-w-82.5 md:max-w-xl">
-            Limpeza semanal, manutenção, reparos, produtos e acessórios. Tudo o que tua piscina precisa, em um só lugar.
+            Limpeza semanal, manutenção, reparos, produtos e acessórios. <strong className="font-bold text-white">Tudo o que tua piscina precisa, em um só lugar.</strong>
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <a
@@ -537,7 +537,7 @@ function Plans() {
               key={i}
               className={`reveal relative rounded-2xl md:rounded-3xl p-5 md:p-7 flex flex-col border transition-all ${
                 p.highlight
-                  ? "bg-gradient-pool text-white border-transparent shadow-pool scale-[1.02] md:-translate-y-3"
+                  ? "bg-gradient-pool text-white border-transparent shadow-pool md:scale-[1.02] md:-translate-y-3"
                   : "bg-card border-border hover:shadow-pool"
               }`}
             >
