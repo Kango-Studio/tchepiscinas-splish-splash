@@ -66,7 +66,7 @@ export function PoolStoreSection() {
         {/* Composição principal */}
         <div className="mt-6 md:mt-8 grid gap-4 md:gap-6 lg:grid-cols-[1.45fr_1fr]">
           {/* Destaque institucional */}
-          <article className="group relative min-h-[280px] md:min-h-[520px] overflow-hidden rounded-[22px] md:rounded-[32px] border border-white/80 bg-slate-950 shadow-[0_30px_80px_-35px_rgba(2,132,199,0.5)]">
+          <article className="group relative min-h-110 md:min-h-[520px] overflow-hidden rounded-[22px] md:rounded-[32px] border border-white/80 bg-slate-950 shadow-[0_30px_80px_-35px_rgba(2,132,199,0.5)]">
             <img
               src={productSuallKit}
               alt="Profissional apresentando produtos e kits para piscina"
@@ -126,7 +126,7 @@ export function PoolStoreSection() {
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/5" />
                   </div>
 
-                  <div className="flex flex-col justify-center p-3 lg:p-6">
+                  <div className={`flex flex-col p-3 lg:justify-center lg:p-6 ${isLast ? "justify-center" : ""}`}>
                     <div className="mb-2 lg:mb-4 grid h-8 w-8 lg:h-11 lg:w-11 place-items-center rounded-xl lg:rounded-2xl bg-gradient-pool text-white shadow-pool transition duration-500 group-hover:rotate-3 group-hover:scale-105">
                       <Icon className="h-4 w-4 lg:h-5 lg:w-5" />
                     </div>
