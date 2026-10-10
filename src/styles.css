@@ -2,6 +2,11 @@
 @source "../src";
 @import "tw-animate-css";
 
+/* HeroUI v2 (admin panel). The brand tokens in @theme below keep precedence
+   over HeroUI's background/foreground/primary/secondary on the landing page. */
+@plugin "./hero.ts";
+@source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx,mjs}";
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

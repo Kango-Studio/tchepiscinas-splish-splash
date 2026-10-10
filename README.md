@@ -27,3 +27,7 @@ npm run dev
 - TypeScript
 - React
 - Tailwind CSS
+
+## Painel de leads
+
+Área administrativa em `/admin` e formulário de orçamento integrados ao Supabase. Configuração em [docs/ADMIN.md](docs/ADMIN.md).

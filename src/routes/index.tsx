@@ -19,6 +19,7 @@ import {
   Calendar,
   ArrowRight,
   Heart,
+  ClipboardList,
 } from "lucide-react";
 import {
   Accordion,
@@ -37,6 +38,8 @@ import {
 import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 import { PoolStoreSection } from "@/components/PoolStoreSection";
 import { ComparisonSection } from "@/components/ComparisonSection";
+import { QuoteFormProvider, useQuoteForm } from "@/components/QuoteForm";
+import type { ClientType, LeadInterest } from "@/lib/leads/schema";
 import heroPool from "@/assets/hero-pool.jpg";
 import logo from "@/assets/logo.png";
 import suallLogo from "@/assets/suall.png";
@@ -141,6 +144,7 @@ function useReveal() {
 function LandingPage() {
   useReveal();
   return (
+    <QuoteFormProvider>
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <Header />
       <Hero />
@@ -159,6 +163,7 @@ function LandingPage() {
       <Footer />
       <FloatingWhatsApp />
     </div>
+    </QuoteFormProvider>
   );
 }
 
@@ -172,6 +177,7 @@ const NAV_LINKS = [
 
 function Header() {
   const [scrolled, setScrolled] = useState(false);
+  const { openQuoteForm } = useQuoteForm();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -219,15 +225,14 @@ function Header() {
           ))}
         </nav>
 
-        <a
-          href={createWhatsAppLink("Olá! Quero solicitar um orçamento com a Tchê Piscinas.")}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hidden md:inline-flex justify-self-end items-center gap-2 bg-gradient-sun text-foreground font-bold px-6 py-3 rounded-full shadow-sun hover:shadow-[0_16px_32px_-10px_rgba(255,193,7,0.55)] hover:-translate-y-0.5 transition-all duration-300 text-sm whitespace-nowrap"
+        <button
+          type="button"
+          onClick={() => openQuoteForm({ cta: "Solicitar orçamento (topo)" })}
+          className="cursor-pointer hidden md:inline-flex justify-self-end items-center gap-2 bg-gradient-sun text-foreground font-bold px-6 py-3 rounded-full shadow-sun hover:shadow-[0_16px_32px_-10px_rgba(255,193,7,0.55)] hover:-translate-y-0.5 transition-all duration-300 text-sm whitespace-nowrap"
         >
-          <WhatsappIcon className="size-4" />
+          <ClipboardList className="size-4" />
           Solicitar orçamento
-        </a>
+        </button>
       </div>
     </header>
   );
@@ -480,7 +485,16 @@ function HowItWorks() {
 
 /* ------------------------------ PLANS ---------------------------- */
 function Plans() {
-  const plans = [
+  const { openQuoteForm } = useQuoteForm();
+  const plans: {
+    name: string;
+    audience: string;
+    features: string[];
+    cta: string;
+    highlight: boolean;
+    interest: LeadInterest;
+    clientType: ClientType;
+  }[] = [
     {
       name: "Residencial",
       audience: "Pra quem quer só aproveitar a piscina",
@@ -492,6 +506,8 @@ function Plans() {
       ],
       cta: "Quero esse plano",
       highlight: true,
+      interest: "manutencao_recorrente",
+      clientType: "residencial",
     },
     {
       name: "Condomínios",
@@ -504,6 +520,8 @@ function Plans() {
       ],
       cta: "Quero atender meu condomínio",
       highlight: false,
+      interest: "manutencao_recorrente",
+      clientType: "condominio",
     },
     {
       name: "Manutenções",
@@ -519,6 +537,8 @@ function Plans() {
       ],
       cta: "Quero um orçamento",
       highlight: false,
+      interest: "equipamentos",
+      clientType: "residencial",
     },
   ];
   return (
@@ -560,19 +580,20 @@ function Plans() {
                   </li>
                 ))}
               </ul>
-              <a
-                href={createWhatsAppLink(`Olá! Quero saber mais sobre o plano ${p.name}.`)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`inline-flex items-center justify-center gap-2 rounded-full py-2.5 md:py-3 text-[15px] md:text-base font-bold transition-transform hover:scale-[1.02] ${
+              <button
+                type="button"
+                onClick={() =>
+                  openQuoteForm({ interest: p.interest, clientType: p.clientType, cta: `${p.cta} (${p.name})` })
+                }
+                className={`cursor-pointer inline-flex items-center justify-center gap-2 rounded-full py-2.5 md:py-3 text-[15px] md:text-base font-bold transition-transform hover:scale-[1.02] ${
                   p.highlight
                     ? "bg-gradient-sun text-foreground shadow-sun"
                     : "bg-pool-deep text-white hover:bg-pool"
                 }`}
               >
-                <WhatsappIcon className="size-4" />
+                <ClipboardList className="size-4" />
                 {p.cta}
-              </a>
+              </button>
             </div>
           ))}
         </div>
@@ -854,6 +875,7 @@ function Sponsors() {
 
 /* ----------------------------- FINAL CTA -------------------------- */
 function FinalCTA() {
+  const { openQuoteForm } = useQuoteForm();
   return (
     <section className="relative py-10 md:py-14 overflow-hidden bg-gradient-pool text-white">
       <svg
@@ -882,18 +904,15 @@ function FinalCTA() {
         <p className="text-sm md:text-lg text-white/90 mb-5 md:mb-8 max-w-xl mx-auto">
           Fala agora com o nosso time e vire cliente antes do verão para garantir ofertas imperdíveis. 
         </p>
-        <a
-          href={createWhatsAppLink(
-            "Olá! 👋 Vim pelo site da Tchê Piscinas e gostaria de solicitar um orçamento para manter minha piscina sempre limpa, cristalina e com a manutenção em dia.",
-          )}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-3 bg-gradient-sun text-foreground font-extrabold text-[15px] md:text-lg px-6 py-3.5 md:px-8 md:py-5 rounded-full shadow-sun hover:scale-[1.03] transition-transform"
+        <button
+          type="button"
+          onClick={() => openQuoteForm({ interest: "manutencao_recorrente", cta: "Quero minha piscina cristalina" })}
+          className="cursor-pointer inline-flex items-center gap-3 bg-gradient-sun text-foreground font-extrabold text-[15px] md:text-lg px-6 py-3.5 md:px-8 md:py-5 rounded-full shadow-sun hover:scale-[1.03] transition-transform"
         >
-          <WhatsappIcon className="size-5 md:size-6" />
+          <ClipboardList className="size-5 md:size-6" />
           Quero minha piscina cristalina
           <ArrowRight className="size-4 md:size-5" />
-        </a>
+        </button>
       </div>
     </section>
   );
