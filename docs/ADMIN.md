@@ -58,7 +58,13 @@ Copie `.env.example` para `.env` e preencha com os dados de
 | `SUPABASE_SERVICE_ROLE_KEY` | servidor | **secreta** — nunca com prefixo `VITE_` |
 | `LEAD_RATE_LIMIT_SALT` | servidor | opcional, texto aleatório |
 
-Em produção (Cloudflare Workers / Lovable), cadastre `SUPABASE_URL`,
+**Vercel**: importe o repositório (Framework Preset: *Other*; build `vite build`,
+detectado automaticamente) e cadastre todas as variáveis acima em
+**Settings > Environment Variables** (Production e Preview). As `VITE_*` precisam
+existir antes do build — depois de alterá-las, faça um novo deploy. O Nitro detecta o
+Vercel sozinho e gera a saída em `.vercel/output`.
+
+Em Cloudflare Workers / Lovable, cadastre `SUPABASE_URL`,
 `SUPABASE_SERVICE_ROLE_KEY` e `LEAD_RATE_LIMIT_SALT` como **secrets** do ambiente de
 execução, e as variáveis `VITE_*` no ambiente de build (elas são embutidas no bundle).
 
