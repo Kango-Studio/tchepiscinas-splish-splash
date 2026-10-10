@@ -9,16 +9,22 @@ import {
   NavbarMenuItem,
   NavbarMenuToggle,
 } from "@heroui/react";
-import { ExternalLink, LogOut, Users } from "lucide-react";
+import { useLocation } from "@tanstack/react-router";
+import { ExternalLink, LayoutDashboard, LogOut, Users } from "lucide-react";
 import logo from "@/assets/logo.png";
 import { useAdminAuth } from "./auth";
 
-const NAV = [{ href: "/admin", label: "Leads", icon: Users }];
+const NAV = [
+  { href: "/admin", label: "Leads", icon: Users },
+  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+];
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const { state, signOut } = useAdminAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const email = "session" in state ? state.session.user.email : undefined;
+  const pathname = useLocation({ select: (l) => l.pathname.replace(/\/+$/, "") });
+  const isActive = (href: string) => pathname === href;
 
   return (
     <div className="min-h-dvh bg-[#f4f9fc] text-foreground">
@@ -32,8 +38,12 @@ export function AdminShell({ children }: { children: ReactNode }) {
             <a
               key={item.href}
               href={item.href}
-              aria-current="page"
-              className="flex items-center gap-3 rounded-xl bg-pool-mist px-3 py-2.5 text-sm font-semibold text-pool-deep"
+              aria-current={isActive(item.href) ? "page" : undefined}
+              className={`mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${
+                isActive(item.href)
+                  ? "bg-pool-mist font-semibold text-pool-deep"
+                  : "font-medium text-default-600 transition hover:bg-default-100"
+              }`}
             >
               <item.icon className="size-4" />
               {item.label}
@@ -85,10 +95,15 @@ export function AdminShell({ children }: { children: ReactNode }) {
         </NavbarContent>
         <NavbarMenu className="gap-1 pt-4">
           {NAV.map((item) => (
-            <NavbarMenuItem key={item.href} isActive>
+            <NavbarMenuItem key={item.href} isActive={isActive(item.href)}>
               <a
                 href={item.href}
-                className="flex items-center gap-3 rounded-xl bg-pool-mist px-3 py-3 font-semibold text-pool-deep"
+                aria-current={isActive(item.href) ? "page" : undefined}
+                className={`flex items-center gap-3 rounded-xl px-3 py-3 ${
+                  isActive(item.href)
+                    ? "bg-pool-mist font-semibold text-pool-deep"
+                    : "text-default-600"
+                }`}
                 onClick={() => setMenuOpen(false)}
               >
                 <item.icon className="size-5" />
