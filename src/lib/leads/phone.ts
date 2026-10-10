@@ -27,8 +27,11 @@ export function normalizeBrazilPhone(input: string): string | null {
   if (digits.length !== 10 && digits.length !== 11) return null;
 
   const ddd = digits.slice(0, 2);
-  const number = digits.slice(2);
+  let number = digits.slice(2);
   if (!VALID_DDDS.has(ddd)) return null;
+  // Celular no formato antigo, sem o nono dígito (o WhatsApp ainda exibe assim
+  // contas antigas: "+55 51 9114-6046"). Celulares de 8 dígitos começavam com 6-9.
+  if (number.length === 8 && /^[6-9]/.test(number)) number = `9${number}`;
   // Celular: 9 dígitos começando com 9. Fixo: 8 dígitos começando com 2-5.
   if (number.length === 9 && !number.startsWith("9")) return null;
   if (number.length === 8 && !/^[2-5]/.test(number)) return null;
