@@ -57,8 +57,14 @@ export const submitSiteLead = createServerFn({ method: "POST" })
     }
 
     try {
+      // Só confia no header da plataforma em que está rodando: fora dela o
+      // visitante pode forjá-lo e burlar o limite por IP.
       const ip =
-        getRequestHeader("cf-connecting-ip") ?? getRequestIP({ xForwardedFor: true }) ?? "unknown";
+        (process.env.VERCEL
+          ? getRequestHeader("x-real-ip")
+          : getRequestHeader("cf-connecting-ip")) ??
+        getRequestIP({ xForwardedFor: true }) ??
+        "unknown";
       const ipHash = await sha256(`${process.env.LEAD_RATE_LIMIT_SALT ?? "tche-piscinas"}:${ip}`);
 
       const [ipAttempts, phoneAttempts] = await Promise.all([
