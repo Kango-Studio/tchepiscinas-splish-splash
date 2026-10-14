@@ -1,6 +1,8 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { HeroUIProvider, ToastProvider } from "@heroui/react";
 import { AdminAuthProvider } from "@/components/admin/auth";
+// Tema HeroUI só no admin (carregado junto com o chunk desta rota).
+import "../../admin.css";
 
 // Área administrativa: renderizada só no cliente (a sessão do Supabase fica no
 // navegador). A segurança dos dados é garantida pelo RLS no banco.

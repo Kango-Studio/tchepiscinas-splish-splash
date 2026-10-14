@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { Button, Card, CardBody, Spinner } from "@heroui/react";
 import { ShieldAlert, Settings } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.webp";
 import { useAdminAuth, type AdminAuthState } from "./auth";
 
 export function AuthCard({ children }: { children: ReactNode }) {

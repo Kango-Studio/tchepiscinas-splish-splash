@@ -1,0 +1,8 @@
+/* CSS do painel admin: estilos base da landing + tema HeroUI v2.
+   Fica separado de styles.css porque o HeroUI gera ~300 KB de CSS que a landing
+   não usa. As brand tokens do @theme em styles.css mantêm precedência sobre as
+   cores background/foreground/primary/secondary do HeroUI. */
+@import "./styles.css";
+
+@plugin "./hero.ts";
+@source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx,mjs}";

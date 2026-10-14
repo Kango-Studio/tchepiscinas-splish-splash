@@ -40,20 +40,24 @@ import { PoolStoreSection } from "@/components/PoolStoreSection";
 import { ComparisonSection } from "@/components/ComparisonSection";
 import { QuoteFormProvider, useQuoteForm } from "@/components/QuoteForm";
 import type { ClientType, LeadInterest } from "@/lib/leads/schema";
-import heroPool from "@/assets/hero-pool.jpg";
-import logo from "@/assets/logo.png";
-import suallLogo from "@/assets/suall.png";
-import syllentLogo from "@/assets/syllent.png";
-import teamGroup from "@/assets/team-group.jpg";
-import teamAction from "@/assets/team-action.jpg";
-import condoPoolArena from "@/assets/condo-pool-arena.jpg";
-import condoPool1 from "@/assets/condo-pool-1.jpg";
-import condoPool2 from "@/assets/condo-pool-2.jpg";
-import condoPool3 from "@/assets/condo-pool-3.jpg";
-import condoPool4 from "@/assets/condo-pool-4.jpg";
-import residentialPool1 from "@/assets/residential-pool-1.jpg";
-import residentialPool2 from "@/assets/residential-pool-2.jpg";
-import residentialPool3 from "@/assets/residential-pool-3.jpg";
+import heroPool from "@/assets/hero-pool.webp";
+import heroPoolSmall from "@/assets/hero-pool-800.webp";
+import logo from "@/assets/logo.webp";
+import suallLogo from "@/assets/suall.webp";
+import syllentLogo from "@/assets/syllent.webp";
+import teamGroup from "@/assets/team-group.webp";
+import teamAction from "@/assets/team-action.webp";
+import condoPoolArena from "@/assets/condo-pool-arena.webp";
+import condoPool1 from "@/assets/condo-pool-1.webp";
+import condoPool2 from "@/assets/condo-pool-2.webp";
+import condoPool3 from "@/assets/condo-pool-3.webp";
+import condoPool4 from "@/assets/condo-pool-4.webp";
+import residentialPool1 from "@/assets/residential-pool-1.webp";
+import residentialPool2 from "@/assets/residential-pool-2.webp";
+import residentialPool3 from "@/assets/residential-pool-3.webp";
+
+// Imagem do hero (LCP): o navegador escolhe a versão pelo tamanho da tela.
+const HERO_SRCSET = `${heroPoolSmall} 800w, ${heroPool} 1600w`;
 
 const LOCAL_BUSINESS_JSON_LD = {
   "@context": "https://schema.org",
@@ -203,6 +207,8 @@ function Header() {
           <img
             src={logo}
             alt="Tchê Piscinas"
+            width={210}
+            height={192}
             className={`h-15 md:h-16 w-auto shrink-0 transition-all duration-300 ${
               scrolled ? "" : "[filter:drop-shadow(0_0_3px_rgba(255,255,255,0.9))_drop-shadow(0_0_8px_rgba(255,255,255,0.55))]"
             }`}
@@ -246,10 +252,14 @@ function Hero() {
       <div className="absolute inset-0 opacity-30 mix-blend-overlay">
         <img
           src={heroPool}
+          srcSet={HERO_SRCSET}
+          sizes="100vw"
           alt=""
           className="w-full h-full object-cover"
           width={1600}
           height={1200}
+          fetchPriority="high"
+          decoding="async"
         />
       </div>
       {/* Decorative wave bottom */}
@@ -298,10 +308,13 @@ function Hero() {
           <div className="relative rounded-[2rem] overflow-hidden shadow-pool ring-4 ring-white/40 animate-float">
             <img
               src={heroPool}
+              srcSet={HERO_SRCSET}
+              sizes="(min-width: 1024px) 560px, 100vw"
               alt="Piscina cristalina com água azul"
               className="w-full h-[440px] object-cover"
               width={1600}
               height={1200}
+              fetchPriority="high"
             />
           </div>
           <div className="absolute -bottom-6 -left-6 bg-white rounded-2xl shadow-pool p-4 flex items-center gap-3 ring-1 ring-border">
@@ -332,7 +345,7 @@ function HowItWorks() {
       title: "Escolha o plano ideal",
       text: "Conte para a gente o tamanho da sua piscina e a frequência que precisa. Nossa equipe indica a melhor opção.",
       tags: ["Agendamento rápido"],
-      img: heroPool,
+      img: heroPoolSmall,
       alt: "Atendimento e agendamento da visita técnica",
     },
     {
@@ -348,7 +361,7 @@ function HowItWorks() {
       title: "Aproveite sem preocupação",
       text: "Sua piscina fica cristalina e pronta para você curtir com a família durante toda a semana.",
       tags: ["Piscina sempre pronta"],
-      img: heroPool,
+      img: heroPoolSmall,
       alt: "Piscina cristalina pronta para a família aproveitar",
     },
   ];
@@ -736,6 +749,8 @@ function Team() {
                 src={teamGroup}
                 alt="Equipe da Tchê Piscinas reunida em atendimento a um condomínio"
                 loading="lazy"
+                width={800}
+                height={1067}
                 className="w-full h-[220px] md:h-[440px] object-cover"
               />
             </div>
@@ -744,6 +759,8 @@ function Team() {
                 src={teamAction}
                 alt="Técnico da Tchê Piscinas avaliando piscina com água esverdeada antes do tratamento"
                 loading="lazy"
+                width={400}
+                height={533}
                 className="w-full h-20 md:h-48 object-cover"
               />
             </div>
@@ -924,7 +941,7 @@ function Footer() {
     <footer className="bg-white text-foreground py-8 md:py-10 border-t border-border">
       <div className="mx-auto max-w-310 px-4 sm:px-6 grid md:grid-cols-3 gap-6 md:gap-8">
         <div>
-          <img src={logo} alt="Tchê Piscinas" className="h-12 md:h-16 w-auto mb-3 md:mb-4" />
+          <img src={logo} alt="Tchê Piscinas" width={210} height={192} loading="lazy" className="h-12 md:h-16 w-auto mb-3 md:mb-4" />
           <p className="text-sm max-w-xs text-muted-foreground">
             Manutenção, limpeza e produtos para piscinas. Água cristalina o ano
             todo, com quem entende de verdade.

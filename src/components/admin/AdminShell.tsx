@@ -11,7 +11,7 @@ import {
 } from "@heroui/react";
 import { useLocation } from "@tanstack/react-router";
 import { ExternalLink, LayoutDashboard, LogOut, Users } from "lucide-react";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/logo.webp";
 import { useAdminAuth } from "./auth";
 
 const NAV = [

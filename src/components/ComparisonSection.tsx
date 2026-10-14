@@ -1,4 +1,3 @@
-import { motion } from "framer-motion";
 import { Fragment } from "react";
 import {
   ArrowRight,
@@ -13,8 +12,8 @@ import {
 } from "lucide-react";
 import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
 import { createWhatsAppLink } from "@/lib/whatsapp";
-import problemGreenWater from "@/assets/problem-green-water.jpg";
-import heroPool from "@/assets/hero-pool.jpg";
+import problemGreenWater from "@/assets/problem-green-water.webp";
+import heroPool from "@/assets/hero-pool-800.webp";
 
 type ComparisonItem = {
   icon: LucideIcon;
@@ -49,13 +48,8 @@ function ItemRow({
   const isSolo = variant === "solo";
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 6 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.5 }}
-      transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-      whileHover={{ y: -1 }}
-      className={`flex items-center gap-2 rounded-lg transition-shadow duration-300 ${
+    <div
+      className={`flex items-center gap-2 rounded-lg transition-all duration-300 hover:-translate-y-px ${
         dense ? "min-h-13 px-4 py-3" : "min-h-13.5 px-3 py-1.5"
       } ${
         isSolo
@@ -71,7 +65,7 @@ function ItemRow({
         <item.icon className={dense ? "size-3.5" : "size-3"} strokeWidth={2.25} />
       </span>
       <span className="text-sm leading-snug font-semibold text-foreground">{item.text}</span>
-    </motion.div>
+    </div>
   );
 }
 
@@ -80,12 +74,8 @@ export function ComparisonSection() {
     <section className="pt-8 pb-12 md:pt-10 md:pb-17 bg-white">
       <div className="mx-auto max-w-310 px-4 sm:px-6">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.4, ease: "easeOut" }}
-          className="text-center max-w-2xl mx-auto mb-5"
+        <div
+          className="reveal text-center max-w-2xl mx-auto mb-5"
         >
           <span className="text-xs font-bold uppercase tracking-wider text-pool">
             A Tchê é a escolha mais inteligente
@@ -96,15 +86,11 @@ export function ComparisonSection() {
           <p className="text-sm md:text-lg text-muted-foreground">
             Veja a diferença entre fazer tudo sozinho e deixar a limpeza e manutenção nas mãos de quem entende do assunto.
           </p>
-        </motion.div>
+        </div>
 
         {/* ============ DESKTOP — linha a linha, lado a lado ============ */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.1 }}
-          transition={{ duration: 0.45, ease: "easeOut" }}
-          className="hidden lg:block relative mx-auto max-w-310 overflow-visible rounded-[28px] border border-sky-100 bg-white shadow-sm"
+        <div
+          className="reveal hidden lg:block relative mx-auto max-w-310 overflow-visible rounded-[28px] border border-sky-100 bg-white shadow-sm"
         >
           <div className="grid lg:grid-cols-2">
             {/* Left header + image */}
@@ -160,17 +146,13 @@ export function ComparisonSection() {
               </Fragment>
             ))}
           </div>
-        </motion.div>
+        </div>
 
         {/* ============ MOBILE — dois blocos completos e independentes ============ */}
         <div className="flex flex-col lg:hidden w-full rounded-[24px]">
           {/* Bloco 1 — Cuidando sozinho (completo) */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="rounded-[22px] border border-sky-100 bg-white shadow-sm p-4"
+          <div
+            className="reveal rounded-[22px] border border-sky-100 bg-white shadow-sm p-4"
           >
             <div className="flex items-center gap-2 mb-1">
               <XCircle className="size-4 text-red-500 shrink-0" strokeWidth={2.25} />
@@ -192,7 +174,7 @@ export function ComparisonSection() {
                 <ItemRow key={i} variant="solo" item={item} dense />
               ))}
             </div>
-          </motion.div>
+          </div>
 
           {/* VS — estático, sem position absolute */}
           <div className="flex justify-center my-4">
@@ -202,12 +184,8 @@ export function ComparisonSection() {
           </div>
 
           {/* Bloco 2 — Cliente Tchê Piscinas (completo) */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="rounded-[22px] border border-sky-100 bg-white shadow-sm p-4"
+          <div
+            className="reveal rounded-[22px] border border-sky-100 bg-white shadow-sm p-4"
           >
             <div className="flex items-center gap-2 mb-1">
               <CheckCircle2 className="size-4 text-pool-deep shrink-0" strokeWidth={2.25} />
@@ -229,16 +207,12 @@ export function ComparisonSection() {
                 <ItemRow key={i} variant="tche" item={item} dense />
               ))}
             </div>
-          </motion.div>
+          </div>
         </div>
 
         {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.4 }}
-          transition={{ duration: 0.4, ease: "easeOut", delay: 0.1 }}
-          className="mt-5 flex justify-center"
+        <div
+          className="reveal mt-5 flex justify-center"
         >
           <a
             href={createWhatsAppLink(
@@ -253,7 +227,7 @@ export function ComparisonSection() {
             <span className="hidden max-[380px]:inline">Conhecer planos</span>
             <ArrowRight className="size-[18px]" />
           </a>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

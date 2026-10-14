@@ -7,10 +7,10 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { createWhatsAppLink } from "@/lib/whatsapp";
-import productSuallKit from "@/assets/product-suall-kit.jpg";
-import productPraticPool from "@/assets/product-pratic-pool.jpg";
-import equipmentSyllent from "@/assets/equipment-syllent.jpg";
-import problemCleaning from "@/assets/problem-cleaning.jpg";
+import productSuallKit from "@/assets/product-suall-kit.webp";
+import productPraticPool from "@/assets/product-pratic-pool.webp";
+import equipmentSyllent from "@/assets/equipment-syllent.webp";
+import problemCleaning from "@/assets/problem-cleaning.webp";
 
 type ProductCard = {
   title: string;
@@ -70,6 +70,8 @@ export function PoolStoreSection() {
             <img
               src={productSuallKit}
               alt="Profissional apresentando produtos e kits para piscina"
+              loading="lazy"
+              decoding="async"
               className="absolute inset-0 h-full w-full object-cover object-top transition duration-700 group-hover:scale-105"
             />
 
@@ -121,6 +123,8 @@ export function PoolStoreSection() {
                     <img
                       src={product.image}
                       alt={product.title}
+                      loading="lazy"
+                      decoding="async"
                       className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent to-white/5" />
