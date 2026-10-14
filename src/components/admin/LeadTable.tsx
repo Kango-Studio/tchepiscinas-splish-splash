@@ -16,6 +16,7 @@ import { formatBrazilPhone } from "@/lib/leads/phone";
 import { INTEREST_LABELS, type Lead } from "@/lib/leads/schema";
 import { isOverdue, todayISO } from "./filters";
 import { LeadWhatsAppButton, StageChip, formatDate } from "./ui";
+import { FollowupDots } from "./FollowupCheckpoints";
 
 const PAGE_SIZE = 10;
 
@@ -84,6 +85,9 @@ export function LeadTable({
             INTERESSE
           </TableColumn>
           <TableColumn key="stage">ETAPA</TableColumn>
+          <TableColumn key="followups" className="hidden lg:table-cell">
+            FOLLOW-UPS
+          </TableColumn>
           <TableColumn key="next_contact" className="hidden md:table-cell">
             PRÓXIMO CONTATO
           </TableColumn>
@@ -111,6 +115,9 @@ export function LeadTable({
                 </TableCell>
                 <TableCell>
                   <StageChip stage={lead.stage} />
+                </TableCell>
+                <TableCell className="hidden lg:table-cell">
+                  <FollowupDots leadId={lead.id} />
                 </TableCell>
                 <TableCell className="hidden md:table-cell">
                   <span

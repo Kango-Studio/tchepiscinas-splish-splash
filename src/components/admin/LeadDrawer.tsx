@@ -48,6 +48,7 @@ import {
 import { LeadWhatsAppButton, StageChip, formatDate, formatDateTime } from "./ui";
 import { isOverdue } from "./filters";
 import { PRINT_INSTRUCTIONS, type PrintPrefill } from "./PrintImportModal";
+import { FollowupTracker } from "./FollowupCheckpoints";
 
 export type DrawerState =
   | { mode: "closed" }
@@ -331,6 +332,8 @@ function LeadFormPanel({
       </DrawerHeader>
 
       <DrawerBody className="py-5">
+        {/* Salva na hora, independente do botão "Salvar alterações". */}
+        {lead && <FollowupTracker leadId={lead.id} />}
         <form
           id="lead-form"
           onSubmit={handleSubmit(onSubmit)}

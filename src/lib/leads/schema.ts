@@ -79,6 +79,15 @@ export type Lead = {
   updated_at: string;
 };
 
+export type LeadFollowup = {
+  id: string;
+  lead_id: string;
+  done_at: string;
+  note: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
 const phoneField = z
   .string({ required_error: "Informe o WhatsApp" })
   .trim()

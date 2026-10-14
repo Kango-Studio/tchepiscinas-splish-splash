@@ -23,6 +23,7 @@ import {
 } from "@/lib/leads/schema";
 import { isOverdue, todayISO } from "./filters";
 import { LeadWhatsAppButton, STAGE_STYLES, formatDate, stopCardEvents } from "./ui";
+import { FollowupDots } from "./FollowupCheckpoints";
 
 type Props = {
   leads: Lead[];
@@ -241,6 +242,12 @@ function LeadCardView({
           {INTEREST_LABELS[lead.interest]}
         </span>
       </div>
+
+      {!overlay && (
+        <div className="mt-2">
+          <FollowupDots leadId={lead.id} />
+        </div>
+      )}
 
       {lead.next_contact_date && (
         <p
