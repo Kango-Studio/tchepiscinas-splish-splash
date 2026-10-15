@@ -9,6 +9,11 @@ import { STAGE_LABELS, type Lead, type LeadStage } from "@/lib/leads/schema";
 export const STAGE_STYLES: Record<LeadStage, { dot: string; chip: string; column: string }> = {
   novo: { dot: "bg-pool-light", chip: "bg-pool-mist text-pool-deep", column: "bg-pool-mist/50" },
   em_atendimento: { dot: "bg-pool", chip: "bg-pool/15 text-pool-deep", column: "bg-sky-50" },
+  proposta_enviada: {
+    dot: "bg-violet-500",
+    chip: "bg-violet-100 text-violet-800",
+    column: "bg-violet-50/70",
+  },
   orcamento_enviado: {
     dot: "bg-sun",
     chip: "bg-sun/25 text-amber-900",

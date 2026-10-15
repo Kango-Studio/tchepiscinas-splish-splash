@@ -1,4 +1,4 @@
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -50,6 +50,7 @@ export function LeadKanban({ leads, onOpen, onMove }: Props) {
     return map;
   }, [leads]);
 
+  const { boardRef, topBarRef, scrollWidth, hasOverflow } = useTopScrollbar();
   const activeLead = activeId ? leads.find((l) => l.id === activeId) : undefined;
   const today = todayISO();
 
@@ -81,8 +82,17 @@ export function LeadKanban({ leads, onOpen, onMove }: Props) {
         },
       }}
     >
+      {/* Barra de rolagem acima das colunas (a de baixo fica escondida). */}
       <div
-        className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 sm:mx-0 sm:snap-none sm:px-0 lg:gap-4"
+        ref={topBarRef}
+        aria-hidden
+        className={`mb-2 overflow-x-auto overflow-y-hidden ${hasOverflow ? "hidden sm:block" : "hidden"}`}
+      >
+        <div style={{ width: scrollWidth, height: 1 }} />
+      </div>
+      <div
+        ref={boardRef}
+        className="-mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-4 [scrollbar-width:none] sm:mx-0 sm:snap-none sm:px-0 lg:gap-4 [&::-webkit-scrollbar]:hidden"
         role="list"
         aria-label="Funil de leads"
       >
@@ -104,6 +114,45 @@ export function LeadKanban({ leads, onOpen, onMove }: Props) {
       </DragOverlay>
     </DndContext>
   );
+}
+
+// Espelha a rolagem horizontal do quadro numa barra acima dele, para não
+// precisar descer até o fim das colunas para rolar para o lado.
+function useTopScrollbar() {
+  const boardRef = useRef<HTMLDivElement>(null);
+  const topBarRef = useRef<HTMLDivElement>(null);
+  const [scrollWidth, setScrollWidth] = useState(0);
+  const [hasOverflow, setHasOverflow] = useState(false);
+
+  useEffect(() => {
+    const board = boardRef.current;
+    const bar = topBarRef.current;
+    if (!board || !bar) return;
+
+    const measure = () => {
+      setScrollWidth(board.scrollWidth);
+      setHasOverflow(board.scrollWidth > board.clientWidth + 1);
+    };
+    const fromBoard = () => {
+      if (bar.scrollLeft !== board.scrollLeft) bar.scrollLeft = board.scrollLeft;
+    };
+    const fromBar = () => {
+      if (board.scrollLeft !== bar.scrollLeft) board.scrollLeft = bar.scrollLeft;
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(board);
+    board.addEventListener("scroll", fromBoard, { passive: true });
+    bar.addEventListener("scroll", fromBar, { passive: true });
+    return () => {
+      observer.disconnect();
+      board.removeEventListener("scroll", fromBoard);
+      bar.removeEventListener("scroll", fromBar);
+    };
+  }, []);
+
+  return { boardRef, topBarRef, scrollWidth, hasOverflow };
 }
 
 function KanbanColumn({

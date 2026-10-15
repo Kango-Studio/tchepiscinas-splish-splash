@@ -1,5 +1,5 @@
 import { Card, CardBody, Skeleton } from "@heroui/react";
-import { CheckCircle2, FileText, Headphones, Sparkles, Users } from "lucide-react";
+import { CheckCircle2, ClipboardList, FileText, Headphones, Sparkles, Users } from "lucide-react";
 import type { Lead } from "@/lib/leads/schema";
 
 export function LeadStats({
@@ -16,13 +16,19 @@ export function LeadStats({
     { label: "Total de leads", value: leads.length, icon: Users, tone: "bg-pool-deep text-white" },
     { label: "Novos", value: count("novo"), icon: Sparkles, tone: "bg-pool-mist text-pool-deep" },
     {
-      label: "Em atendimento",
+      label: "Aguardando endereço",
       value: count("em_atendimento"),
       icon: Headphones,
       tone: "bg-sky-100 text-pool",
     },
     {
-      label: "Orçamentos enviados",
+      label: "Propostas enviadas",
+      value: count("proposta_enviada"),
+      icon: ClipboardList,
+      tone: "bg-violet-100 text-violet-700",
+    },
+    {
+      label: "Valores enviados",
       value: count("orcamento_enviado"),
       icon: FileText,
       tone: "bg-sun/25 text-amber-800",
@@ -37,13 +43,9 @@ export function LeadStats({
 
   return (
     <section aria-label="Resumo dos leads">
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
-        {items.map((it, i) => (
-          <Card
-            key={it.label}
-            shadow="sm"
-            className={`border border-default-100 ${i === 0 ? "col-span-2 sm:col-span-1" : ""}`}
-          >
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        {items.map((it) => (
+          <Card key={it.label} shadow="sm" className="border border-default-100">
             <CardBody className="flex flex-row items-center gap-3 p-4">
               <span className={`grid size-10 shrink-0 place-items-center rounded-xl ${it.tone}`}>
                 <it.icon className="size-5" aria-hidden />

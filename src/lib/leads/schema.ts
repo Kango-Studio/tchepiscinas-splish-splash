@@ -1,9 +1,12 @@
 import { z } from "zod";
 import { normalizeBrazilPhone } from "./phone";
 
+// As chaves "em_atendimento" e "orcamento_enviado" foram mantidas (dados já
+// gravados); os rótulos refletem o processo atual de atendimento.
 export const LEAD_STAGES = [
   "novo",
   "em_atendimento",
+  "proposta_enviada",
   "orcamento_enviado",
   "fechado",
   "perdido",
@@ -32,8 +35,9 @@ export type LeadSource = (typeof LEAD_SOURCES)[number];
 
 export const STAGE_LABELS: Record<LeadStage, string> = {
   novo: "Novo",
-  em_atendimento: "Em atendimento",
-  orcamento_enviado: "Orçamento enviado",
+  em_atendimento: "Aguardando endereço",
+  proposta_enviada: "Proposta enviada",
+  orcamento_enviado: "Valor enviado",
   fechado: "Fechado",
   perdido: "Perdido",
 };

@@ -11,18 +11,31 @@ import { LEAD_SOURCES, SOURCE_LABELS, type Lead, type LeadStage } from "@/lib/le
 const FUNNEL: { label: string; stages: LeadStage[]; fill: string; ink: string }[] = [
   {
     label: "Entraram",
-    stages: ["novo", "em_atendimento", "orcamento_enviado", "fechado", "perdido"],
+    stages: [
+      "novo",
+      "em_atendimento",
+      "proposta_enviada",
+      "orcamento_enviado",
+      "fechado",
+      "perdido",
+    ],
     fill: "#7FD3F9",
     ink: "text-pool-deep",
   },
   {
     label: "Em atendimento",
-    stages: ["em_atendimento", "orcamento_enviado", "fechado"],
+    stages: ["em_atendimento", "proposta_enviada", "orcamento_enviado", "fechado"],
+    fill: "#4DB8EC",
+    ink: "text-white",
+  },
+  {
+    label: "Proposta enviada",
+    stages: ["proposta_enviada", "orcamento_enviado", "fechado"],
     fill: "#2E9FDB",
     ink: "text-white",
   },
   {
-    label: "Orçamento enviado",
+    label: "Valor enviado",
     stages: ["orcamento_enviado", "fechado"],
     fill: "#0077BE",
     ink: "text-white",
