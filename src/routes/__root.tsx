@@ -72,7 +72,7 @@ function ErrorComponent({ error, reset }: { error: unknown; reset: () => void })
   );
 }
 
-export const SITE_URL = "https://tchepiscinas.com";
+export const SITE_URL = "https://www.tchepiscinas.com";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
