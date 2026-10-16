@@ -24,6 +24,11 @@ async function fetchAllFollowups(): Promise<LeadFollowup[]> {
   }
 }
 
+// Todos os follow-ups (relatórios do dashboard). Mesma consulta e cache dos cards.
+export function useAllFollowups() {
+  return useQuery({ queryKey: FOLLOWUPS_QUERY_KEY, queryFn: fetchAllFollowups, staleTime: 30_000 });
+}
+
 const byDoneAt = (a: LeadFollowup, b: LeadFollowup) => a.done_at.localeCompare(b.done_at);
 
 // Uma única consulta para todos os follow-ups; cada card lê só os do seu lead.

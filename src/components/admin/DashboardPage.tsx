@@ -11,6 +11,8 @@ import {
 } from "./filters";
 import { LeadFiltersBar } from "./LeadFiltersBar";
 import { LeadDashboard } from "./LeadDashboard";
+import { useAllFollowups } from "./followups-api";
+import { FollowupSummaryCard, FollowupsByStageCard } from "./FollowupReport";
 
 export function DashboardPage() {
   const leadsQuery = useLeads();
@@ -24,11 +26,19 @@ export function DashboardPage() {
     [allLeads, filters],
   );
 
+  const followupsQuery = useAllFollowups();
+  // Follow-ups seguem os mesmos filtros dos leads.
+  const followups = useMemo(() => {
+    const ids = new Set(leads.map((l) => l.id));
+    return (followupsQuery.data ?? []).filter((f) => ids.has(f.lead_id));
+  }, [followupsQuery.data, leads]);
+  const followupsLoading = leadsQuery.isPending || followupsQuery.isPending;
+
   return (
     <div className="flex flex-col gap-5">
       <div>
         <h1 className="text-2xl font-extrabold text-pool-deep md:text-3xl">Dashboard</h1>
-        <p className="text-sm text-default-500">Funil de vendas e origem dos leads.</p>
+        <p className="text-sm text-default-500">Funil de vendas, origem dos leads e follow-ups.</p>
       </div>
 
       <LeadFiltersBar filters={filters} onChange={setFilters} cities={cities} showStage={false} />
@@ -53,11 +63,31 @@ export function DashboardPage() {
           </CardBody>
         </Card>
       ) : (
-        <LeadDashboard
-          leads={leads}
-          isLoading={leadsQuery.isPending}
-          filtered={hasActiveFilters(filters)}
-        />
+        <>
+          <LeadDashboard
+            leads={leads}
+            isLoading={leadsQuery.isPending}
+            filtered={hasActiveFilters(filters)}
+          />
+          {followupsQuery.isError ? (
+            <p className="text-sm text-danger">
+              Não foi possível carregar os follow-ups: {describeDbError(followupsQuery.error)}
+            </p>
+          ) : (
+            <div className="grid gap-3 lg:grid-cols-5">
+              <div className="lg:col-span-2">
+                <FollowupSummaryCard followups={followups} isLoading={followupsLoading} />
+              </div>
+              <div className="min-w-0 lg:col-span-3">
+                <FollowupsByStageCard
+                  leads={leads}
+                  followups={followups}
+                  isLoading={followupsLoading}
+                />
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

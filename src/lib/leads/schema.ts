@@ -88,6 +88,7 @@ export type LeadFollowup = {
   lead_id: string;
   done_at: string;
   note: string | null;
+  stage: LeadStage | null; // etapa do lead no momento do follow-up
   created_by: string | null;
   created_at: string;
 };
