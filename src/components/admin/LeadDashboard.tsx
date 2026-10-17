@@ -100,7 +100,9 @@ export function LeadDashboard({
       <Card className="animate-admin-rise gap-4 p-4 sm:p-5 lg:col-span-3">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h2 className="font-display text-lg font-extrabold text-pool-deep">Funil de vendas</h2>
+            <h2 className="font-display text-base font-semibold text-foreground">
+              Funil de vendas
+            </h2>
             <p className="text-xs text-muted">Leads que chegaram a cada etapa</p>
           </div>
           <div className="text-right">
@@ -108,7 +110,7 @@ export function LeadDashboard({
             {isLoading ? (
               <Skeleton className="mt-1 ml-auto h-7 w-14 rounded-md" />
             ) : (
-              <p className="font-display text-2xl font-extrabold text-foreground">
+              <p className="font-display text-2xl font-semibold tracking-tight text-foreground">
                 {total ? (
                   <>
                     <CountUp value={Math.round((closed / total) * 100)} />%
@@ -150,14 +152,14 @@ export function LeadDashboard({
       <div className="grid gap-3 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
         <Card className="animate-admin-rise gap-3 p-4 sm:p-5" style={stagger(1)}>
           <div>
-            <h2 className="text-sm font-bold text-foreground">Novos leads por semana</h2>
+            <h2 className="text-sm font-semibold text-foreground">Novos leads por semana</h2>
             <p className="text-xs text-muted">Últimas {WEEKS} semanas</p>
           </div>
           {isLoading ? <Skeleton className="h-28 rounded-md" /> : <WeeklyBars weeks={weeks} />}
         </Card>
 
         <Card className="animate-admin-rise gap-3 p-4 sm:p-5" style={stagger(2)}>
-          <h2 className="text-sm font-bold text-foreground">Por origem</h2>
+          <h2 className="text-sm font-semibold text-foreground">Por origem</h2>
           {isLoading ? (
             <Skeleton className="h-24 rounded-md" />
           ) : (
@@ -219,7 +221,7 @@ function Funnel({
                   <polygon points={points} fill={row.fill} />
                 </svg>
                 <span
-                  className={`relative grid h-full place-items-center font-display text-lg font-extrabold ${row.ink}`}
+                  className={`relative grid h-full place-items-center font-display text-lg font-semibold ${row.ink}`}
                 >
                   <CountUp value={row.value} />
                 </span>
@@ -233,7 +235,7 @@ function Funnel({
               </Tooltip.Content>
             </Tooltip>
             <div className="animate-admin-rise min-w-0" style={stagger(i)}>
-              <p className="truncate text-sm font-semibold text-foreground">{row.label}</p>
+              <p className="truncate text-sm font-medium text-foreground">{row.label}</p>
               <p className="text-xs text-muted">
                 {pct(row.value, total)} do total
                 {previous !== null && (

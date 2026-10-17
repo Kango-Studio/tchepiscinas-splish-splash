@@ -75,7 +75,7 @@ function LoginForm({ onForgot, forbidden }: { onForgot: () => void; forbidden: b
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
       <div className="text-center">
-        <h1 className="text-xl font-bold text-pool-deep">Painel administrativo</h1>
+        <h1 className="text-xl font-semibold text-pool-deep">Painel administrativo</h1>
         <p className="text-sm text-muted">Entre com sua conta de administrador.</p>
       </div>
 
@@ -183,7 +183,7 @@ function ResetRequestForm({ onBack }: { onBack: () => void }) {
       className="animate-admin-rise flex flex-col gap-4"
     >
       <div className="text-center">
-        <h1 className="text-xl font-bold text-pool-deep">Recuperar senha</h1>
+        <h1 className="text-xl font-semibold text-pool-deep">Recuperar senha</h1>
         <p className="text-sm text-muted">Enviaremos um link para redefinir a senha.</p>
       </div>
       {sent ? (

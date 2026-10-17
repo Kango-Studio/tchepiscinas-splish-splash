@@ -90,7 +90,9 @@ export function LeadsPage({
     >
       <div className="animate-admin-rise flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold text-pool-deep md:text-3xl">Leads</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-pool-deep md:text-3xl">
+            Leads
+          </h1>
           <p className="text-sm text-muted">Acompanhe os contatos do funil de vendas.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

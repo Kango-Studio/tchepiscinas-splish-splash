@@ -67,7 +67,7 @@ export function FollowupTracker({ leadId }: { leadId: string }) {
       className="rounded-2xl border border-border bg-pool-mist/30 p-4"
     >
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h3 id="followups-title" className="text-sm font-bold text-pool-deep">
+        <h3 id="followups-title" className="text-sm font-semibold text-foreground">
           Follow-ups
         </h3>
         {!isLoading && !isError && (
@@ -129,7 +129,7 @@ function DoneCheckpoint({ followup, number }: { followup: LeadFollowup; number: 
         aria-label={`Follow-up ${number}, feito em ${formatDateTime(followup.done_at)}`}
         className="group flex w-12 flex-col items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-focus"
       >
-        <span className="relative flex size-9 items-center justify-center rounded-full bg-pool-deep text-sm font-bold text-white shadow-surface transition-transform duration-200 group-hover:scale-110">
+        <span className="relative flex size-9 items-center justify-center rounded-full bg-pool-deep text-sm font-semibold text-white shadow-surface transition-transform duration-200 group-hover:scale-110">
           {number}
           <span className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white">
             <Check className="size-2.5" />
@@ -142,7 +142,7 @@ function DoneCheckpoint({ followup, number }: { followup: LeadFollowup; number: 
       <Popover.Content placement="bottom" className="w-64">
         <Popover.Arrow />
         <Popover.Dialog className="flex flex-col p-3">
-          <Popover.Heading className="text-sm font-bold text-pool-deep">
+          <Popover.Heading className="text-sm font-semibold text-foreground">
             Follow-up {number}
           </Popover.Heading>
           <p className="text-xs text-muted">{formatDateTime(followup.done_at)}</p>
@@ -217,7 +217,7 @@ function AddCheckpoint({
       <Popover.Content placement="bottom" className="w-72">
         <Popover.Arrow />
         <Popover.Dialog className="flex flex-col gap-3 p-3">
-          <Popover.Heading className="text-sm font-bold text-pool-deep">
+          <Popover.Heading className="text-sm font-semibold text-foreground">
             Registrar follow-up {number}
           </Popover.Heading>
           <TextField fullWidth type="date" value={date} onChange={setDate} isInvalid={!validDate}>

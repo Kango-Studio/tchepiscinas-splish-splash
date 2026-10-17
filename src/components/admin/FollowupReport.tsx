@@ -152,7 +152,7 @@ export function FollowupSummaryCard({
     <Card className="animate-admin-rise gap-4 p-4 sm:p-5" style={stagger(3)}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="font-display text-lg font-extrabold text-pool-deep">Follow-ups</h2>
+          <h2 className="font-display text-base font-semibold text-foreground">Follow-ups</h2>
           <p className="text-xs text-muted">Contatos registrados pela equipe</p>
         </div>
         <Segmented
@@ -224,7 +224,7 @@ function Stat({
       <p className="line-clamp-2 text-xs leading-tight font-medium text-muted first-letter:uppercase">
         {label}
       </p>
-      <p className="font-display text-2xl font-extrabold text-foreground">
+      <p className="font-display text-2xl font-semibold tracking-tight text-foreground">
         <CountUp value={value} />
       </p>
       <div className="text-[11px] text-muted">{hint}</div>
@@ -427,7 +427,7 @@ export function FollowupsByStageCard({
       >
         <div className="flex flex-col gap-2">
           <div>
-            <h2 className="font-display text-lg font-extrabold text-pool-deep">
+            <h2 className="font-display text-base font-semibold text-foreground">
               Follow-ups por etapa
             </h2>
             <p className="text-xs text-muted">
@@ -537,7 +537,7 @@ function FollowupFunnel({
                     <polygon points={points} fill={style.fill} />
                   </svg>
                   <span
-                    className={`relative grid h-full place-items-center font-display text-lg font-extrabold ${style.ink}`}
+                    className={`relative grid h-full place-items-center font-display text-lg font-semibold ${style.ink}`}
                   >
                     <CountUp value={s.followups} />
                   </span>
@@ -553,7 +553,7 @@ function FollowupFunnel({
                 </Tooltip.Content>
               </Tooltip>
               <div className="animate-admin-rise min-w-0" style={stagger(i)}>
-                <p className="truncate text-sm font-semibold text-foreground">
+                <p className="truncate text-sm font-medium text-foreground">
                   {STAGE_LABELS[s.stage]}
                 </p>
                 <p className="text-xs text-muted">
@@ -578,7 +578,7 @@ function LostBox({ lost, total }: { lost: StageStat; total: number }) {
     >
       <div>
         <p className="text-xs font-medium text-muted">Perdidos</p>
-        <p className="font-display text-2xl font-extrabold text-slate-500">
+        <p className="font-display text-2xl font-semibold tracking-tight text-slate-500">
           <CountUp value={lost.followups} />
         </p>
       </div>
@@ -609,7 +609,7 @@ function StageBars({ flow, lost, total }: { flow: StageStat[]; lost: StageStat; 
           />
         </div>
         <span className="w-16 shrink-0 text-right text-xs tabular-nums">
-          <strong className="font-bold text-foreground">{s.followups}</strong>{" "}
+          <strong className="font-semibold text-foreground">{s.followups}</strong>{" "}
           <span className="text-muted">{pct(s.followups, total)}</span>
         </span>
       </div>
@@ -630,7 +630,7 @@ function ConversionList({ flow }: { flow: StageStat[] }) {
   return (
     <div className="flex flex-col gap-2 rounded-xl bg-pool-mist/30 p-3">
       <div>
-        <h3 className="text-sm font-bold text-foreground">Taxa de conversão entre etapas</h3>
+        <h3 className="text-sm font-semibold text-foreground">Taxa de conversão entre etapas</h3>
         <p className="text-[11px] text-muted">
           Dos leads que receberam follow-up na etapa, quantos já avançaram.
         </p>
@@ -646,7 +646,7 @@ function ConversionList({ flow }: { flow: StageStat[] }) {
               {STAGE_LABELS[s.stage]} → {STAGE_LABELS[flow[i + 1].stage]}
             </span>
             <span className="shrink-0 tabular-nums">
-              <strong className="font-bold text-pool-deep">{pct(s.advanced, s.leads)}</strong>{" "}
+              <strong className="font-semibold text-pool-deep">{pct(s.advanced, s.leads)}</strong>{" "}
               <span className="text-muted">
                 ({s.advanced}/{s.leads})
               </span>
@@ -675,7 +675,7 @@ function StageTable({ rows, totals, columns, total }: ReturnType<typeof useStage
                 {label(k)}
               </Table.Column>
             ))}
-            <Table.Column id="total" className="text-center font-bold">
+            <Table.Column id="total" className="text-center font-semibold">
               Total
             </Table.Column>
           </Table.Header>
@@ -694,12 +694,12 @@ function StageTable({ rows, totals, columns, total }: ReturnType<typeof useStage
                     )}
                   </Table.Cell>
                 ))}
-                <Table.Cell className="text-center font-bold text-pool-deep tabular-nums">
+                <Table.Cell className="text-center font-semibold text-pool-deep tabular-nums">
                   {r.counts.total}
                 </Table.Cell>
               </Table.Row>
             ))}
-            <Table.Row id="__totais" className="bg-surface-secondary font-bold">
+            <Table.Row id="__totais" className="bg-surface-secondary font-semibold">
               <Table.Cell className={`${sticky} bg-surface-secondary`}>
                 Total ({rows.length} leads)
               </Table.Cell>

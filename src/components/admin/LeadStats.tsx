@@ -68,7 +68,7 @@ export function LeadStats({
               {isLoading ? (
                 <Skeleton className="mt-1 h-7 w-10 rounded-md" />
               ) : (
-                <p className="font-display text-2xl font-extrabold text-foreground">
+                <p className="font-display text-2xl font-semibold tracking-tight text-foreground">
                   <CountUp value={it.value} />
                 </p>
               )}

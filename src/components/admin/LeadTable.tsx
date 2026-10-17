@@ -101,7 +101,7 @@ export function LeadTable({
               return (
                 <Table.Row id={lead.id} className="cursor-pointer">
                   <Table.Cell>
-                    <span className="font-semibold whitespace-nowrap">{lead.name}</span>
+                    <span className="font-medium whitespace-nowrap">{lead.name}</span>
                   </Table.Cell>
                   <Table.Cell className="whitespace-nowrap">
                     {formatBrazilPhone(lead.whatsapp)}

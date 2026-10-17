@@ -183,7 +183,7 @@ function KanbanColumn({
       } ${isOver ? "scale-[1.01] border-pool ring-2 ring-pool-light/50" : "border-border"}`}
     >
       <header className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
-        <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
+        <h3 className="flex items-center gap-2 text-sm font-medium text-foreground">
           <span className={`size-2.5 rounded-full ${style.dot}`} aria-hidden />
           {STAGE_LABELS[stage]}
         </h3>
@@ -274,7 +274,7 @@ function LeadCardView({
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="truncate font-semibold text-foreground">{lead.name}</p>
+          <p className="truncate font-medium text-foreground">{lead.name}</p>
           <p className="text-sm text-muted">{formatBrazilPhone(lead.whatsapp)}</p>
         </div>
         <div {...stopCardEvents}>

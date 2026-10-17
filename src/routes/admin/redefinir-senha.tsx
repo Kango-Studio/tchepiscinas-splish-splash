@@ -107,7 +107,7 @@ function ResetPasswordPage() {
   return (
     <AuthCard>
       <div className="text-center">
-        <h1 className="text-xl font-bold text-pool-deep">Definir nova senha</h1>
+        <h1 className="text-xl font-semibold text-pool-deep">Definir nova senha</h1>
       </div>
       {linkState === "checking" ? (
         <div className="flex justify-center py-2">

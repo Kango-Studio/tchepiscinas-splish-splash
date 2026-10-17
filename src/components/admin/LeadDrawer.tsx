@@ -321,7 +321,7 @@ function LeadFormPanel({
         {lead ? (
           <>
             <div className="flex flex-wrap items-center gap-2 pr-8">
-              <Drawer.Heading className="text-xl font-bold text-pool-deep">
+              <Drawer.Heading className="text-xl font-semibold text-pool-deep">
                 {lead.name}
               </Drawer.Heading>
               <StageChip stage={lead.stage} />
@@ -343,7 +343,7 @@ function LeadFormPanel({
           </>
         ) : fromPrint ? (
           <>
-            <Drawer.Heading className="pr-8 text-xl font-bold text-pool-deep">
+            <Drawer.Heading className="pr-8 text-xl font-semibold text-pool-deep">
               Novo lead a partir do print
             </Drawer.Heading>
             <div className="flex gap-3">
@@ -369,7 +369,7 @@ function LeadFormPanel({
             </div>
           </>
         ) : (
-          <Drawer.Heading className="pr-8 text-xl font-bold text-pool-deep">
+          <Drawer.Heading className="pr-8 text-xl font-semibold text-pool-deep">
             Novo lead
           </Drawer.Heading>
         )}
