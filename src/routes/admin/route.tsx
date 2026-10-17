@@ -1,5 +1,7 @@
+import { useLayoutEffect } from "react";
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { HeroUIProvider, ToastProvider } from "@heroui/react";
+import { I18nProvider } from "react-aria-components";
+import { Toast } from "@heroui/react";
 import { AdminAuthProvider } from "@/components/admin/auth";
 // Tema HeroUI só no admin (carregado junto com o chunk desta rota).
 import "../../admin.css";
@@ -14,13 +16,26 @@ export const Route = createFileRoute("/admin")({
   component: AdminRoot,
 });
 
+// O tema fica no <html> para alcançar também os overlays (modais, popovers e
+// toasts), que o React Aria renderiza fora da árvore, direto no <body>.
+function useAdminTheme() {
+  useLayoutEffect(() => {
+    const root = document.documentElement;
+    root.dataset.theme = "tche-admin";
+    return () => {
+      delete root.dataset.theme;
+    };
+  }, []);
+}
+
 function AdminRoot() {
+  useAdminTheme();
   return (
-    <HeroUIProvider locale="pt-BR">
-      <ToastProvider placement="top-right" toastOffset={12} />
+    <I18nProvider locale="pt-BR">
+      <Toast.Provider placement="top end" />
       <AdminAuthProvider>
         <Outlet />
       </AdminAuthProvider>
-    </HeroUIProvider>
+    </I18nProvider>
   );
 }

@@ -1,17 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Button, Description, Label, Modal, ProgressBar, Radio, RadioGroup } from "@heroui/react";
 import {
-  Alert,
-  Button,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  Progress,
-  Radio,
-  RadioGroup,
-} from "@heroui/react";
-import { ClipboardPaste, ImageUp, RotateCcw, ScanText } from "lucide-react";
+  ArrowRotateLeft,
+  ArrowUpFromSquare,
+  CopyPicture,
+  SquareDashedText,
+} from "@gravity-ui/icons";
 import { formatBrazilPhone } from "@/lib/leads/phone";
 import { extractFromPrintText, type PrintExtraction } from "@/lib/leads/print-extract";
 import {
@@ -20,6 +14,7 @@ import {
   validatePrintFile,
   type OcrProgress,
 } from "@/lib/leads/print-ocr";
+import { StatusAlert } from "./ui";
 
 export const PRINT_INSTRUCTIONS =
   "Envie um print em que o telefone esteja visível. Confira os dados antes de cadastrar.";
@@ -174,189 +169,207 @@ export function PrintImportModal({
     state.kind === "result" && state.extraction.phones.length > 1 && !selectedPhone;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onOpenChange={(open) => !open && handleClose()}
-      size="2xl"
-      scrollBehavior="inside"
-    >
-      <ModalContent>
-        <ModalHeader className="flex items-center gap-2 text-pool-deep">
-          <ScanText className="size-5" /> Cadastrar por print
-        </ModalHeader>
-        <ModalBody>
-          <p className="text-sm text-default-600">{PRINT_INSTRUCTIONS}</p>
+    <Modal.Backdrop isOpen={isOpen} onOpenChange={(open) => !open && handleClose()} variant="blur">
+      <Modal.Container size="lg" scroll="inside">
+        <Modal.Dialog className="sm:max-w-2xl">
+          <Modal.CloseTrigger aria-label="Fechar" />
+          <Modal.Header>
+            <Modal.Icon className="bg-accent-soft text-accent-soft-foreground">
+              <SquareDashedText className="size-5" />
+            </Modal.Icon>
+            <Modal.Heading>Cadastrar por print</Modal.Heading>
+          </Modal.Header>
+          <Modal.Body className="flex flex-col gap-4">
+            <p className="text-sm text-muted">{PRINT_INSTRUCTIONS}</p>
 
-          {state.kind === "idle" && (
-            <>
-              <div
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  setDragOver(true);
-                }}
-                onDragLeave={() => setDragOver(false)}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setDragOver(false);
-                  const file = e.dataTransfer.files[0];
-                  if (file) void processFile(file);
-                }}
-                className={`flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition ${
-                  dragOver ? "border-pool bg-pool-mist/60" : "border-default-300 bg-default-50"
-                }`}
-              >
-                <ImageUp className="size-9 text-pool" aria-hidden />
-                <div className="flex flex-wrap justify-center gap-2">
-                  <Button color="primary" onPress={() => inputRef.current?.click()}>
-                    Selecionar imagem
-                  </Button>
-                  {canReadClipboard() && (
-                    <Button
-                      variant="flat"
-                      color="primary"
-                      startContent={<ClipboardPaste className="size-4" />}
-                      onPress={pasteFromClipboard}
-                    >
-                      Colar print
-                    </Button>
-                  )}
-                </div>
-                <p className="text-xs text-default-500">
-                  Arraste a imagem aqui ou pressione Ctrl+V. PNG, JPG ou WEBP, até 8 MB.
-                </p>
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept={PRINT_ACCEPTED_TYPES.join(",")}
-                  className="sr-only"
-                  aria-label="Selecionar imagem do print"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    e.target.value = "";
+            {state.kind === "idle" && (
+              <div className="animate-admin-rise flex flex-col gap-3">
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setDragOver(true);
+                  }}
+                  onDragLeave={() => setDragOver(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setDragOver(false);
+                    const file = e.dataTransfer.files[0];
                     if (file) void processFile(file);
                   }}
-                />
+                  className={`flex flex-col items-center gap-3 rounded-2xl border-2 border-dashed px-4 py-8 text-center transition-[background-color,border-color,scale] duration-200 ${
+                    dragOver
+                      ? "scale-[1.01] border-pool bg-pool-mist/60"
+                      : "border-border bg-surface-secondary"
+                  }`}
+                >
+                  <span
+                    className={`grid size-14 place-items-center rounded-2xl bg-surface text-pool shadow-surface transition-transform duration-300 ${
+                      dragOver ? "-translate-y-1 scale-110" : ""
+                    }`}
+                  >
+                    <ArrowUpFromSquare className="size-7" aria-hidden />
+                  </span>
+                  <div className="flex flex-wrap justify-center gap-2">
+                    <Button onPress={() => inputRef.current?.click()}>Selecionar imagem</Button>
+                    {canReadClipboard() && (
+                      <Button variant="secondary" onPress={pasteFromClipboard}>
+                        <CopyPicture className="size-4" />
+                        Colar print
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted">
+                    Arraste a imagem aqui ou pressione Ctrl+V. PNG, JPG ou WEBP, até 8 MB.
+                  </p>
+                  <input
+                    ref={inputRef}
+                    type="file"
+                    accept={PRINT_ACCEPTED_TYPES.join(",")}
+                    className="sr-only"
+                    aria-label="Selecionar imagem do print"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      e.target.value = "";
+                      if (file) void processFile(file);
+                    }}
+                  />
+                </div>
+                {state.error && <StatusAlert status="danger" title={state.error} />}
+                <p className="text-xs text-muted">
+                  A imagem é lida apenas neste navegador e não é armazenada.
+                </p>
               </div>
-              {state.error && <Alert color="danger" title={state.error} />}
-              <p className="text-xs text-default-400">
-                A imagem é lida apenas neste navegador e não é armazenada.
-              </p>
-            </>
-          )}
+            )}
 
-          {state.kind !== "idle" && (
-            <div className="grid gap-4 sm:grid-cols-[180px_1fr]">
-              <img
-                src={state.previewUrl}
-                alt="Prévia do print enviado"
-                className="max-h-72 w-full rounded-xl border border-default-200 bg-default-50 object-contain"
-              />
-              <div className="flex flex-col gap-3">
-                {state.kind === "processing" && (
-                  <Progress
-                    aria-label={progressLabel}
-                    label={progressLabel}
-                    color="primary"
-                    showValueLabel
-                    value={Math.round(state.progress.progress * 100)}
-                    isIndeterminate={state.progress.stage === "loading"}
-                  />
-                )}
+            {state.kind !== "idle" && (
+              <div className="animate-admin-rise grid gap-4 sm:grid-cols-[180px_1fr]">
+                <img
+                  src={state.previewUrl}
+                  alt="Prévia do print enviado"
+                  className="max-h-72 w-full rounded-xl border border-border bg-surface-secondary object-contain"
+                />
+                <div className="flex flex-col gap-3 text-foreground">
+                  {state.kind === "processing" && (
+                    <ProgressBar
+                      aria-label={progressLabel}
+                      value={Math.round(state.progress.progress * 100)}
+                      isIndeterminate={state.progress.stage === "loading"}
+                    >
+                      <Label>{progressLabel}</Label>
+                      <ProgressBar.Output />
+                      <ProgressBar.Track>
+                        <ProgressBar.Fill />
+                      </ProgressBar.Track>
+                    </ProgressBar>
+                  )}
 
-                {state.kind === "error" && (
-                  <>
-                    <Alert color="danger" title="Erro ao processar" description={state.message} />
-                    <div className="flex gap-2">
-                      <Button
-                        color="primary"
-                        variant="flat"
-                        startContent={<RotateCcw className="size-4" />}
-                        onPress={() => processFile(state.file)}
-                      >
-                        Tentar novamente
-                      </Button>
-                      <Button variant="light" onPress={reset}>
-                        Escolher outra imagem
-                      </Button>
-                    </div>
-                  </>
-                )}
-
-                {state.kind === "empty" && (
-                  <Alert
-                    color="warning"
-                    title="Nenhum texto identificado"
-                    description="Não conseguimos ler texto nesta imagem. Tente um print mais nítido ou cadastre manualmente."
-                  />
-                )}
-
-                {state.kind === "result" && (
-                  <>
-                    <div>
-                      <p className="text-xs font-medium text-default-500">Nome do contato</p>
-                      <p className="font-semibold">
-                        {state.extraction.name ?? (
-                          <span className="font-normal text-default-500">
-                            Não identificado — preencha no formulário
-                          </span>
-                        )}
-                      </p>
-                    </div>
-
-                    {state.extraction.phones.length === 0 ? (
-                      <Alert
-                        color="warning"
-                        title="Nenhum telefone identificado"
-                        description="Preencha o WhatsApp manualmente no formulário."
+                  {state.kind === "error" && (
+                    <>
+                      <StatusAlert
+                        status="danger"
+                        title="Erro ao processar"
+                        description={state.message}
                       />
-                    ) : state.extraction.phones.length === 1 ? (
+                      <div className="flex gap-2">
+                        <Button variant="secondary" onPress={() => processFile(state.file)}>
+                          <ArrowRotateLeft className="size-4" />
+                          Tentar novamente
+                        </Button>
+                        <Button variant="ghost" onPress={reset}>
+                          Escolher outra imagem
+                        </Button>
+                      </div>
+                    </>
+                  )}
+
+                  {state.kind === "empty" && (
+                    <StatusAlert
+                      status="warning"
+                      title="Nenhum texto identificado"
+                      description="Não conseguimos ler texto nesta imagem. Tente um print mais nítido ou cadastre manualmente."
+                    />
+                  )}
+
+                  {state.kind === "result" && (
+                    <>
                       <div>
-                        <p className="text-xs font-medium text-default-500">WhatsApp</p>
+                        <p className="text-xs font-medium text-muted">Nome do contato</p>
                         <p className="font-semibold">
-                          {formatBrazilPhone(state.extraction.phones[0].normalized)}
+                          {state.extraction.name ?? (
+                            <span className="font-normal text-muted">
+                              Não identificado — preencha no formulário
+                            </span>
+                          )}
                         </p>
                       </div>
-                    ) : (
-                      <RadioGroup
-                        label={`Encontramos ${state.extraction.phones.length} números. Qual é o do contato?`}
-                        value={selectedPhone}
-                        onValueChange={setSelectedPhone}
-                        classNames={{ label: "text-sm text-default-700" }}
-                      >
-                        {state.extraction.phones.map((p) => (
-                          <Radio
-                            key={p.normalized}
-                            value={p.normalized}
-                            description={`Lido como "${p.raw}"`}
-                          >
-                            {formatBrazilPhone(p.normalized)}
+
+                      {state.extraction.phones.length === 0 ? (
+                        <StatusAlert
+                          status="warning"
+                          title="Nenhum telefone identificado"
+                          description="Preencha o WhatsApp manualmente no formulário."
+                        />
+                      ) : state.extraction.phones.length === 1 ? (
+                        <div>
+                          <p className="text-xs font-medium text-muted">WhatsApp</p>
+                          <p className="font-semibold">
+                            {formatBrazilPhone(state.extraction.phones[0].normalized)}
+                          </p>
+                        </div>
+                      ) : (
+                        <RadioGroup
+                          variant="secondary"
+                          value={selectedPhone}
+                          onChange={setSelectedPhone}
+                        >
+                          <Label>
+                            Encontramos {state.extraction.phones.length} números. Qual é o do
+                            contato?
+                          </Label>
+                          {state.extraction.phones.map((p) => (
+                            <Radio key={p.normalized} value={p.normalized}>
+                              <Radio.Content>
+                                <Radio.Control>
+                                  <Radio.Indicator />
+                                </Radio.Control>
+                                {formatBrazilPhone(p.normalized)}
+                              </Radio.Content>
+                              <Description>Lido como "{p.raw}"</Description>
+                            </Radio>
+                          ))}
+                          <Radio value={NONE}>
+                            <Radio.Content>
+                              <Radio.Control>
+                                <Radio.Indicator />
+                              </Radio.Control>
+                              Nenhum destes (preencher manualmente)
+                            </Radio.Content>
                           </Radio>
-                        ))}
-                        <Radio value={NONE}>Nenhum destes (preencher manualmente)</Radio>
-                      </RadioGroup>
-                    )}
-                  </>
-                )}
+                        </RadioGroup>
+                      )}
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
-        </ModalBody>
-        <ModalFooter>
-          {state.kind !== "idle" && state.kind !== "processing" && (
-            <Button variant="light" onPress={reset} className="mr-auto">
-              Outro print
+            )}
+          </Modal.Body>
+          <Modal.Footer>
+            {state.kind !== "idle" && state.kind !== "processing" && (
+              <Button variant="ghost" onPress={reset} className="mr-auto">
+                Outro print
+              </Button>
+            )}
+            <Button variant="tertiary" onPress={handleClose}>
+              Cancelar
             </Button>
-          )}
-          <Button variant="flat" onPress={handleClose}>
-            Cancelar
-          </Button>
-          {(state.kind === "result" || state.kind === "empty") && (
-            <Button color="primary" onPress={continueToForm} isDisabled={needsChoice}>
-              Continuar para o cadastro
-            </Button>
-          )}
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+            {(state.kind === "result" || state.kind === "empty") && (
+              <Button onPress={continueToForm} isDisabled={needsChoice}>
+                Continuar para o cadastro
+              </Button>
+            )}
+          </Modal.Footer>
+        </Modal.Dialog>
+      </Modal.Container>
+    </Modal.Backdrop>
   );
 }

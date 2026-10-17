@@ -3,8 +3,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Alert, Button, Input, Link, Spinner } from "@heroui/react";
+import { Button, FieldError, Input, Label, Link, Spinner, TextField } from "@heroui/react";
 import { AuthCard, NotConfiguredNotice } from "@/components/admin/AdminStatusScreen";
+import { PendingLabel, StatusAlert } from "@/components/admin/ui";
 import { getSupabase, isSupabaseConfigured } from "@/lib/supabase/client";
 
 export const Route = createFileRoute("/admin/redefinir-senha")({
@@ -80,75 +81,64 @@ function ResetPasswordPage() {
     );
   }
 
+  const passwordField = (name: "password" | "confirm", label: string) => (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <TextField
+          fullWidth
+          type="password"
+          autoComplete="new-password"
+          name={field.name}
+          value={field.value}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          isInvalid={!!errors[name]}
+        >
+          <Label>{label}</Label>
+          <Input />
+          <FieldError>{errors[name]?.message}</FieldError>
+        </TextField>
+      )}
+    />
+  );
+
   return (
     <AuthCard>
       <div className="text-center">
         <h1 className="text-xl font-bold text-pool-deep">Definir nova senha</h1>
       </div>
       {linkState === "checking" ? (
-        <Spinner color="primary" className="mx-auto" />
+        <div className="flex justify-center py-2">
+          <Spinner aria-label="Verificando link" />
+        </div>
       ) : linkState === "invalid" ? (
         <>
-          <Alert
-            color="warning"
+          <StatusAlert
+            status="warning"
             title="Link inválido ou expirado"
             description="Solicite um novo link de recuperação na tela de login."
           />
-          <Link href="/admin/login" className="self-center" size="sm">
+          <Link href="/admin/login" className="self-center text-sm">
             Ir para o login
           </Link>
         </>
       ) : done ? (
-        <Alert
-          color="success"
+        <StatusAlert
+          status="success"
           title="Senha atualizada!"
           description="Redirecionando para o painel..."
         />
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
-          {error && <Alert color="danger" title={error} />}
-          <Controller
-            control={control}
-            name="password"
-            render={({ field }) => (
-              <Input
-                label="Nova senha"
-                type="password"
-                autoComplete="new-password"
-                variant="bordered"
-                value={field.value}
-                onValueChange={field.onChange}
-                onBlur={field.onBlur}
-                isInvalid={!!errors.password}
-                errorMessage={errors.password?.message}
-              />
+          {error && <StatusAlert status="danger" title={error} />}
+          {passwordField("password", "Nova senha")}
+          {passwordField("confirm", "Confirmar nova senha")}
+          <Button type="submit" size="lg" fullWidth isPending={isSubmitting}>
+            {({ isPending }) => (
+              <PendingLabel isPending={isPending}>Salvar nova senha</PendingLabel>
             )}
-          />
-          <Controller
-            control={control}
-            name="confirm"
-            render={({ field }) => (
-              <Input
-                label="Confirmar nova senha"
-                type="password"
-                autoComplete="new-password"
-                variant="bordered"
-                value={field.value}
-                onValueChange={field.onChange}
-                onBlur={field.onBlur}
-                isInvalid={!!errors.confirm}
-                errorMessage={errors.confirm?.message}
-              />
-            )}
-          />
-          <Button
-            type="submit"
-            color="primary"
-            size="lg"
-            isLoading={isSubmitting}
-            className="font-semibold"
-          >
-            Salvar nova senha
           </Button>
         </form>
       )}

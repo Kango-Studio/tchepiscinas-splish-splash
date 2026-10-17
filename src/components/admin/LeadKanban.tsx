@@ -11,8 +11,8 @@ import {
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
-import { Chip, Select, SelectItem } from "@heroui/react";
-import { CalendarClock, AlertTriangle, MapPin } from "lucide-react";
+import { Chip, ListBox, Select } from "@heroui/react";
+import { Calendar, MapPin, TriangleExclamation } from "@gravity-ui/icons";
 import { formatBrazilPhone } from "@/lib/leads/phone";
 import {
   INTEREST_LABELS,
@@ -178,28 +178,27 @@ function KanbanColumn({
       ref={setNodeRef}
       role="listitem"
       aria-label={`${STAGE_LABELS[stage]}: ${leads.length} leads`}
-      className={`flex w-[82vw] max-w-[320px] shrink-0 snap-center flex-col rounded-2xl border transition-colors sm:w-[290px] xl:w-auto xl:min-w-[250px] xl:max-w-none xl:flex-1 ${
+      className={`flex w-[82vw] max-w-[320px] shrink-0 snap-center flex-col rounded-2xl border transition-[background-color,border-color,scale] duration-200 sm:w-[290px] xl:w-auto xl:min-w-[250px] xl:max-w-none xl:flex-1 ${
         style.column
-      } ${isOver ? "border-pool ring-2 ring-pool-light/50" : "border-default-200"}`}
+      } ${isOver ? "scale-[1.01] border-pool ring-2 ring-pool-light/50" : "border-border"}`}
     >
       <header className="flex items-center justify-between gap-2 px-3 pt-3 pb-2">
         <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
           <span className={`size-2.5 rounded-full ${style.dot}`} aria-hidden />
           {STAGE_LABELS[stage]}
         </h3>
-        <Chip size="sm" variant="flat" classNames={{ base: "bg-white", content: "font-semibold" }}>
+        <Chip size="sm" variant="secondary" className="bg-surface font-semibold tabular-nums">
           {leads.length}
         </Chip>
       </header>
       <div className="flex min-h-32 flex-1 flex-col gap-2.5 p-2 pt-1">
         {leads.length === 0 ? (
-          <p className="m-auto py-6 text-center text-xs text-default-400">
-            Nenhum lead nesta etapa
-          </p>
+          <p className="m-auto py-6 text-center text-xs text-muted">Nenhum lead nesta etapa</p>
         ) : (
-          leads.map((lead) => (
+          leads.map((lead, i) => (
             <DraggableLeadCard
               key={lead.id}
+              index={i}
               lead={lead}
               today={today}
               dimmed={activeId === lead.id}
@@ -215,12 +214,14 @@ function KanbanColumn({
 
 const DraggableLeadCard = memo(function DraggableLeadCard({
   lead,
+  index,
   today,
   dimmed,
   onOpen,
   onMove,
 }: {
   lead: Lead;
+  index: number;
   today: string;
   dimmed: boolean;
   onOpen: (id: string) => void;
@@ -241,7 +242,8 @@ const DraggableLeadCard = memo(function DraggableLeadCard({
           onOpen(lead.id);
         }
       }}
-      className={`cursor-grab rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-pool active:cursor-grabbing ${
+      style={{ "--i": Math.min(index, 8) } as React.CSSProperties}
+      className={`animate-admin-rise cursor-grab rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-focus active:cursor-grabbing ${
         dimmed ? "opacity-40" : ""
       }`}
     >
@@ -266,14 +268,14 @@ function LeadCardView({
 
   return (
     <article
-      className={`rounded-xl border bg-white p-3 shadow-sm transition-shadow hover:shadow-md ${
-        overdue ? "border-danger-300" : "border-default-200"
-      } ${overlay ? "rotate-2 cursor-grabbing shadow-xl" : ""}`}
+      className={`rounded-xl border bg-surface p-3 shadow-surface transition-[translate,box-shadow,border-color] duration-200 hover:-translate-y-0.5 hover:shadow-overlay ${
+        overdue ? "border-danger/40" : "border-border"
+      } ${overlay ? "rotate-2 scale-[1.03] cursor-grabbing shadow-overlay" : ""}`}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="truncate font-semibold text-foreground">{lead.name}</p>
-          <p className="text-sm text-default-500">{formatBrazilPhone(lead.whatsapp)}</p>
+          <p className="text-sm text-muted">{formatBrazilPhone(lead.whatsapp)}</p>
         </div>
         <div {...stopCardEvents}>
           <LeadWhatsAppButton lead={lead} />
@@ -282,7 +284,7 @@ function LeadCardView({
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
         {lead.city && (
-          <span className="inline-flex items-center gap-1 text-default-600">
+          <span className="inline-flex items-center gap-1 text-muted">
             <MapPin className="size-3.5" aria-hidden />
             {lead.city}
           </span>
@@ -302,16 +304,16 @@ function LeadCardView({
         <p
           className={`mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium ${
             overdue
-              ? "bg-danger-50 text-danger-600"
+              ? "bg-danger-soft text-danger-soft-foreground"
               : dueToday
-                ? "bg-warning-50 text-warning-700"
-                : "text-default-600"
+                ? "bg-warning-soft text-warning-soft-foreground"
+                : "text-muted"
           }`}
         >
           {overdue ? (
-            <AlertTriangle className="size-3.5" aria-hidden />
+            <TriangleExclamation className="size-3.5" aria-hidden />
           ) : (
-            <CalendarClock className="size-3.5" aria-hidden />
+            <Calendar className="size-3.5" aria-hidden />
           )}
           {overdue ? "Atrasado: " : dueToday ? "Hoje: " : "Próximo contato: "}
           {formatDate(lead.next_contact_date)}
@@ -322,19 +324,32 @@ function LeadCardView({
         <div className="mt-2.5" {...stopCardEvents}>
           <Select
             aria-label={`Etapa de ${lead.name}`}
-            size="sm"
-            variant="flat"
-            disallowEmptySelection
-            selectedKeys={[lead.stage]}
-            onSelectionChange={(keys) => {
-              const next = Array.from(keys)[0] as LeadStage | undefined;
+            variant="secondary"
+            fullWidth
+            value={lead.stage}
+            onChange={(key) => {
+              const next = key as LeadStage | null;
               if (next && next !== lead.stage) onMove(lead, next);
             }}
-            classNames={{ trigger: "min-h-8 h-8 bg-default-100", value: "text-xs" }}
           >
-            {LEAD_STAGES.map((s) => (
-              <SelectItem key={s}>{STAGE_LABELS[s]}</SelectItem>
-            ))}
+            <Select.Trigger className="h-8 min-h-8 text-xs">
+              <Select.Value />
+              <Select.Indicator />
+            </Select.Trigger>
+            <Select.Popover>
+              <ListBox>
+                {LEAD_STAGES.map((s) => (
+                  <ListBox.Item key={s} id={s} textValue={STAGE_LABELS[s]}>
+                    <span
+                      className={`size-2 shrink-0 rounded-full ${STAGE_STYLES[s].dot}`}
+                      aria-hidden
+                    />
+                    {STAGE_LABELS[s]}
+                    <ListBox.ItemIndicator />
+                  </ListBox.Item>
+                ))}
+              </ListBox>
+            </Select.Popover>
           </Select>
         </div>
       )}

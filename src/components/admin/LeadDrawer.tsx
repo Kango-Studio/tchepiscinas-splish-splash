@@ -1,26 +1,23 @@
 import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Alert,
+  AlertDialog,
   Button,
   Checkbox,
+  CloseButton,
   Drawer,
-  DrawerBody,
-  DrawerContent,
-  DrawerFooter,
-  DrawerHeader,
+  FieldError,
   Input,
-  Modal,
-  ModalBody,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
+  InputGroup,
+  Label,
+  ListBox,
   Select,
-  SelectItem,
-  Textarea,
+  TextArea,
+  TextField,
 } from "@heroui/react";
-import { Trash2 } from "lucide-react";
+import { TrashBin } from "@gravity-ui/icons";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatBrazilPhone, maskBrazilPhoneInput, normalizeBrazilPhone } from "@/lib/leads/phone";
 import {
@@ -45,7 +42,14 @@ import {
   useDeleteLead,
   useUpdateLead,
 } from "./leads-api";
-import { LeadWhatsAppButton, StageChip, formatDate, formatDateTime } from "./ui";
+import {
+  LeadWhatsAppButton,
+  PendingLabel,
+  StageChip,
+  StatusAlert,
+  formatDate,
+  formatDateTime,
+} from "./ui";
 import { isOverdue } from "./filters";
 import { PRINT_INSTRUCTIONS, type PrintPrefill } from "./PrintImportModal";
 import { FollowupTracker } from "./FollowupCheckpoints";
@@ -97,18 +101,18 @@ export function LeadDrawer({
     state.mode === "edit"
       ? `edit-${state.leadId}`
       : `${state.mode}-${fromPrint?.previewUrl ?? "manual"}`;
+  const placement = isMobile ? "bottom" : "right";
 
   return (
-    <Drawer
-      isOpen={isOpen}
-      onOpenChange={(open) => !open && onClose()}
-      placement={isMobile ? "bottom" : "right"}
-      size={isMobile ? "full" : "xl"}
-      scrollBehavior="inside"
-    >
-      <DrawerContent>
-        {() =>
-          isOpen ? (
+    <Drawer.Backdrop isOpen={isOpen} onOpenChange={(open) => !open && onClose()} variant="blur">
+      <Drawer.Content placement={placement}>
+        <Drawer.Dialog
+          aria-label={lead ? `Lead ${lead.name}` : "Novo lead"}
+          className={isMobile ? "max-h-[92dvh]" : "sm:w-xl"}
+        >
+          {isMobile && <Drawer.Handle />}
+          <Drawer.CloseTrigger aria-label="Fechar" />
+          {isOpen && (
             <LeadFormPanel
               key={formKey}
               lead={lead}
@@ -116,10 +120,102 @@ export function LeadDrawer({
               onClose={onClose}
               onOpenLead={onOpenLead}
             />
-          ) : null
-        }
-      </DrawerContent>
-    </Drawer>
+          )}
+        </Drawer.Dialog>
+      </Drawer.Content>
+    </Drawer.Backdrop>
+  );
+}
+
+type TextName = "name" | "email" | "city" | "neighborhood";
+type SelectName = "client_type" | "interest" | "source" | "stage";
+
+function FormTextField({
+  control,
+  name,
+  label,
+  isRequired,
+  type,
+  placeholder,
+}: {
+  control: Control<LeadFormInput, unknown, LeadFormValues>;
+  name: TextName;
+  label: string;
+  isRequired?: boolean;
+  type?: string;
+  placeholder?: string;
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <TextField
+          fullWidth
+          isRequired={isRequired}
+          type={type}
+          autoComplete="off"
+          name={field.name}
+          value={field.value ?? ""}
+          onChange={field.onChange}
+          onBlur={field.onBlur}
+          isInvalid={!!fieldState.error}
+        >
+          <Label>{label}</Label>
+          <Input variant="secondary" placeholder={placeholder} />
+          <FieldError>{fieldState.error?.message}</FieldError>
+        </TextField>
+      )}
+    />
+  );
+}
+
+function FormSelect({
+  control,
+  name,
+  label,
+  options,
+  labels,
+}: {
+  control: Control<LeadFormInput, unknown, LeadFormValues>;
+  name: SelectName;
+  label: string;
+  options: readonly string[];
+  labels: Record<string, string>;
+}) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Select
+          fullWidth
+          variant="secondary"
+          name={field.name}
+          value={field.value as string}
+          onChange={(key) => key && field.onChange(key)}
+          onBlur={field.onBlur}
+          isInvalid={!!fieldState.error}
+        >
+          <Label>{label}</Label>
+          <Select.Trigger>
+            <Select.Value />
+            <Select.Indicator />
+          </Select.Trigger>
+          <Select.Popover>
+            <ListBox>
+              {options.map((o) => (
+                <ListBox.Item key={o} id={o} textValue={labels[o]}>
+                  {labels[o]}
+                  <ListBox.ItemIndicator />
+                </ListBox.Item>
+              ))}
+            </ListBox>
+          </Select.Popover>
+          <FieldError>{fieldState.error?.message}</FieldError>
+        </Select>
+      )}
+    />
   );
 }
 
@@ -151,7 +247,7 @@ function LeadFormPanel({
     reset,
     getValues,
     setValue,
-    formState: { errors, isDirty, isSubmitting },
+    formState: { isDirty, isSubmitting },
   } = useForm<LeadFormInput, unknown, LeadFormValues>({
     resolver: zodResolver(leadFormSchema),
     defaultValues: toFormInput(lead, fromPrint),
@@ -217,121 +313,69 @@ function LeadFormPanel({
     }
   };
 
-  const textField = (
-    name: "name" | "email" | "city" | "neighborhood",
-    label: string,
-    extra: Partial<React.ComponentProps<typeof Input>> = {},
-  ) => (
-    <Controller
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <Input
-          placeholder=" "
-          {...extra}
-          label={label}
-          labelPlacement="outside"
-          variant="bordered"
-          value={field.value ?? ""}
-          onValueChange={field.onChange}
-          onBlur={field.onBlur}
-          name={field.name}
-          isInvalid={!!errors[name]}
-          errorMessage={errors[name]?.message}
-        />
-      )}
-    />
-  );
-
-  const selectField = <K extends "client_type" | "interest" | "source" | "stage">(
-    name: K,
-    label: string,
-    options: readonly string[],
-    labels: Record<string, string>,
-  ) => (
-    <Controller
-      control={control}
-      name={name}
-      render={({ field }) => (
-        <Select
-          label={label}
-          labelPlacement="outside"
-          variant="bordered"
-          disallowEmptySelection
-          selectedKeys={[field.value as string]}
-          onSelectionChange={(keys) => {
-            const v = Array.from(keys)[0];
-            if (v) field.onChange(v);
-          }}
-          onBlur={field.onBlur}
-          isInvalid={!!errors[name]}
-          errorMessage={errors[name]?.message as string | undefined}
-        >
-          {options.map((o) => (
-            <SelectItem key={o}>{labels[o]}</SelectItem>
-          ))}
-        </Select>
-      )}
-    />
-  );
-
   const busy = isSubmitting || createLead.isPending || updateLead.isPending;
 
   return (
     <>
-      <DrawerHeader className="flex flex-col gap-2 border-b border-default-100">
+      <Drawer.Header className="border-b border-separator pb-4">
         {lead ? (
           <>
             <div className="flex flex-wrap items-center gap-2 pr-8">
-              <h2 className="text-xl font-bold text-pool-deep">{lead.name}</h2>
+              <Drawer.Heading className="text-xl font-bold text-pool-deep">
+                {lead.name}
+              </Drawer.Heading>
               <StageChip stage={lead.stage} />
               {isOverdue(lead) && (
-                <span className="rounded-full bg-danger-50 px-2 py-0.5 text-xs font-semibold text-danger">
+                <span className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-semibold text-danger-soft-foreground">
                   Contato atrasado
                 </span>
               )}
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-normal text-default-500">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
               <span>Origem: {SOURCE_LABELS[lead.source]}</span>
               <span>Criado em {formatDateTime(lead.created_at)}</span>
               <span>Atualizado em {formatDateTime(lead.updated_at)}</span>
             </div>
             <div className="flex items-center gap-2">
               <LeadWhatsAppButton lead={lead} withLabel />
-              <span className="text-sm text-default-600">{formatBrazilPhone(lead.whatsapp)}</span>
+              <span className="text-sm text-muted">{formatBrazilPhone(lead.whatsapp)}</span>
             </div>
           </>
         ) : fromPrint ? (
           <>
-            <h2 className="text-xl font-bold text-pool-deep">Novo lead a partir do print</h2>
+            <Drawer.Heading className="pr-8 text-xl font-bold text-pool-deep">
+              Novo lead a partir do print
+            </Drawer.Heading>
             <div className="flex gap-3">
               <a
                 href={fromPrint.previewUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="shrink-0"
+                className="shrink-0 transition-transform duration-200 hover:scale-105"
                 aria-label="Abrir print em tamanho real"
               >
                 <img
                   src={fromPrint.previewUrl}
                   alt="Prévia do print"
-                  className="h-28 w-20 rounded-lg border border-default-200 bg-default-50 object-cover object-top"
+                  className="h-28 w-20 rounded-lg border border-border bg-surface-secondary object-cover object-top"
                 />
               </a>
-              <p className="text-sm font-normal text-default-600">
+              <p className="text-sm text-muted">
                 {PRINT_INSTRUCTIONS}
-                <span className="mt-1 block text-xs text-default-400">
+                <span className="mt-1 block text-xs">
                   Campos não identificados ficaram em branco.
                 </span>
               </p>
             </div>
           </>
         ) : (
-          <h2 className="text-xl font-bold text-pool-deep">Novo lead</h2>
+          <Drawer.Heading className="pr-8 text-xl font-bold text-pool-deep">
+            Novo lead
+          </Drawer.Heading>
         )}
-      </DrawerHeader>
+      </Drawer.Header>
 
-      <DrawerBody className="py-5">
+      <Drawer.Body className="flex flex-col gap-5 py-5 text-foreground">
         {/* Salva na hora, independente do botão "Salvar alterações". */}
         {lead && <FollowupTracker leadId={lead.id} />}
         <form
@@ -340,40 +384,41 @@ function LeadFormPanel({
           noValidate
           className="flex flex-col gap-5"
         >
-          <section className="grid gap-5 sm:grid-cols-2">
-            {textField("name", "Nome", { isRequired: true, autoComplete: "off" })}
+          <section className="grid gap-4 sm:grid-cols-2">
+            <FormTextField control={control} name="name" label="Nome" isRequired />
             <Controller
               control={control}
               name="whatsapp"
-              render={({ field }) => (
-                <Input
-                  label="WhatsApp"
-                  labelPlacement="outside"
-                  variant="bordered"
+              render={({ field, fieldState }) => (
+                <TextField
+                  fullWidth
+                  isRequired
                   type="tel"
                   inputMode="tel"
-                  placeholder="(51) 99999-9999"
-                  isRequired
+                  name={field.name}
                   value={field.value}
-                  onValueChange={(v) => field.onChange(maskBrazilPhoneInput(v))}
+                  onChange={(v) => field.onChange(maskBrazilPhoneInput(v))}
                   onBlur={() => {
                     field.onBlur();
                     void checkDuplicates(getValues("whatsapp"));
                   }}
-                  isInvalid={!!errors.whatsapp}
-                  errorMessage={errors.whatsapp?.message}
-                />
+                  isInvalid={!!fieldState.error}
+                >
+                  <Label>WhatsApp</Label>
+                  <Input variant="secondary" placeholder="(51) 99999-9999" />
+                  <FieldError>{fieldState.error?.message}</FieldError>
+                </TextField>
               )}
             />
           </section>
 
           {duplicates.length > 0 && (
-            <Alert
-              color="warning"
-              title="Já existe lead com este WhatsApp"
-              description={
-                <div className="mt-1 flex flex-col gap-2">
-                  <ul className="text-sm">
+            <Alert status="warning" className="animate-admin-rise">
+              <Alert.Indicator />
+              <Alert.Content>
+                <Alert.Title>Já existe lead com este WhatsApp</Alert.Title>
+                <Alert.Description>
+                  <ul className="mt-1 flex flex-col gap-1 text-sm">
                     {duplicates.map((d) => (
                       <li key={d.id} className="flex flex-wrap items-center gap-2">
                         <strong>{d.name}</strong>
@@ -381,165 +426,212 @@ function LeadFormPanel({
                           · {STAGE_LABELS[d.stage as LeadStage]} · criado em{" "}
                           {formatDate(d.created_at)}
                         </span>
-                        <Button
-                          size="sm"
-                          variant="light"
-                          color="primary"
-                          onPress={() => onOpenLead(d.id)}
-                        >
+                        <Button size="sm" variant="ghost" onPress={() => onOpenLead(d.id)}>
                           Abrir
                         </Button>
                       </li>
                     ))}
                   </ul>
                   {!duplicateConfirmed ? (
-                    <div>
-                      <Button
-                        size="sm"
-                        color="warning"
-                        variant="flat"
-                        onPress={() => setDuplicateConfirmed(true)}
-                      >
-                        Entendi, salvar mesmo assim
-                      </Button>
-                    </div>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="mt-2"
+                      onPress={() => setDuplicateConfirmed(true)}
+                    >
+                      Entendi, salvar mesmo assim
+                    </Button>
                   ) : (
-                    <span className="text-xs">Confirmado. Clique em salvar para continuar.</span>
+                    <span className="mt-2 block text-xs">
+                      Confirmado. Clique em salvar para continuar.
+                    </span>
                   )}
-                </div>
-              }
-            />
+                </Alert.Description>
+              </Alert.Content>
+            </Alert>
           )}
 
-          <section className="grid gap-5 sm:grid-cols-2">
-            {textField("email", "E-mail", { type: "email", placeholder: "opcional" })}
+          <section className="grid gap-4 sm:grid-cols-2">
+            <FormTextField
+              control={control}
+              name="email"
+              label="E-mail"
+              type="email"
+              placeholder="opcional"
+            />
             <Controller
               control={control}
               name="next_contact_date"
-              render={({ field }) => (
-                <Input
-                  label="Próximo contato"
-                  labelPlacement="outside"
-                  variant="bordered"
+              render={({ field, fieldState }) => (
+                <TextField
+                  fullWidth
                   type="date"
+                  name={field.name}
                   value={field.value ?? ""}
-                  onValueChange={field.onChange}
+                  onChange={field.onChange}
                   onBlur={field.onBlur}
-                  isClearable
-                  onClear={() => setValue("next_contact_date", "", { shouldDirty: true })}
-                  isInvalid={!!errors.next_contact_date}
-                  errorMessage={errors.next_contact_date?.message}
-                />
+                  isInvalid={!!fieldState.error}
+                >
+                  <Label>Próximo contato</Label>
+                  <InputGroup variant="secondary">
+                    <InputGroup.Input />
+                    {field.value && (
+                      <InputGroup.Suffix>
+                        <CloseButton
+                          aria-label="Limpar data"
+                          onPress={() => setValue("next_contact_date", "", { shouldDirty: true })}
+                        />
+                      </InputGroup.Suffix>
+                    )}
+                  </InputGroup>
+                  <FieldError>{fieldState.error?.message}</FieldError>
+                </TextField>
               )}
             />
-            {textField("city", "Cidade", { placeholder: "Ex.: Porto Alegre" })}
-            {textField("neighborhood", "Bairro")}
+            <FormTextField
+              control={control}
+              name="city"
+              label="Cidade"
+              placeholder="Ex.: Porto Alegre"
+            />
+            <FormTextField control={control} name="neighborhood" label="Bairro" />
           </section>
 
-          <section className="grid gap-5 sm:grid-cols-2">
-            {selectField("stage", "Etapa", LEAD_STAGES, STAGE_LABELS)}
-            {selectField("interest", "Interesse", LEAD_INTERESTS, INTEREST_LABELS)}
-            {selectField("client_type", "Tipo de cliente", CLIENT_TYPES, CLIENT_TYPE_LABELS)}
-            {selectField("source", "Origem", LEAD_SOURCES, SOURCE_LABELS)}
+          <section className="grid gap-4 sm:grid-cols-2">
+            <FormSelect
+              control={control}
+              name="stage"
+              label="Etapa"
+              options={LEAD_STAGES}
+              labels={STAGE_LABELS}
+            />
+            <FormSelect
+              control={control}
+              name="interest"
+              label="Interesse"
+              options={LEAD_INTERESTS}
+              labels={INTEREST_LABELS}
+            />
+            <FormSelect
+              control={control}
+              name="client_type"
+              label="Tipo de cliente"
+              options={CLIENT_TYPES}
+              labels={CLIENT_TYPE_LABELS}
+            />
+            <FormSelect
+              control={control}
+              name="source"
+              label="Origem"
+              options={LEAD_SOURCES}
+              labels={SOURCE_LABELS}
+            />
           </section>
 
-          <Controller
-            control={control}
-            name="initial_message"
-            render={({ field }) => (
-              <Textarea
-                label="Mensagem inicial"
-                labelPlacement="outside"
-                variant="bordered"
-                minRows={2}
-                value={field.value ?? ""}
-                onValueChange={field.onChange}
-                onBlur={field.onBlur}
-                isInvalid={!!errors.initial_message}
-                errorMessage={errors.initial_message?.message}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="internal_notes"
-            render={({ field }) => (
-              <Textarea
-                label="Observações internas"
-                labelPlacement="outside"
-                variant="bordered"
-                placeholder="Visível apenas para a equipe"
-                minRows={3}
-                value={field.value ?? ""}
-                onValueChange={field.onChange}
-                onBlur={field.onBlur}
-                isInvalid={!!errors.internal_notes}
-                errorMessage={errors.internal_notes?.message}
-              />
-            )}
-          />
+          {(
+            [
+              { name: "initial_message", label: "Mensagem inicial", rows: 2 },
+              {
+                name: "internal_notes",
+                label: "Observações internas",
+                rows: 3,
+                placeholder: "Visível apenas para a equipe",
+              },
+            ] as const
+          ).map((t) => (
+            <Controller
+              key={t.name}
+              control={control}
+              name={t.name}
+              render={({ field, fieldState }) => (
+                <TextField
+                  fullWidth
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  onBlur={field.onBlur}
+                  isInvalid={!!fieldState.error}
+                >
+                  <Label>{t.label}</Label>
+                  <TextArea
+                    variant="secondary"
+                    rows={t.rows}
+                    placeholder={"placeholder" in t ? t.placeholder : undefined}
+                  />
+                  <FieldError>{fieldState.error?.message}</FieldError>
+                </TextField>
+              )}
+            />
+          ))}
 
           {submitError && (
-            <Alert color="danger" title="Não foi possível salvar" description={submitError} />
+            <StatusAlert
+              status="danger"
+              title="Não foi possível salvar"
+              description={submitError}
+            />
           )}
         </form>
-      </DrawerBody>
+      </Drawer.Body>
 
-      <DrawerFooter className="flex-wrap border-t border-default-100">
+      <Drawer.Footer className="flex-wrap border-t border-separator pt-4">
         {fromPrint && (
-          <Checkbox
-            isSelected={printChecked}
-            onValueChange={setPrintChecked}
-            size="sm"
-            className="mr-auto"
-          >
-            Conferi os dados com o print
+          <Checkbox isSelected={printChecked} onChange={setPrintChecked} className="mr-auto">
+            <Checkbox.Content>
+              <Checkbox.Control>
+                <Checkbox.Indicator />
+              </Checkbox.Control>
+              Conferi os dados com o print
+            </Checkbox.Content>
           </Checkbox>
         )}
         {isEdit && (
-          <Button
-            color="danger"
-            variant="light"
-            startContent={<Trash2 className="size-4" />}
-            onPress={() => setConfirmDelete(true)}
-            className="mr-auto"
-          >
+          <Button variant="danger-soft" onPress={() => setConfirmDelete(true)} className="mr-auto">
+            <TrashBin className="size-4" />
             Excluir
           </Button>
         )}
-        <Button variant="flat" onPress={onClose}>
+        <Button variant="tertiary" onPress={onClose}>
           {isEdit ? "Fechar" : "Cancelar"}
         </Button>
         <Button
-          color="primary"
           type="submit"
           form="lead-form"
-          isLoading={busy}
+          isPending={busy}
           isDisabled={(isEdit && !isDirty && !duplicateConfirmed) || (!!fromPrint && !printChecked)}
         >
-          {isEdit ? "Salvar alterações" : "Cadastrar lead"}
+          {({ isPending }) => (
+            <PendingLabel isPending={isPending}>
+              {isEdit ? "Salvar alterações" : "Cadastrar lead"}
+            </PendingLabel>
+          )}
         </Button>
-      </DrawerFooter>
+      </Drawer.Footer>
 
-      <Modal isOpen={confirmDelete} onOpenChange={setConfirmDelete} placement="center" size="sm">
-        <ModalContent>
-          <ModalHeader>Excluir lead?</ModalHeader>
-          <ModalBody>
-            <p className="text-sm text-default-600">
-              O lead <strong>{lead?.name}</strong> será removido permanentemente. Esta ação não pode
-              ser desfeita.
-            </p>
-          </ModalBody>
-          <ModalFooter>
-            <Button variant="flat" onPress={() => setConfirmDelete(false)}>
-              Cancelar
-            </Button>
-            <Button color="danger" onPress={onDelete} isLoading={deleteLead.isPending}>
-              Excluir
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+      <AlertDialog.Backdrop isOpen={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-100">
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="danger" />
+              <AlertDialog.Heading>Excluir lead?</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Body>
+              <p>
+                O lead <strong>{lead?.name}</strong> será removido permanentemente. Esta ação não
+                pode ser desfeita.
+              </p>
+            </AlertDialog.Body>
+            <AlertDialog.Footer>
+              <Button slot="close" variant="tertiary">
+                Cancelar
+              </Button>
+              <Button variant="danger" onPress={onDelete} isPending={deleteLead.isPending}>
+                {({ isPending }) => <PendingLabel isPending={isPending}>Excluir</PendingLabel>}
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
     </>
   );
 }

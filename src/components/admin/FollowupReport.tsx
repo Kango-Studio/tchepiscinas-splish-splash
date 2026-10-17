@@ -1,5 +1,14 @@
 import { useMemo, useState } from "react";
-import { Card, CardBody, Skeleton, Tab, Tabs, Tooltip } from "@heroui/react";
+import {
+  Card,
+  Skeleton,
+  Table,
+  Tabs,
+  ToggleButton,
+  ToggleButtonGroup,
+  Tooltip,
+  type Key,
+} from "@heroui/react";
 import {
   addMonths,
   addWeeks,
@@ -10,7 +19,7 @@ import {
   subWeeks,
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ArrowDownRight, ArrowUpRight, Minus } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, Minus } from "@gravity-ui/icons";
 import {
   LEAD_STAGES,
   STAGE_LABELS,
@@ -18,6 +27,7 @@ import {
   type LeadFollowup,
   type LeadStage,
 } from "@/lib/leads/schema";
+import { CountUp } from "./ui";
 
 type Granularity = "mes" | "semana";
 type Period = "mes" | "mes_anterior" | "tudo";
@@ -92,6 +102,41 @@ function usePeriodBars(followups: LeadFollowup[], granularity: Granularity) {
   }, [followups, granularity]);
 }
 
+const stagger = (i: number) => ({ "--i": i }) as React.CSSProperties;
+
+// Seletor de opção única (segmentado) com o ToggleButtonGroup do HeroUI v3.
+function Segmented<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+}: {
+  label: string;
+  value: T;
+  options: Record<T, string>;
+  onChange: (value: T) => void;
+}) {
+  return (
+    <ToggleButtonGroup
+      aria-label={label}
+      selectionMode="single"
+      disallowEmptySelection
+      selectedKeys={new Set<Key>([value])}
+      onSelectionChange={(keys) => {
+        const next = [...keys][0];
+        if (next) onChange(next as T);
+      }}
+    >
+      {(Object.keys(options) as T[]).map((k, i) => (
+        <ToggleButton key={k} id={k} size="sm">
+          {i > 0 && <ToggleButtonGroup.Separator />}
+          {options[k]}
+        </ToggleButton>
+      ))}
+    </ToggleButtonGroup>
+  );
+}
+
 export function FollowupSummaryCard({
   followups,
   isLoading,
@@ -104,79 +149,85 @@ export function FollowupSummaryCard({
   const bars = usePeriodBars(followups, granularity);
 
   return (
-    <Card shadow="sm" className="border border-default-100">
-      <CardBody className="gap-4 p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <h2 className="font-display text-lg font-extrabold text-pool-deep">Follow-ups</h2>
-            <p className="text-xs text-default-500">Contatos registrados pela equipe</p>
-          </div>
-          <Tabs
-            aria-label="Agrupar gráfico por"
-            selectedKey={granularity}
-            onSelectionChange={(k) => setGranularity(k as Granularity)}
-            color="primary"
-            radius="full"
-            size="sm"
-          >
-            <Tab key="mes" title="Por mês" />
-            <Tab key="semana" title="Por semana" />
-          </Tabs>
+    <Card className="animate-admin-rise gap-4 p-4 sm:p-5" style={stagger(3)}>
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h2 className="font-display text-lg font-extrabold text-pool-deep">Follow-ups</h2>
+          <p className="text-xs text-muted">Contatos registrados pela equipe</p>
         </div>
+        <Segmented
+          label="Agrupar gráfico por"
+          value={granularity}
+          options={{ mes: "Por mês", semana: "Por semana" }}
+          onChange={setGranularity}
+        />
+      </div>
 
-        {isLoading ? (
-          <Skeleton className="h-20 rounded-md" />
-        ) : (
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            <Stat
-              label={`Em ${format(s.month, "MMMM", { locale: ptBR })}`}
-              value={s.current}
-              hint={<Delta current={s.current} previous={s.previousToDate} />}
-            />
-            <Stat
-              label={`Em ${format(s.prevMonth, "MMMM", { locale: ptBR })}`}
-              value={s.previous}
-              hint={`${s.previousToDate} até o dia ${format(new Date(), "d")}`}
-            />
-            <Stat
-              label="Leads contatados no mês"
-              value={s.currentLeads}
-              hint={
-                s.currentLeads
-                  ? `${(s.current / s.currentLeads).toFixed(1).replace(".", ",")} por lead`
-                  : "—"
-              }
-              className="col-span-2 sm:col-span-1"
-            />
-          </div>
-        )}
+      {isLoading ? (
+        <Skeleton className="h-20 rounded-md" />
+      ) : (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Stat
+            index={0}
+            label={`Em ${format(s.month, "MMMM", { locale: ptBR })}`}
+            value={s.current}
+            hint={<Delta current={s.current} previous={s.previousToDate} />}
+          />
+          <Stat
+            index={1}
+            label={`Em ${format(s.prevMonth, "MMMM", { locale: ptBR })}`}
+            value={s.previous}
+            hint={`${s.previousToDate} até o dia ${format(new Date(), "d")}`}
+          />
+          <Stat
+            index={2}
+            label="Leads contatados"
+            value={s.currentLeads}
+            hint={
+              s.currentLeads
+                ? `${(s.current / s.currentLeads).toFixed(1).replace(".", ",")} por lead`
+                : "—"
+            }
+            className="col-span-2 sm:col-span-1"
+          />
+        </div>
+      )}
 
-        {isLoading ? (
-          <Skeleton className="h-28 rounded-md" />
-        ) : (
-          <PeriodBars bars={bars} granularity={granularity} />
-        )}
-      </CardBody>
+      {isLoading ? (
+        <Skeleton className="h-28 rounded-md" />
+      ) : (
+        // key: refaz a animação de crescimento ao trocar mês/semana
+        <PeriodBars key={granularity} bars={bars} granularity={granularity} />
+      )}
     </Card>
   );
 }
 
 function Stat({
+  index,
   label,
   value,
   hint,
   className = "",
 }: {
+  index: number;
   label: string;
   value: number;
   hint: React.ReactNode;
   className?: string;
 }) {
   return (
-    <div className={`rounded-xl bg-pool-mist/30 px-3 py-2.5 ${className}`}>
-      <p className="truncate text-xs font-medium capitalize text-default-500">{label}</p>
-      <p className="font-display text-2xl font-extrabold tabular-nums text-foreground">{value}</p>
-      <div className="text-[11px] text-default-500">{hint}</div>
+    <div
+      className={`animate-admin-rise rounded-xl bg-pool-mist/30 px-3 py-2.5 ${className}`}
+      style={stagger(index)}
+    >
+      <p className="line-clamp-2 text-xs leading-tight font-medium text-muted first-letter:uppercase">
+        {label}
+      </p>
+      <p className="font-display text-2xl font-extrabold text-foreground">
+        <CountUp value={value} />
+      </p>
+      <div className="text-[11px] text-muted">{hint}</div>
     </div>
   );
 }
@@ -186,12 +237,15 @@ function Delta({ current, previous }: { current: number; previous: number }) {
   if (!previous) return <span>{current ? "Sem base no mês anterior" : "—"}</span>;
   const diff = Math.round(((current - previous) / previous) * 100);
   const Icon = diff > 0 ? ArrowUpRight : diff < 0 ? ArrowDownRight : Minus;
-  const tone = diff > 0 ? "text-success-600" : diff < 0 ? "text-danger-600" : "text-default-500";
+  const tone = diff > 0 ? "text-success" : diff < 0 ? "text-danger" : "text-muted";
   return (
-    <span className={`inline-flex items-center gap-0.5 font-semibold ${tone}`}>
-      <Icon className="size-3.5" aria-hidden />
-      {diff > 0 ? "+" : ""}
-      {diff}% <span className="font-normal text-default-500">vs. mesmo dia</span>
+    <span className="flex flex-col">
+      <span className={`inline-flex items-center gap-0.5 font-semibold ${tone}`}>
+        <Icon className="size-3.5" aria-hidden />
+        {diff > 0 ? "+" : ""}
+        {diff}%
+      </span>
+      <span className="text-muted">vs. mesmo dia do mês passado</span>
     </span>
   );
 }
@@ -214,42 +268,42 @@ function PeriodBars({
   return (
     <div>
       <ol
-        className="flex h-28 items-end gap-1.5 border-b border-default-200"
+        className="flex h-28 items-end gap-1.5 border-b border-separator"
         aria-label={granularity === "mes" ? "Follow-ups por mês" : "Follow-ups por semana"}
       >
         {bars.map((b, i) => (
           <li key={b.start.toISOString()} className="flex h-full flex-1 items-end">
-            <Tooltip
-              content={
-                <div className="px-1 py-0.5 text-xs">
-                  <p className="font-semibold capitalize">{long(b.start)}</p>
-                  <p>
-                    {b.value} follow-up{b.value === 1 ? "" : "s"}
-                  </p>
-                </div>
-              }
-              placement="top"
-              closeDelay={0}
-            >
-              <div
-                className="flex h-full w-full cursor-default flex-col items-center justify-end"
+            <Tooltip delay={0} closeDelay={0}>
+              <Tooltip.Trigger
+                className="group flex h-full w-full cursor-default flex-col items-center justify-end"
                 aria-label={`${long(b.start)}: ${b.value}`}
               >
                 {b.value > 0 && (
-                  <span className="mb-0.5 text-[10px] font-semibold tabular-nums text-default-600">
+                  <span
+                    className="animate-admin-rise mb-0.5 text-[10px] font-semibold text-muted tabular-nums"
+                    style={stagger(i)}
+                  >
                     {b.value}
                   </span>
                 )}
                 <div
-                  className={`w-full rounded-t ${i === bars.length - 1 ? "bg-pool" : "bg-pool-light"}`}
-                  style={{ height: b.value ? `${(b.value / max) * 80}%` : 0 }}
+                  className={`animate-admin-grow-y w-full rounded-t transition-[filter] duration-200 group-hover:brightness-110 ${
+                    i === bars.length - 1 ? "bg-pool" : "bg-pool-light"
+                  }`}
+                  style={{ ...stagger(i), height: b.value ? `${(b.value / max) * 80}%` : 0 }}
                 />
-              </div>
+              </Tooltip.Trigger>
+              <Tooltip.Content placement="top">
+                <p className="font-semibold capitalize">{long(b.start)}</p>
+                <p>
+                  {b.value} follow-up{b.value === 1 ? "" : "s"}
+                </p>
+              </Tooltip.Content>
             </Tooltip>
           </li>
         ))}
       </ol>
-      <ol className="mt-1.5 flex gap-1.5 text-[10px] text-default-500" aria-hidden>
+      <ol className="mt-1.5 flex gap-1.5 text-[10px] text-muted" aria-hidden>
         {bars.map((b) => (
           <li key={b.start.toISOString()} className="flex-1 truncate text-center capitalize">
             {short(b.start)}
@@ -352,73 +406,83 @@ export function FollowupsByStageCard({
   const report = useStageReport(leads, followups, period);
   const withoutStage = report.totals.sem_etapa ?? 0;
 
+  const charts = (
+    <>
+      {view === "funil" ? (
+        <FollowupFunnel flow={report.flow} lost={report.lost} total={report.total} />
+      ) : (
+        <StageBars flow={report.flow} lost={report.lost} total={report.total} />
+      )}
+      <ConversionList flow={report.flow} />
+    </>
+  );
+
   return (
-    <Card shadow="sm" className="border border-default-100">
-      <CardBody className="gap-4 p-4 sm:p-5">
+    <Card className="animate-admin-rise gap-4 p-4 sm:p-5" style={stagger(4)}>
+      <Tabs
+        selectedKey={view}
+        onSelectionChange={(k) => setView(k as View)}
+        variant="secondary"
+        className="gap-4"
+      >
         <div className="flex flex-col gap-2">
           <div>
             <h2 className="font-display text-lg font-extrabold text-pool-deep">
               Follow-ups por etapa
             </h2>
-            <p className="text-xs text-default-500">
+            <p className="text-xs text-muted">
               Quantos contatos foram feitos em cada etapa do funil
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <Tabs
-              aria-label="Visualização"
-              selectedKey={view}
-              onSelectionChange={(k) => setView(k as View)}
-              variant="underlined"
-              color="primary"
-              size="sm"
-            >
-              {(Object.keys(VIEW_LABELS) as View[]).map((v) => (
-                <Tab key={v} title={VIEW_LABELS[v]} />
-              ))}
-            </Tabs>
-            <Tabs
-              aria-label="Período"
-              selectedKey={period}
-              onSelectionChange={(k) => setPeriod(k as Period)}
-              color="primary"
-              radius="full"
-              size="sm"
-            >
-              {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
-                <Tab key={p} title={PERIOD_LABELS[p]} />
-              ))}
-            </Tabs>
+            <Tabs.ListContainer>
+              <Tabs.List aria-label="Visualização">
+                {(Object.keys(VIEW_LABELS) as View[]).map((v) => (
+                  <Tabs.Tab key={v} id={v}>
+                    {VIEW_LABELS[v]}
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
+                ))}
+              </Tabs.List>
+            </Tabs.ListContainer>
+            <Segmented
+              label="Período"
+              value={period}
+              options={PERIOD_LABELS}
+              onChange={setPeriod}
+            />
           </div>
         </div>
 
         {isLoading ? (
           <Skeleton className="h-48 rounded-md" />
         ) : !report.total ? (
-          <p className="py-6 text-center text-sm text-default-500">
+          <p className="animate-admin-rise py-6 text-center text-sm text-muted">
             Nenhum follow-up registrado neste período.
           </p>
-        ) : view === "tabela" ? (
-          <StageTable {...report} />
         ) : (
-          <>
-            {view === "funil" ? (
-              <FollowupFunnel flow={report.flow} lost={report.lost} total={report.total} />
-            ) : (
-              <StageBars flow={report.flow} lost={report.lost} total={report.total} />
-            )}
-            <ConversionList flow={report.flow} />
-          </>
+          // key: reanima os gráficos ao trocar o período
+          <div key={period} className="contents">
+            <Tabs.Panel id="funil" className="flex flex-col gap-4">
+              {charts}
+            </Tabs.Panel>
+            <Tabs.Panel id="barras" className="flex flex-col gap-4">
+              {charts}
+            </Tabs.Panel>
+            <Tabs.Panel id="tabela">
+              <StageTable {...report} />
+            </Tabs.Panel>
+          </div>
         )}
 
         {!isLoading && withoutStage > 0 && (
-          <p className="text-xs text-default-500">
+          <p className="text-xs text-muted">
             {view === "tabela"
               ? "“Sem etapa”: follow-ups registrados antes de o painel guardar a etapa."
               : `${withoutStage} follow-up(s) sem etapa registrada ficam fora do gráfico.`}
           </p>
         )}
-      </CardBody>
+      </Tabs>
     </Card>
   );
 }
@@ -459,22 +523,11 @@ function FollowupFunnel({
               key={s.stage}
               className="grid grid-cols-[minmax(0,1fr)_8rem] items-center gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]"
             >
-              <Tooltip
-                content={
-                  <div className="px-1 py-0.5 text-xs">
-                    <p className="font-semibold">{STAGE_LABELS[s.stage]}</p>
-                    <p>
-                      {s.followups} follow-ups ({pct(s.followups, total)})
-                    </p>
-                    <p>
-                      {s.leads} leads · {perLead(s)} por lead
-                    </p>
-                  </div>
-                }
-                placement="top"
-                closeDelay={0}
-              >
-                <div className="relative h-11 cursor-default">
+              <Tooltip delay={0} closeDelay={0}>
+                <Tooltip.Trigger
+                  className="animate-admin-grow-x relative h-11 origin-center cursor-default transition-[filter] duration-200 hover:brightness-105"
+                  style={stagger(i)}
+                >
                   <svg
                     viewBox="0 0 100 100"
                     preserveAspectRatio="none"
@@ -486,15 +539,24 @@ function FollowupFunnel({
                   <span
                     className={`relative grid h-full place-items-center font-display text-lg font-extrabold ${style.ink}`}
                   >
-                    {s.followups}
+                    <CountUp value={s.followups} />
                   </span>
-                </div>
+                </Tooltip.Trigger>
+                <Tooltip.Content placement="top">
+                  <p className="font-semibold">{STAGE_LABELS[s.stage]}</p>
+                  <p>
+                    {s.followups} follow-ups ({pct(s.followups, total)})
+                  </p>
+                  <p>
+                    {s.leads} leads · {perLead(s)} por lead
+                  </p>
+                </Tooltip.Content>
               </Tooltip>
-              <div className="min-w-0">
+              <div className="animate-admin-rise min-w-0" style={stagger(i)}>
                 <p className="truncate text-sm font-semibold text-foreground">
                   {STAGE_LABELS[s.stage]}
                 </p>
-                <p className="text-xs text-default-500">
+                <p className="text-xs text-muted">
                   {pct(s.followups, total)} · {s.leads} leads
                 </p>
               </div>
@@ -510,14 +572,17 @@ function FollowupFunnel({
 
 function LostBox({ lost, total }: { lost: StageStat; total: number }) {
   return (
-    <div className="flex items-center justify-between gap-2 self-start rounded-xl border border-dashed border-default-300 bg-default-50 px-3 py-2.5 sm:flex-col sm:items-start">
+    <div
+      className="animate-admin-rise flex items-center justify-between gap-2 self-start rounded-xl border border-dashed border-border bg-surface-secondary px-3 py-2.5 sm:flex-col sm:items-start"
+      style={stagger(5)}
+    >
       <div>
-        <p className="text-xs font-medium text-default-500">Perdidos</p>
-        <p className="font-display text-2xl font-extrabold tabular-nums text-slate-500">
-          {lost.followups}
+        <p className="text-xs font-medium text-muted">Perdidos</p>
+        <p className="font-display text-2xl font-extrabold text-slate-500">
+          <CountUp value={lost.followups} />
         </p>
       </div>
-      <p className="text-right text-[11px] text-default-500 sm:text-left">
+      <p className="text-right text-[11px] text-muted sm:text-left">
         follow-ups ({pct(lost.followups, total)})
         <br />
         em {lost.leads} leads · saída do funil
@@ -528,24 +593,24 @@ function LostBox({ lost, total }: { lost: StageStat; total: number }) {
 
 function StageBars({ flow, lost, total }: { flow: StageStat[]; lost: StageStat; total: number }) {
   const max = Math.max(1, lost.followups, ...flow.map((s) => s.followups));
-  const row = (s: StageStat, fill: string) => (
-    <li key={s.stage} className="flex flex-col gap-1">
+  const row = (s: StageStat, fill: string, i: number) => (
+    <li key={s.stage} className="animate-admin-rise flex flex-col gap-1" style={stagger(i)}>
       <div className="flex items-baseline justify-between gap-2 text-xs">
-        <span className="truncate font-medium text-default-700">{STAGE_LABELS[s.stage]}</span>
-        <span className="shrink-0 text-default-500">
+        <span className="truncate font-medium text-foreground">{STAGE_LABELS[s.stage]}</span>
+        <span className="shrink-0 text-muted">
           {s.leads} leads · {perLead(s)} por lead
         </span>
       </div>
       <div className="flex items-center gap-2">
-        <div className="h-3.5 flex-1 rounded-full bg-default-100">
+        <div className="h-3.5 flex-1 rounded-full bg-default">
           <div
-            className="h-full rounded-full"
-            style={{ width: `${(s.followups / max) * 100}%`, background: fill }}
+            className="animate-admin-grow-x h-full rounded-full"
+            style={{ ...stagger(i), width: `${(s.followups / max) * 100}%`, background: fill }}
           />
         </div>
         <span className="w-16 shrink-0 text-right text-xs tabular-nums">
           <strong className="font-bold text-foreground">{s.followups}</strong>{" "}
-          <span className="text-default-400">{pct(s.followups, total)}</span>
+          <span className="text-muted">{pct(s.followups, total)}</span>
         </span>
       </div>
     </li>
@@ -553,9 +618,9 @@ function StageBars({ flow, lost, total }: { flow: StageStat[]; lost: StageStat; 
 
   return (
     <ul className="flex flex-col gap-2.5" aria-label="Follow-ups por etapa">
-      {flow.map((s) => row(s, FLOW_STYLE[s.stage].fill))}
-      <li aria-hidden className="border-t border-dashed border-default-200" />
-      {row(lost, LOST_FILL)}
+      {flow.map((s, i) => row(s, FLOW_STYLE[s.stage].fill, i))}
+      <li aria-hidden className="border-t border-dashed border-border" />
+      {row(lost, LOST_FILL, flow.length)}
     </ul>
   );
 }
@@ -566,7 +631,7 @@ function ConversionList({ flow }: { flow: StageStat[] }) {
     <div className="flex flex-col gap-2 rounded-xl bg-pool-mist/30 p-3">
       <div>
         <h3 className="text-sm font-bold text-foreground">Taxa de conversão entre etapas</h3>
-        <p className="text-[11px] text-default-500">
+        <p className="text-[11px] text-muted">
           Dos leads que receberam follow-up na etapa, quantos já avançaram.
         </p>
       </div>
@@ -574,14 +639,15 @@ function ConversionList({ flow }: { flow: StageStat[] }) {
         {flow.slice(0, -1).map((s, i) => (
           <li
             key={s.stage}
-            className="flex items-center justify-between gap-2 rounded-lg bg-content1 px-2.5 py-1.5 text-xs"
+            className="animate-admin-rise flex items-center justify-between gap-2 rounded-lg bg-surface px-2.5 py-1.5 text-xs shadow-surface"
+            style={stagger(i)}
           >
-            <span className="min-w-0 truncate text-default-600">
+            <span className="min-w-0 truncate text-muted">
               {STAGE_LABELS[s.stage]} → {STAGE_LABELS[flow[i + 1].stage]}
             </span>
             <span className="shrink-0 tabular-nums">
               <strong className="font-bold text-pool-deep">{pct(s.advanced, s.leads)}</strong>{" "}
-              <span className="text-default-400">
+              <span className="text-muted">
                 ({s.advanced}/{s.leads})
               </span>
             </span>
@@ -594,59 +660,62 @@ function ConversionList({ flow }: { flow: StageStat[] }) {
 
 function StageTable({ rows, totals, columns, total }: ReturnType<typeof useStageReport>) {
   const label = (k: StageKey) => (k === "sem_etapa" ? "Sem etapa" : STAGE_LABELS[k]);
+  const sticky = "sticky left-0 z-1 bg-surface";
 
   return (
-    <div className="max-h-[26rem] overflow-auto rounded-lg border border-default-100">
-      <table className="w-full min-w-[42rem] border-collapse text-sm">
-        <thead className="sticky top-0 z-10 bg-default-50 text-xs text-default-500">
-          <tr>
-            <th className="sticky left-0 bg-default-50 px-3 py-2 text-left font-semibold">Lead</th>
+    <Table variant="secondary">
+      <Table.ScrollContainer className="max-h-[26rem]">
+        <Table.Content aria-label="Follow-ups por lead e etapa" className="min-w-[42rem]">
+          <Table.Header>
+            <Table.Column id="lead" isRowHeader className={sticky}>
+              Lead
+            </Table.Column>
             {columns.map((k) => (
-              <th key={k} className="px-2 py-2 text-center font-semibold">
+              <Table.Column key={k} id={k} className="text-center">
                 {label(k)}
-              </th>
+              </Table.Column>
             ))}
-            <th className="px-3 py-2 text-center font-bold text-default-700">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.id} className="border-t border-default-100">
-              <td className="sticky left-0 max-w-[12rem] bg-content1 px-3 py-2">
-                <span className="block truncate font-medium">{r.name}</span>
-              </td>
+            <Table.Column id="total" className="text-center font-bold">
+              Total
+            </Table.Column>
+          </Table.Header>
+          <Table.Body>
+            {rows.map((r) => (
+              <Table.Row key={r.id} id={r.id}>
+                <Table.Cell className={`${sticky} max-w-[12rem]`}>
+                  <span className="block truncate font-medium">{r.name}</span>
+                </Table.Cell>
+                {columns.map((k) => (
+                  <Table.Cell key={k} className="text-center tabular-nums">
+                    {r.counts[k] ? (
+                      <span className="font-semibold text-foreground">{r.counts[k]}</span>
+                    ) : (
+                      <span className="text-muted/50">·</span>
+                    )}
+                  </Table.Cell>
+                ))}
+                <Table.Cell className="text-center font-bold text-pool-deep tabular-nums">
+                  {r.counts.total}
+                </Table.Cell>
+              </Table.Row>
+            ))}
+            <Table.Row id="__totais" className="bg-surface-secondary font-bold">
+              <Table.Cell className={`${sticky} bg-surface-secondary`}>
+                Total ({rows.length} leads)
+              </Table.Cell>
               {columns.map((k) => (
-                <td key={k} className="px-2 py-2 text-center tabular-nums">
-                  {r.counts[k] ? (
-                    <span className="font-semibold text-foreground">{r.counts[k]}</span>
-                  ) : (
-                    <span className="text-default-300">·</span>
-                  )}
-                </td>
+                <Table.Cell key={k} className="text-center tabular-nums">
+                  {totals[k] ?? 0}
+                  <span className="block text-[11px] font-normal text-muted">
+                    {pct(totals[k] ?? 0, total)}
+                  </span>
+                </Table.Cell>
               ))}
-              <td className="px-3 py-2 text-center font-bold tabular-nums text-pool-deep">
-                {r.counts.total}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-        <tfoot className="sticky bottom-0 bg-default-50 text-xs">
-          <tr className="border-t border-default-200">
-            <th className="sticky left-0 bg-default-50 px-3 py-2 text-left font-bold">
-              Total ({rows.length} leads)
-            </th>
-            {columns.map((k) => (
-              <td key={k} className="px-2 py-2 text-center font-bold tabular-nums">
-                {totals[k] ?? 0}
-                <span className="block font-normal text-default-500">
-                  {pct(totals[k] ?? 0, total)}
-                </span>
-              </td>
-            ))}
-            <td className="px-3 py-2 text-center font-bold tabular-nums text-pool-deep">{total}</td>
-          </tr>
-        </tfoot>
-      </table>
-    </div>
+              <Table.Cell className="text-center text-pool-deep tabular-nums">{total}</Table.Cell>
+            </Table.Row>
+          </Table.Body>
+        </Table.Content>
+      </Table.ScrollContainer>
+    </Table>
   );
 }

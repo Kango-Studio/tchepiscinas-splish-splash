@@ -1,142 +1,133 @@
-import { useState, type ReactNode } from "react";
+import type { ComponentType, ReactNode, SVGProps } from "react";
+import { Button, Drawer, Separator } from "@heroui/react";
 import {
-  Button,
-  Divider,
-  Navbar,
-  NavbarBrand,
-  NavbarContent,
-  NavbarMenu,
-  NavbarMenuItem,
-  NavbarMenuToggle,
-} from "@heroui/react";
+  ArrowRightFromSquare,
+  ArrowUpRightFromSquare,
+  Bars,
+  ChartColumn,
+  Persons,
+} from "@gravity-ui/icons";
 import { useLocation } from "@tanstack/react-router";
-import { ExternalLink, LayoutDashboard, LogOut, Users } from "lucide-react";
 import logo from "@/assets/logo.webp";
 import { useAdminAuth } from "./auth";
 
-const NAV = [
-  { href: "/admin", label: "Leads", icon: Users },
-  { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+type NavItem = { href: string; label: string; icon: ComponentType<SVGProps<SVGSVGElement>> };
+
+const NAV: NavItem[] = [
+  { href: "/admin", label: "Leads", icon: Persons },
+  { href: "/admin/dashboard", label: "Dashboard", icon: ChartColumn },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const { state, signOut } = useAdminAuth();
-  const [menuOpen, setMenuOpen] = useState(false);
   const email = "session" in state ? state.session.user.email : undefined;
   const pathname = useLocation({ select: (l) => l.pathname.replace(/\/+$/, "") });
   const isActive = (href: string) => pathname === href;
 
+  const navLinks = (size: "md" | "lg") => (
+    <>
+      {NAV.map((item) => {
+        const active = isActive(item.href);
+        return (
+          <a
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={`group relative flex items-center gap-3 rounded-xl px-3 text-sm transition-colors duration-200 ${
+              size === "lg" ? "py-3" : "py-2.5"
+            } ${
+              active
+                ? "bg-accent-soft font-semibold text-accent"
+                : "font-medium text-muted hover:bg-default hover:text-foreground"
+            }`}
+          >
+            {/* Barra indicadora da página atual */}
+            <span
+              aria-hidden
+              className={`absolute inset-y-2 left-0 w-1 rounded-full bg-accent transition-all duration-300 ${
+                active ? "opacity-100" : "scale-y-0 opacity-0"
+              }`}
+            />
+            <item.icon
+              className={`size-4.5 transition-transform duration-200 ${active ? "" : "group-hover:scale-110"}`}
+            />
+            {item.label}
+          </a>
+        );
+      })}
+      <a
+        href="/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={`flex items-center gap-3 rounded-xl px-3 text-sm font-medium text-muted transition-colors duration-200 hover:bg-default hover:text-foreground ${
+          size === "lg" ? "py-3" : "py-2.5"
+        }`}
+      >
+        <ArrowUpRightFromSquare className="size-4.5" />
+        Ver site
+      </a>
+    </>
+  );
+
+  const signOutButton = (
+    <Button
+      variant="ghost"
+      size="sm"
+      className="w-full justify-start text-danger"
+      onPress={signOut}
+    >
+      <ArrowRightFromSquare className="size-4" />
+      Sair
+    </Button>
+  );
+
   return (
-    <div className="min-h-dvh bg-[#f4f9fc] text-foreground">
+    <div className="min-h-dvh bg-background text-foreground">
       {/* Sidebar (desktop) */}
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-default-200 bg-white lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-separator bg-surface lg:flex">
         <div className="flex h-20 items-center px-6">
           <img src={logo} alt="Tchê Piscinas" className="h-12 w-auto" />
         </div>
-        <nav aria-label="Navegação do painel" className="flex-1 px-3 py-2">
-          {NAV.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              aria-current={isActive(item.href) ? "page" : undefined}
-              className={`mb-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm ${
-                isActive(item.href)
-                  ? "bg-pool-mist font-semibold text-pool-deep"
-                  : "font-medium text-default-600 transition hover:bg-default-100"
-              }`}
-            >
-              <item.icon className="size-4" />
-              {item.label}
-            </a>
-          ))}
-          <a
-            href="/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-1 flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-default-600 transition hover:bg-default-100"
-          >
-            <ExternalLink className="size-4" />
-            Ver site
-          </a>
+        <nav aria-label="Navegação do painel" className="flex flex-1 flex-col gap-1 px-3 py-2">
+          {navLinks("md")}
         </nav>
-        <div className="border-t border-default-200 p-4">
-          <p className="truncate text-xs text-default-500" title={email}>
+        <div className="border-t border-separator p-4">
+          <p className="truncate px-1 text-xs text-muted" title={email}>
             {email}
           </p>
-          <Button
-            variant="light"
-            color="danger"
-            size="sm"
-            className="mt-2 w-full justify-start"
-            startContent={<LogOut className="size-4" />}
-            onPress={signOut}
-          >
-            Sair
-          </Button>
+          <div className="mt-2">{signOutButton}</div>
         </div>
       </aside>
 
-      {/* Topo (mobile/tablet) */}
-      <Navbar
-        isMenuOpen={menuOpen}
-        onMenuOpenChange={setMenuOpen}
-        maxWidth="full"
-        isBordered
-        className="lg:hidden"
-        classNames={{ wrapper: "px-4" }}
-      >
-        <NavbarContent justify="start">
-          <NavbarBrand>
-            <img src={logo} alt="Tchê Piscinas" className="h-10 w-auto" />
-          </NavbarBrand>
-        </NavbarContent>
-        <NavbarContent justify="end">
-          <NavbarMenuToggle aria-label={menuOpen ? "Fechar menu" : "Abrir menu"} />
-        </NavbarContent>
-        <NavbarMenu className="gap-1 pt-4">
-          {NAV.map((item) => (
-            <NavbarMenuItem key={item.href} isActive={isActive(item.href)}>
-              <a
-                href={item.href}
-                aria-current={isActive(item.href) ? "page" : undefined}
-                className={`flex items-center gap-3 rounded-xl px-3 py-3 ${
-                  isActive(item.href)
-                    ? "bg-pool-mist font-semibold text-pool-deep"
-                    : "text-default-600"
-                }`}
-                onClick={() => setMenuOpen(false)}
-              >
-                <item.icon className="size-5" />
-                {item.label}
-              </a>
-            </NavbarMenuItem>
-          ))}
-          <NavbarMenuItem>
-            <a
-              href="/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-3 px-3 py-3 text-default-600"
-            >
-              <ExternalLink className="size-5" />
-              Ver site
-            </a>
-          </NavbarMenuItem>
-          <Divider className="my-2" />
-          <NavbarMenuItem>
-            <p className="px-3 text-xs text-default-500">{email}</p>
-            <Button
-              variant="light"
-              color="danger"
-              className="mt-1 w-full justify-start"
-              startContent={<LogOut className="size-5" />}
-              onPress={signOut}
-            >
-              Sair
-            </Button>
-          </NavbarMenuItem>
-        </NavbarMenu>
-      </Navbar>
+      {/* Topo (mobile/tablet): menu em Drawer, já que o Navbar saiu do HeroUI v3 */}
+      <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-separator bg-surface/85 px-4 backdrop-blur-md lg:hidden">
+        <img src={logo} alt="Tchê Piscinas" className="h-10 w-auto" />
+        <Drawer>
+          <Button isIconOnly variant="ghost" aria-label="Abrir menu">
+            <Bars className="size-5" />
+          </Button>
+          <Drawer.Backdrop variant="blur">
+            <Drawer.Content placement="left">
+              <Drawer.Dialog aria-label="Menu do painel">
+                <Drawer.CloseTrigger aria-label="Fechar menu" />
+                <Drawer.Header>
+                  <img src={logo} alt="Tchê Piscinas" className="h-10 w-auto self-start" />
+                </Drawer.Header>
+                <Drawer.Body>
+                  <nav aria-label="Navegação do painel" className="flex flex-col gap-1">
+                    {navLinks("lg")}
+                  </nav>
+                </Drawer.Body>
+                <Drawer.Footer className="flex-col items-stretch gap-2">
+                  <Separator />
+                  <p className="truncate px-1 text-xs text-muted">{email}</p>
+                  {signOutButton}
+                </Drawer.Footer>
+              </Drawer.Dialog>
+            </Drawer.Content>
+          </Drawer.Backdrop>
+        </Drawer>
+      </header>
 
       <main className="px-4 py-5 sm:px-6 lg:ml-64 lg:px-8 lg:py-8">{children}</main>
     </div>

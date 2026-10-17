@@ -1,9 +1,10 @@
 import { useMemo } from "react";
-import { Card, CardBody, Skeleton, Tooltip } from "@heroui/react";
+import { Card, Skeleton, Tooltip } from "@heroui/react";
 import { format, startOfWeek, subWeeks } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { XCircle } from "lucide-react";
+import { CircleXmark } from "@gravity-ui/icons";
 import { LEAD_SOURCES, SOURCE_LABELS, type Lead, type LeadStage } from "@/lib/leads/schema";
+import { CountUp } from "./ui";
 
 // O banco guarda só a etapa atual; cada faixa do funil conta quem chegou
 // pelo menos até ela (um lead fechado também passou pelo orçamento).
@@ -80,6 +81,8 @@ function useDashboard(leads: Lead[]) {
   }, [leads]);
 }
 
+const stagger = (i: number) => ({ "--i": i }) as React.CSSProperties;
+
 export function LeadDashboard({
   leads,
   isLoading,
@@ -94,79 +97,77 @@ export function LeadDashboard({
 
   return (
     <section aria-label="Dashboard de leads" className="grid gap-3 lg:grid-cols-5">
-      <Card shadow="sm" className="border border-default-100 lg:col-span-3">
-        <CardBody className="gap-4 p-4 sm:p-5">
-          <div className="flex flex-wrap items-end justify-between gap-2">
-            <div>
-              <h2 className="font-display text-lg font-extrabold text-pool-deep">
-                Funil de vendas
-              </h2>
-              <p className="text-xs text-default-500">Leads que chegaram a cada etapa</p>
-            </div>
-            <div className="text-right">
-              <p className="text-xs font-medium text-default-500">Taxa de fechamento</p>
-              {isLoading ? (
-                <Skeleton className="ml-auto mt-1 h-7 w-14 rounded-md" />
-              ) : (
-                <p className="font-display text-2xl font-extrabold text-foreground">
-                  {pct(closed, total)}
-                </p>
-              )}
-            </div>
+      <Card className="animate-admin-rise gap-4 p-4 sm:p-5 lg:col-span-3">
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <div>
+            <h2 className="font-display text-lg font-extrabold text-pool-deep">Funil de vendas</h2>
+            <p className="text-xs text-muted">Leads que chegaram a cada etapa</p>
           </div>
+          <div className="text-right">
+            <p className="text-xs font-medium text-muted">Taxa de fechamento</p>
+            {isLoading ? (
+              <Skeleton className="mt-1 ml-auto h-7 w-14 rounded-md" />
+            ) : (
+              <p className="font-display text-2xl font-extrabold text-foreground">
+                {total ? (
+                  <>
+                    <CountUp value={Math.round((closed / total) * 100)} />%
+                  </>
+                ) : (
+                  "—"
+                )}
+              </p>
+            )}
+          </div>
+        </div>
 
-          {isLoading ? (
-            <div className="flex flex-col items-center gap-0.5">
-              {FUNNEL.map((f, i) => (
-                <Skeleton
-                  key={f.label}
-                  className="h-12 rounded-md"
-                  style={{ width: `${100 - i * 18}%` }}
-                />
-              ))}
-            </div>
-          ) : (
-            <Funnel rows={funnel} total={total} />
-          )}
+        {isLoading ? (
+          <div className="flex flex-col items-center gap-0.5">
+            {FUNNEL.map((f, i) => (
+              <Skeleton
+                key={f.label}
+                className="h-12 rounded-md"
+                style={{ width: `${100 - i * 18}%` }}
+              />
+            ))}
+          </div>
+        ) : (
+          <Funnel rows={funnel} total={total} />
+        )}
 
-          {!isLoading && (
-            <p className="flex items-center gap-1.5 text-xs text-default-500">
-              <XCircle className="size-3.5 shrink-0 text-slate-400" aria-hidden />
-              <span>
-                <strong className="font-semibold text-default-700">{lost} perdidos</strong> (
-                {pct(lost, total)}) — ficam fora das etapas seguintes, pois não é registrado onde
-                pararam.
-              </span>
-            </p>
-          )}
-        </CardBody>
+        {!isLoading && (
+          <p className="flex items-center gap-1.5 text-xs text-muted">
+            <CircleXmark className="size-3.5 shrink-0 text-slate-400" aria-hidden />
+            <span>
+              <strong className="font-semibold text-foreground">{lost} perdidos</strong> (
+              {pct(lost, total)}) — ficam fora das etapas seguintes, pois não é registrado onde
+              pararam.
+            </span>
+          </p>
+        )}
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:col-span-2 lg:grid-cols-1">
-        <Card shadow="sm" className="border border-default-100">
-          <CardBody className="gap-3 p-4 sm:p-5">
-            <div>
-              <h2 className="text-sm font-bold text-foreground">Novos leads por semana</h2>
-              <p className="text-xs text-default-500">Últimas {WEEKS} semanas</p>
-            </div>
-            {isLoading ? <Skeleton className="h-28 rounded-md" /> : <WeeklyBars weeks={weeks} />}
-          </CardBody>
+        <Card className="animate-admin-rise gap-3 p-4 sm:p-5" style={stagger(1)}>
+          <div>
+            <h2 className="text-sm font-bold text-foreground">Novos leads por semana</h2>
+            <p className="text-xs text-muted">Últimas {WEEKS} semanas</p>
+          </div>
+          {isLoading ? <Skeleton className="h-28 rounded-md" /> : <WeeklyBars weeks={weeks} />}
         </Card>
 
-        <Card shadow="sm" className="border border-default-100">
-          <CardBody className="gap-3 p-4 sm:p-5">
-            <h2 className="text-sm font-bold text-foreground">Por origem</h2>
-            {isLoading ? (
-              <Skeleton className="h-24 rounded-md" />
-            ) : (
-              <SourceBars sources={sources} total={total} />
-            )}
-          </CardBody>
+        <Card className="animate-admin-rise gap-3 p-4 sm:p-5" style={stagger(2)}>
+          <h2 className="text-sm font-bold text-foreground">Por origem</h2>
+          {isLoading ? (
+            <Skeleton className="h-24 rounded-md" />
+          ) : (
+            <SourceBars sources={sources} total={total} />
+          )}
         </Card>
       </div>
 
       {filtered && !isLoading && (
-        <p className="text-xs text-default-500 lg:col-span-5">
+        <p className="text-xs text-muted lg:col-span-5">
           Números considerando os filtros aplicados.
         </p>
       )}
@@ -202,22 +203,13 @@ function Funnel({
         return (
           <li
             key={row.label}
-            className="grid grid-cols-[minmax(0,1fr)_8.5rem] sm:grid-cols-[minmax(0,1fr)_11.5rem] items-center gap-3"
+            className="grid grid-cols-[minmax(0,1fr)_8.5rem] items-center gap-3 sm:grid-cols-[minmax(0,1fr)_11.5rem]"
           >
-            <Tooltip
-              content={
-                <div className="px-1 py-0.5 text-xs">
-                  <p className="font-semibold">{row.label}</p>
-                  <p>
-                    {row.value} de {total} leads ({pct(row.value, total)})
-                  </p>
-                  {previous !== null && <p>{pct(row.value, previous)} da etapa anterior</p>}
-                </div>
-              }
-              placement="top"
-              closeDelay={0}
-            >
-              <div className="relative h-12 cursor-default">
+            <Tooltip delay={0} closeDelay={0}>
+              <Tooltip.Trigger
+                className="animate-admin-grow-x relative h-12 origin-center cursor-default transition-[filter] duration-200 hover:brightness-105"
+                style={stagger(i)}
+              >
                 <svg
                   viewBox="0 0 100 100"
                   preserveAspectRatio="none"
@@ -229,18 +221,25 @@ function Funnel({
                 <span
                   className={`relative grid h-full place-items-center font-display text-lg font-extrabold ${row.ink}`}
                 >
-                  {row.value}
+                  <CountUp value={row.value} />
                 </span>
-              </div>
+              </Tooltip.Trigger>
+              <Tooltip.Content placement="top">
+                <p className="font-semibold">{row.label}</p>
+                <p>
+                  {row.value} de {total} leads ({pct(row.value, total)})
+                </p>
+                {previous !== null && <p>{pct(row.value, previous)} da etapa anterior</p>}
+              </Tooltip.Content>
             </Tooltip>
-            <div className="min-w-0">
+            <div className="animate-admin-rise min-w-0" style={stagger(i)}>
               <p className="truncate text-sm font-semibold text-foreground">{row.label}</p>
-              <p className="text-xs text-default-500">
+              <p className="text-xs text-muted">
                 {pct(row.value, total)} do total
                 {previous !== null && (
                   <>
                     {" · "}
-                    <span className="text-default-600">{pct(row.value, previous)} avançaram</span>
+                    <span className="text-foreground/80">{pct(row.value, previous)} avançaram</span>
                   </>
                 )}
               </p>
@@ -259,44 +258,44 @@ function WeeklyBars({ weeks }: { weeks: { start: Date; value: number }[] }) {
   return (
     <div>
       <ol
-        className="flex h-28 items-end gap-1.5 border-b border-default-200"
+        className="flex h-28 items-end gap-1.5 border-b border-separator"
         aria-label="Novos leads por semana"
       >
         {weeks.map((w, i) => {
           const label = `Semana de ${format(w.start, "dd/MM", { locale: ptBR })}`;
           return (
             <li key={w.start.toISOString()} className="flex h-full flex-1 items-end">
-              <Tooltip
-                content={
-                  <div className="px-1 py-0.5 text-xs">
-                    <p className="font-semibold">{label}</p>
-                    <p>
-                      {w.value} {w.value === 1 ? "lead" : "leads"}
-                    </p>
-                  </div>
-                }
-                placement="top"
-                closeDelay={0}
-              >
+              <Tooltip delay={0} closeDelay={0}>
                 {/* Alvo do hover ocupa a coluna inteira, não só a barra. */}
-                <div
-                  className="flex h-full w-full cursor-default items-end"
+                <Tooltip.Trigger
+                  className="group flex h-full w-full cursor-default items-end"
                   aria-label={`${label}: ${w.value}`}
                 >
                   <div
-                    className={`w-full rounded-t ${i === weeks.length - 1 ? "bg-pool" : "bg-pool-light"}`}
-                    style={{ height: w.value ? `${(w.value / max) * 100}%` : 0 }}
+                    className={`animate-admin-grow-y w-full rounded-t transition-[filter] duration-200 group-hover:brightness-110 ${
+                      i === weeks.length - 1 ? "bg-pool" : "bg-pool-light"
+                    }`}
+                    style={{
+                      ...stagger(i),
+                      height: w.value ? `${(w.value / max) * 100}%` : 0,
+                    }}
                   />
-                </div>
+                </Tooltip.Trigger>
+                <Tooltip.Content placement="top">
+                  <p className="font-semibold">{label}</p>
+                  <p>
+                    {w.value} {w.value === 1 ? "lead" : "leads"}
+                  </p>
+                </Tooltip.Content>
               </Tooltip>
             </li>
           );
         })}
       </ol>
-      <div className="mt-1.5 flex justify-between text-[11px] text-default-500">
+      <div className="mt-1.5 flex justify-between text-[11px] text-muted">
         <span>{format(weeks[0].start, "dd/MM", { locale: ptBR })}</span>
         <span>
-          Esta semana: <strong className="font-semibold text-default-700">{last.value}</strong>
+          Esta semana: <strong className="font-semibold text-foreground">{last.value}</strong>
         </span>
       </div>
     </div>
@@ -310,25 +309,25 @@ function SourceBars({
   sources: { label: string; value: number }[];
   total: number;
 }) {
-  if (!sources.length) return <p className="text-xs text-default-500">Sem leads no período.</p>;
+  if (!sources.length) return <p className="text-xs text-muted">Sem leads no período.</p>;
   const max = sources[0].value;
 
   return (
     <ul className="flex flex-col gap-2" aria-label="Leads por origem">
-      {sources.map((s) => (
+      {sources.map((s, i) => (
         <li
           key={s.label}
           className="grid grid-cols-[5.5rem_minmax(0,1fr)_3.5rem] items-center gap-2 text-xs"
         >
-          <span className="truncate font-medium text-default-700">{s.label}</span>
-          <div className="h-2.5 rounded-full bg-default-100">
+          <span className="truncate font-medium text-foreground">{s.label}</span>
+          <div className="h-2.5 rounded-full bg-default">
             <div
-              className="h-full rounded-full bg-pool"
-              style={{ width: `${(s.value / max) * 100}%` }}
+              className="animate-admin-grow-x h-full rounded-full bg-pool"
+              style={{ ...stagger(i), width: `${(s.value / max) * 100}%` }}
             />
           </div>
-          <span className="text-right tabular-nums text-default-600">
-            {s.value} <span className="text-default-400">· {pct(s.value, total)}</span>
+          <span className="text-right text-muted tabular-nums">
+            {s.value} <span className="opacity-70">· {pct(s.value, total)}</span>
           </span>
         </li>
       ))}

@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Button, Card, CardBody, Skeleton, Tab, Tabs } from "@heroui/react";
-import { AlertCircle, Inbox, KanbanSquare, List, Plus, RefreshCw, ScanText } from "lucide-react";
+import { Button, Card, EmptyState, Skeleton, Tabs } from "@heroui/react";
+import {
+  ArrowRotateRight,
+  CircleExclamation,
+  LayoutColumns3,
+  ListUl,
+  Plus,
+  SquareDashedText,
+  Tray,
+} from "@gravity-ui/icons";
 import type { Lead, LeadStage } from "@/lib/leads/schema";
 import { describeDbError, useLeads, useUpdateStage } from "./leads-api";
 import {
@@ -16,6 +24,7 @@ import { LeadKanban } from "./LeadKanban";
 import { LeadTable } from "./LeadTable";
 import { LeadDrawer, type DrawerState } from "./LeadDrawer";
 import { PrintImportModal } from "./PrintImportModal";
+import { PendingLabel } from "./ui";
 
 export type LeadsView = "kanban" | "lista";
 
@@ -63,65 +72,49 @@ export function LeadsPage({
   const noLeadsAtAll = leadsQuery.isSuccess && allLeads.length === 0;
 
   const filteredEmpty = (
-    <div className="flex flex-col items-center gap-2 py-10 text-center">
-      <Inbox className="size-8 text-default-300" />
-      <p className="text-sm text-default-500">Nenhum lead encontrado com esses filtros.</p>
-      <Button size="sm" variant="flat" color="primary" onPress={() => setFilters(EMPTY_FILTERS)}>
+    <EmptyState className="flex flex-col items-center gap-2 py-10 text-center">
+      <Tray className="size-8 text-muted" />
+      <p className="text-sm text-muted">Nenhum lead encontrado com esses filtros.</p>
+      <Button size="sm" variant="tertiary" onPress={() => setFilters(EMPTY_FILTERS)}>
         Limpar filtros
       </Button>
-    </div>
+    </EmptyState>
   );
 
   return (
-    <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    // Tabs envolve a página: a lista de abas fica no cabeçalho e os painéis no conteúdo.
+    <Tabs
+      selectedKey={view}
+      onSelectionChange={(k) => onViewChange(k as LeadsView)}
+      className="gap-5"
+    >
+      <div className="animate-admin-rise flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-pool-deep md:text-3xl">Leads</h1>
-          <p className="text-sm text-default-500">Acompanhe os contatos do funil de vendas.</p>
+          <p className="text-sm text-muted">Acompanhe os contatos do funil de vendas.</p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Tabs
-            aria-label="Modo de visualização"
-            selectedKey={view}
-            onSelectionChange={(k) => onViewChange(k as LeadsView)}
-            color="primary"
-            radius="full"
-            size="md"
-          >
-            <Tab
-              key="kanban"
-              title={
-                <span className="flex items-center gap-1.5">
-                  <KanbanSquare className="size-4" /> Kanban
-                </span>
-              }
-            />
-            <Tab
-              key="lista"
-              title={
-                <span className="flex items-center gap-1.5">
-                  <List className="size-4" /> Lista
-                </span>
-              }
-            />
-          </Tabs>
-          <Button
-            color="primary"
-            radius="full"
-            startContent={<Plus className="size-4" />}
-            onPress={() => setDrawer({ mode: "create" })}
-            className="font-semibold"
-          >
+          <Tabs.ListContainer>
+            <Tabs.List aria-label="Modo de visualização">
+              <Tabs.Tab id="kanban" className="gap-1.5">
+                <LayoutColumns3 className="size-4" />
+                Kanban
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="lista" className="gap-1.5">
+                <Tabs.Separator />
+                <ListUl className="size-4" />
+                Lista
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            </Tabs.List>
+          </Tabs.ListContainer>
+          <Button onPress={() => setDrawer({ mode: "create" })}>
+            <Plus className="size-4" />
             Novo lead
           </Button>
-          <Button
-            color="primary"
-            variant="flat"
-            radius="full"
-            startContent={<ScanText className="size-4" />}
-            onPress={() => setPrintOpen(true)}
-            className="font-semibold"
-          >
+          <Button variant="secondary" onPress={() => setPrintOpen(true)}>
+            <SquareDashedText className="size-4" />
             Cadastrar por print
           </Button>
         </div>
@@ -137,73 +130,73 @@ export function LeadsPage({
       />
 
       {leadsQuery.isError ? (
-        <Card shadow="sm" className="border border-danger-200">
-          <CardBody className="flex flex-col items-center gap-3 py-10 text-center">
-            <AlertCircle className="size-8 text-danger" />
+        <Card className="animate-admin-rise border border-danger/30">
+          <Card.Content className="items-center gap-3 py-10 text-center">
+            <CircleExclamation className="size-8 text-danger" />
             <div>
               <p className="font-semibold">Não foi possível carregar os leads</p>
-              <p className="text-sm text-default-500">{describeDbError(leadsQuery.error)}</p>
+              <p className="text-sm text-muted">{describeDbError(leadsQuery.error)}</p>
             </div>
             <Button
-              variant="flat"
-              color="primary"
-              startContent={<RefreshCw className="size-4" />}
+              variant="tertiary"
               onPress={() => leadsQuery.refetch()}
-              isLoading={leadsQuery.isFetching}
+              isPending={leadsQuery.isFetching}
             >
-              Tentar novamente
+              {({ isPending }) => (
+                <PendingLabel isPending={isPending} icon={<ArrowRotateRight className="size-4" />}>
+                  Tentar novamente
+                </PendingLabel>
+              )}
             </Button>
-          </CardBody>
+          </Card.Content>
         </Card>
       ) : leadsQuery.isPending ? (
-        <div className="flex gap-3 overflow-hidden">
+        <div className="skeleton--shimmer flex gap-3 overflow-hidden" aria-busy="true">
           {Array.from({ length: 5 }).map((_, i) => (
             <div
               key={i}
-              className="flex w-[280px] shrink-0 flex-col gap-2.5 rounded-2xl bg-default-50 p-3 xl:flex-1"
+              className="flex w-70 shrink-0 flex-col gap-2.5 rounded-2xl bg-surface-secondary p-3 xl:flex-1"
             >
-              <Skeleton className="h-5 w-28 rounded-md" />
-              <Skeleton className="h-28 rounded-xl" />
-              <Skeleton className="h-28 rounded-xl" />
+              <Skeleton animationType="none" className="h-5 w-28 rounded-md" />
+              <Skeleton animationType="none" className="h-28 rounded-xl" />
+              <Skeleton animationType="none" className="h-28 rounded-xl" />
             </div>
           ))}
         </div>
       ) : noLeadsAtAll ? (
-        <Card shadow="sm" className="border border-default-100">
-          <CardBody className="flex flex-col items-center gap-3 py-14 text-center">
-            <Inbox className="size-10 text-pool-light" />
+        <Card className="animate-admin-rise">
+          <EmptyState className="flex flex-col items-center gap-3 py-14 text-center">
+            <span className="grid size-16 place-items-center rounded-2xl bg-pool-mist text-pool">
+              <Tray className="size-8" />
+            </span>
             <div>
               <p className="font-semibold">Nenhum lead ainda</p>
-              <p className="text-sm text-default-500">
+              <p className="text-sm text-muted">
                 Os pedidos do formulário do site aparecem aqui. Você também pode cadastrar
                 manualmente.
               </p>
             </div>
-            <Button
-              color="primary"
-              startContent={<Plus className="size-4" />}
-              onPress={() => setDrawer({ mode: "create" })}
-            >
+            <Button onPress={() => setDrawer({ mode: "create" })}>
+              <Plus className="size-4" />
               Cadastrar primeiro lead
             </Button>
-          </CardBody>
+          </EmptyState>
         </Card>
-      ) : view === "kanban" ? (
-        <>
-          {filtersActive && funnelLeads.length === 0 && (
-            <Card shadow="none" className="border border-default-200">
-              <CardBody className="p-0">{filteredEmpty}</CardBody>
-            </Card>
-          )}
-          <LeadKanban leads={funnelLeads} onOpen={openLead} onMove={moveLead} />
-        </>
       ) : (
-        <LeadTable
-          leads={listLeads}
-          onOpen={openLead}
-          resetKey={JSON.stringify(filters)}
-          emptyContent={filteredEmpty}
-        />
+        <>
+          <Tabs.Panel id="kanban" className="animate-admin-rise flex flex-col gap-3">
+            {filtersActive && funnelLeads.length === 0 && <Card>{filteredEmpty}</Card>}
+            <LeadKanban leads={funnelLeads} onOpen={openLead} onMove={moveLead} />
+          </Tabs.Panel>
+          <Tabs.Panel id="lista" className="animate-admin-rise">
+            <LeadTable
+              leads={listLeads}
+              onOpen={openLead}
+              resetKey={JSON.stringify(filters)}
+              emptyContent={filteredEmpty}
+            />
+          </Tabs.Panel>
+        </>
       )}
 
       <LeadDrawer
@@ -221,6 +214,6 @@ export function LeadsPage({
           setDrawer({ mode: "create", fromPrint });
         }}
       />
-    </div>
+    </Tabs>
   );
 }

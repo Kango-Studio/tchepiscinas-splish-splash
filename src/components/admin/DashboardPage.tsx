@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
-import { Button, Card, CardBody } from "@heroui/react";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { Button, Card } from "@heroui/react";
+import { ArrowRotateRight, CircleExclamation } from "@gravity-ui/icons";
 import { describeDbError, useLeads } from "./leads-api";
 import {
   EMPTY_FILTERS,
@@ -13,6 +13,7 @@ import { LeadFiltersBar } from "./LeadFiltersBar";
 import { LeadDashboard } from "./LeadDashboard";
 import { useAllFollowups } from "./followups-api";
 import { FollowupSummaryCard, FollowupsByStageCard } from "./FollowupReport";
+import { PendingLabel, StatusAlert } from "./ui";
 
 export function DashboardPage() {
   const leadsQuery = useLeads();
@@ -36,31 +37,33 @@ export function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
+      <div className="animate-admin-rise">
         <h1 className="text-2xl font-extrabold text-pool-deep md:text-3xl">Dashboard</h1>
-        <p className="text-sm text-default-500">Funil de vendas, origem dos leads e follow-ups.</p>
+        <p className="text-sm text-muted">Funil de vendas, origem dos leads e follow-ups.</p>
       </div>
 
       <LeadFiltersBar filters={filters} onChange={setFilters} cities={cities} showStage={false} />
 
       {leadsQuery.isError ? (
-        <Card shadow="sm" className="border border-danger-200">
-          <CardBody className="flex flex-col items-center gap-3 py-10 text-center">
-            <AlertCircle className="size-8 text-danger" />
+        <Card className="animate-admin-rise border border-danger/30">
+          <Card.Content className="items-center gap-3 py-10 text-center">
+            <CircleExclamation className="size-8 text-danger" />
             <div>
               <p className="font-semibold">Não foi possível carregar os dados</p>
-              <p className="text-sm text-default-500">{describeDbError(leadsQuery.error)}</p>
+              <p className="text-sm text-muted">{describeDbError(leadsQuery.error)}</p>
             </div>
             <Button
-              variant="flat"
-              color="primary"
-              startContent={<RefreshCw className="size-4" />}
+              variant="tertiary"
               onPress={() => leadsQuery.refetch()}
-              isLoading={leadsQuery.isFetching}
+              isPending={leadsQuery.isFetching}
             >
-              Tentar novamente
+              {({ isPending }) => (
+                <PendingLabel isPending={isPending} icon={<ArrowRotateRight className="size-4" />}>
+                  Tentar novamente
+                </PendingLabel>
+              )}
             </Button>
-          </CardBody>
+          </Card.Content>
         </Card>
       ) : (
         <>
@@ -70,9 +73,11 @@ export function DashboardPage() {
             filtered={hasActiveFilters(filters)}
           />
           {followupsQuery.isError ? (
-            <p className="text-sm text-danger">
-              Não foi possível carregar os follow-ups: {describeDbError(followupsQuery.error)}
-            </p>
+            <StatusAlert
+              status="danger"
+              title="Não foi possível carregar os follow-ups"
+              description={describeDbError(followupsQuery.error)}
+            />
           ) : (
             <div className="grid gap-3 lg:grid-cols-5">
               <div className="lg:col-span-2">

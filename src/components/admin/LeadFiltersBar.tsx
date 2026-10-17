@@ -1,5 +1,5 @@
-import { Button, Input, Select, SelectItem } from "@heroui/react";
-import { Search, X } from "lucide-react";
+import { Button, Label, ListBox, SearchField, Select } from "@heroui/react";
+import { Xmark } from "@gravity-ui/icons";
 import {
   INTEREST_LABELS,
   LEAD_INTERESTS,
@@ -20,26 +20,33 @@ function FilterSelect({
 }: {
   label: string;
   value: string;
-  options: { key: string; label: string }[];
+  options: { id: string; label: string }[];
   onChange: (value: string) => void;
 }) {
   return (
     <Select
-      aria-label={label}
-      label={label}
-      size="sm"
-      variant="bordered"
-      disallowEmptySelection
-      selectedKeys={[value || ALL]}
-      onSelectionChange={(keys) => {
-        const v = String(Array.from(keys)[0] ?? ALL);
+      fullWidth
+      value={value || ALL}
+      onChange={(key) => {
+        const v = String(key ?? ALL);
         onChange(v === ALL ? "" : v);
       }}
-      classNames={{ trigger: "bg-white" }}
     >
-      {[{ key: ALL, label: "Todos" }, ...options].map((o) => (
-        <SelectItem key={o.key}>{o.label}</SelectItem>
-      ))}
+      <Label>{label}</Label>
+      <Select.Trigger>
+        <Select.Value />
+        <Select.Indicator />
+      </Select.Trigger>
+      <Select.Popover>
+        <ListBox>
+          {[{ id: ALL, label: "Todos" }, ...options].map((o) => (
+            <ListBox.Item key={o.id} id={o.id} textValue={o.label}>
+              {o.label}
+              <ListBox.ItemIndicator />
+            </ListBox.Item>
+          ))}
+        </ListBox>
+      </Select.Popover>
     </Select>
   );
 }
@@ -60,26 +67,26 @@ export function LeadFiltersBar({
 
   return (
     <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:flex lg:flex-wrap lg:items-end">
-      <Input
+      <SearchField
         aria-label="Buscar por nome ou telefone"
-        placeholder="Buscar por nome ou telefone"
-        size="md"
-        variant="bordered"
-        isClearable
+        className="col-span-2 sm:col-span-3 lg:w-72 lg:flex-none"
+        fullWidth
         value={filters.search}
-        onValueChange={(v) => set("search", v)}
+        onChange={(v) => set("search", v)}
         onClear={() => set("search", "")}
-        startContent={<Search className="size-4 text-default-400" />}
-        classNames={{
-          base: "col-span-2 sm:col-span-3 lg:w-72 lg:flex-none",
-          inputWrapper: "bg-white",
-        }}
-      />
+      >
+        <Label className="sr-only lg:not-sr-only">Buscar</Label>
+        <SearchField.Group>
+          <SearchField.SearchIcon />
+          <SearchField.Input placeholder="Buscar por nome ou telefone" />
+          <SearchField.ClearButton />
+        </SearchField.Group>
+      </SearchField>
       <div className="lg:w-44">
         <FilterSelect
           label="Cidade"
           value={filters.city}
-          options={cities.map((c) => ({ key: c, label: c }))}
+          options={cities.map((c) => ({ id: c, label: c }))}
           onChange={(v) => set("city", v)}
         />
       </div>
@@ -87,7 +94,7 @@ export function LeadFiltersBar({
         <FilterSelect
           label="Interesse"
           value={filters.interest}
-          options={LEAD_INTERESTS.map((i) => ({ key: i, label: INTEREST_LABELS[i] }))}
+          options={LEAD_INTERESTS.map((i) => ({ id: i, label: INTEREST_LABELS[i] }))}
           onChange={(v) => set("interest", v as LeadFilters["interest"])}
         />
       </div>
@@ -95,7 +102,7 @@ export function LeadFiltersBar({
         <FilterSelect
           label="Origem"
           value={filters.source}
-          options={LEAD_SOURCES.map((s) => ({ key: s, label: SOURCE_LABELS[s] }))}
+          options={LEAD_SOURCES.map((s) => ({ id: s, label: SOURCE_LABELS[s] }))}
           onChange={(v) => set("source", v as LeadFilters["source"])}
         />
       </div>
@@ -104,30 +111,29 @@ export function LeadFiltersBar({
           label="Próximo contato"
           value={filters.nextContact === "all" ? "" : filters.nextContact}
           options={(["overdue", "today", "next7", "scheduled", "none"] as const).map((k) => ({
-            key: k,
+            id: k,
             label: NEXT_CONTACT_LABELS[k],
           }))}
           onChange={(v) => set("nextContact", (v || "all") as LeadFilters["nextContact"])}
         />
       </div>
       {showStage && (
-        <div className="lg:w-44">
+        <div className="animate-admin-rise lg:w-44">
           <FilterSelect
             label="Etapa"
             value={filters.stage}
-            options={LEAD_STAGES.map((s) => ({ key: s, label: STAGE_LABELS[s] }))}
+            options={LEAD_STAGES.map((s) => ({ id: s, label: STAGE_LABELS[s] }))}
             onChange={(v) => set("stage", v as LeadFilters["stage"])}
           />
         </div>
       )}
       {hasActiveFilters(filters) && (
         <Button
-          variant="light"
-          color="primary"
-          startContent={<X className="size-4" />}
+          variant="ghost"
+          className="animate-admin-rise self-end"
           onPress={() => onChange(EMPTY_FILTERS)}
-          className="self-center"
         >
+          <Xmark className="size-4" />
           Limpar filtros
         </Button>
       )}

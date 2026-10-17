@@ -3,9 +3,14 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Alert, Button, Input, Link, Spinner } from "@heroui/react";
-import { Eye, EyeOff } from "lucide-react";
-import { AuthCard, NotConfiguredNotice } from "@/components/admin/AdminStatusScreen";
+import { Button, FieldError, Input, InputGroup, Label, Link, TextField } from "@heroui/react";
+import { Eye, EyeSlash } from "@gravity-ui/icons";
+import {
+  AuthCard,
+  FullPageSpinner,
+  NotConfiguredNotice,
+} from "@/components/admin/AdminStatusScreen";
+import { PendingLabel, StatusAlert } from "@/components/admin/ui";
 import { useAdminAuth } from "@/components/admin/auth";
 import { getSupabase } from "@/lib/supabase/client";
 
@@ -35,13 +40,7 @@ function LoginPage() {
       </AuthCard>
     );
   }
-  if (state.status === "loading" || state.status === "admin") {
-    return (
-      <div className="flex min-h-dvh items-center justify-center">
-        <Spinner color="primary" label="Carregando..." />
-      </div>
-    );
-  }
+  if (state.status === "loading" || state.status === "admin") return <FullPageSpinner />;
 
   return (
     <AuthCard>
@@ -77,66 +76,71 @@ function LoginForm({ onForgot, forbidden }: { onForgot: () => void; forbidden: b
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
       <div className="text-center">
         <h1 className="text-xl font-bold text-pool-deep">Painel administrativo</h1>
-        <p className="text-sm text-default-500">Entre com sua conta de administrador.</p>
+        <p className="text-sm text-muted">Entre com sua conta de administrador.</p>
       </div>
 
-      {forbidden && <Alert color="danger" title="Esta conta não tem permissão de administrador." />}
-      {error && <Alert color="danger" title={error} />}
+      {forbidden && (
+        <StatusAlert status="danger" title="Esta conta não tem permissão de administrador." />
+      )}
+      {error && <StatusAlert status="danger" title={error} />}
 
       <Controller
         control={control}
         name="email"
         render={({ field }) => (
-          <Input
-            label="E-mail"
+          <TextField
+            fullWidth
             type="email"
             autoComplete="email"
-            variant="bordered"
+            name={field.name}
             value={field.value}
-            onValueChange={field.onChange}
+            onChange={field.onChange}
             onBlur={field.onBlur}
             isInvalid={!!errors.email}
-            errorMessage={errors.email?.message}
-          />
+          >
+            <Label>E-mail</Label>
+            <Input placeholder="voce@tchepiscinas.com" />
+            <FieldError>{errors.email?.message}</FieldError>
+          </TextField>
         )}
       />
       <Controller
         control={control}
         name="password"
         render={({ field }) => (
-          <Input
-            label="Senha"
+          <TextField
+            fullWidth
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"
-            variant="bordered"
+            name={field.name}
             value={field.value}
-            onValueChange={field.onChange}
+            onChange={field.onChange}
             onBlur={field.onBlur}
             isInvalid={!!errors.password}
-            errorMessage={errors.password?.message}
-            endContent={
-              <button
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-                className="text-default-400 hover:text-default-600"
-              >
-                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
-            }
-          />
+          >
+            <Label>Senha</Label>
+            <InputGroup>
+              <InputGroup.Input />
+              <InputGroup.Suffix>
+                <Button
+                  isIconOnly
+                  size="sm"
+                  variant="ghost"
+                  aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
+                  onPress={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? <EyeSlash className="size-4" /> : <Eye className="size-4" />}
+                </Button>
+              </InputGroup.Suffix>
+            </InputGroup>
+            <FieldError>{errors.password?.message}</FieldError>
+          </TextField>
         )}
       />
-      <Button
-        type="submit"
-        color="primary"
-        size="lg"
-        isLoading={isSubmitting}
-        className="font-semibold"
-      >
-        Entrar
+      <Button type="submit" size="lg" fullWidth isPending={isSubmitting} className="mt-1">
+        {({ isPending }) => <PendingLabel isPending={isPending}>Entrar</PendingLabel>}
       </Button>
-      <Link as="button" type="button" size="sm" className="self-center" onPress={onForgot}>
+      <Link className="self-center text-sm" onPress={onForgot}>
         Esqueci minha senha
       </Link>
     </form>
@@ -173,49 +177,50 @@ function ResetRequestForm({ onBack }: { onBack: () => void }) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} noValidate className="flex flex-col gap-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      noValidate
+      className="animate-admin-rise flex flex-col gap-4"
+    >
       <div className="text-center">
         <h1 className="text-xl font-bold text-pool-deep">Recuperar senha</h1>
-        <p className="text-sm text-default-500">Enviaremos um link para redefinir a senha.</p>
+        <p className="text-sm text-muted">Enviaremos um link para redefinir a senha.</p>
       </div>
       {sent ? (
-        <Alert
-          color="success"
+        <StatusAlert
+          status="success"
           title="Verifique seu e-mail"
           description="Se houver uma conta com este endereço, você receberá o link em instantes."
         />
       ) : (
         <>
-          {error && <Alert color="danger" title={error} />}
+          {error && <StatusAlert status="danger" title={error} />}
           <Controller
             control={control}
             name="email"
             render={({ field }) => (
-              <Input
-                label="E-mail"
+              <TextField
+                fullWidth
                 type="email"
                 autoComplete="email"
-                variant="bordered"
+                name={field.name}
                 value={field.value}
-                onValueChange={field.onChange}
+                onChange={field.onChange}
                 onBlur={field.onBlur}
                 isInvalid={!!errors.email}
-                errorMessage={errors.email?.message}
-              />
+              >
+                <Label>E-mail</Label>
+                <Input placeholder="voce@tchepiscinas.com" />
+                <FieldError>{errors.email?.message}</FieldError>
+              </TextField>
             )}
           />
-          <Button
-            type="submit"
-            color="primary"
-            size="lg"
-            isLoading={isSubmitting}
-            className="font-semibold"
-          >
-            Enviar link
+          <Button type="submit" size="lg" fullWidth isPending={isSubmitting}>
+            {({ isPending }) => <PendingLabel isPending={isPending}>Enviar link</PendingLabel>}
           </Button>
         </>
       )}
-      <Link as="button" type="button" size="sm" className="self-center" onPress={onBack}>
+      <Link className="self-center text-sm" onPress={onBack}>
         Voltar para o login
       </Link>
     </form>

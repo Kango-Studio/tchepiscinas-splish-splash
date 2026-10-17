@@ -1,20 +1,12 @@
 import { Fragment, useState } from "react";
-import {
-  Alert,
-  Button,
-  Input,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Textarea,
-} from "@heroui/react";
+import { Button, FieldError, Input, Label, Popover, TextArea, TextField } from "@heroui/react";
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Check, Plus, Trash2 } from "lucide-react";
+import { Check, Plus, TrashBin } from "@gravity-ui/icons";
 import type { LeadFollowup } from "@/lib/leads/schema";
 import { useAddFollowup, useLeadFollowups, useRemoveFollowup } from "./followups-api";
 import { todayISO } from "./filters";
-import { formatDateTime } from "./ui";
+import { PendingLabel, StatusAlert, formatDateTime } from "./ui";
 
 const MAX_DOTS = 5;
 
@@ -47,17 +39,17 @@ export function FollowupDots({ leadId }: { leadId: string }) {
       : `${count} follow-up${count > 1 ? "s" : ""} · último ${sinceLabel(last.done_at)}`;
 
   return (
-    <span className="inline-flex items-center gap-1.5 text-xs text-default-500" title={label}>
+    <span className="inline-flex items-center gap-1.5 text-xs text-muted" title={label}>
       <span className="inline-flex items-center gap-0.5" aria-hidden>
         {Array.from({ length: Math.min(count, MAX_DOTS) }, (_, i) => (
-          <span key={i} className="size-2 rounded-full bg-pool-deep" />
+          <span key={i} className="animate-admin-pop size-2 rounded-full bg-pool-deep" />
         ))}
-        {count === 0 && <span className="size-2 rounded-full border border-default-300" />}
+        {count === 0 && <span className="size-2 rounded-full border border-border" />}
         {count > MAX_DOTS && (
           <span className="ml-0.5 font-semibold text-pool-deep">+{count - MAX_DOTS}</span>
         )}
       </span>
-      <span className={count === 0 ? "text-default-400" : ""}>{label}</span>
+      <span>{label}</span>
     </span>
   );
 }
@@ -72,14 +64,14 @@ export function FollowupTracker({ leadId }: { leadId: string }) {
   return (
     <section
       aria-labelledby="followups-title"
-      className="rounded-2xl border border-default-200 bg-pool-mist/30 p-4"
+      className="rounded-2xl border border-border bg-pool-mist/30 p-4"
     >
       <div className="mb-3 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h3 id="followups-title" className="text-sm font-bold text-pool-deep">
           Follow-ups
         </h3>
         {!isLoading && !isError && (
-          <span className="text-xs text-default-500">
+          <span className="text-xs text-muted">
             {count === 0
               ? "Nenhum follow-up registrado"
               : `${count} feito${count > 1 ? "s" : ""} · último ${sinceLabel(last.done_at)}`}
@@ -88,8 +80,8 @@ export function FollowupTracker({ leadId }: { leadId: string }) {
       </div>
 
       {isError ? (
-        <Alert
-          color="warning"
+        <StatusAlert
+          status="warning"
           title="Não foi possível carregar os follow-ups"
           description="Verifique a conexão ou se a migração lead_followups foi aplicada no Supabase."
         />
@@ -97,7 +89,7 @@ export function FollowupTracker({ leadId }: { leadId: string }) {
         <ol className="flex flex-wrap items-start gap-y-3" aria-label="Checkpoints de follow-up">
           {followups.map((f, i) => (
             <Fragment key={f.id}>
-              <li>
+              <li className="animate-admin-pop">
                 <DoneCheckpoint followup={f} number={i + 1} />
               </li>
               <Connector />
@@ -114,15 +106,16 @@ export function FollowupTracker({ leadId }: { leadId: string }) {
 
 function Connector() {
   return (
-    <li aria-hidden className="mt-4 h-0.5 w-4 shrink-0 rounded-full bg-pool-light/60 sm:w-6" />
+    <li
+      aria-hidden
+      className="animate-admin-grow-x mt-4 h-0.5 w-4 shrink-0 rounded-full bg-pool-light/60 sm:w-6"
+    />
   );
 }
 
 function CheckpointLabel({ children }: { children: React.ReactNode }) {
   return (
-    <span className="mt-1 block text-center text-[11px] leading-tight text-default-500">
-      {children}
-    </span>
+    <span className="mt-1 block text-center text-[11px] leading-tight text-muted">{children}</span>
   );
 }
 
@@ -131,42 +124,46 @@ function DoneCheckpoint({ followup, number }: { followup: LeadFollowup; number: 
   const remove = useRemoveFollowup();
 
   return (
-    <Popover isOpen={open} onOpenChange={setOpen} placement="bottom" showArrow>
-      <PopoverTrigger>
-        <button
-          type="button"
-          className="flex w-12 flex-col items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-pool"
-          aria-label={`Follow-up ${number}, feito em ${formatDateTime(followup.done_at)}`}
-        >
-          <span className="relative flex size-9 items-center justify-center rounded-full bg-pool-deep text-sm font-bold text-white shadow-sm">
-            {number}
-            <span className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white">
-              <Check className="size-2.5" strokeWidth={3} />
-            </span>
+    <Popover isOpen={open} onOpenChange={setOpen}>
+      <Popover.Trigger
+        aria-label={`Follow-up ${number}, feito em ${formatDateTime(followup.done_at)}`}
+        className="group flex w-12 flex-col items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-focus"
+      >
+        <span className="relative flex size-9 items-center justify-center rounded-full bg-pool-deep text-sm font-bold text-white shadow-surface transition-transform duration-200 group-hover:scale-110">
+          {number}
+          <span className="absolute -right-0.5 -bottom-0.5 flex size-4 items-center justify-center rounded-full bg-emerald-500 ring-2 ring-white">
+            <Check className="size-2.5" />
           </span>
-          <CheckpointLabel>
-            {format(parseISO(followup.done_at), "dd/MM", { locale: ptBR })}
-          </CheckpointLabel>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 items-stretch p-3">
-        <p className="text-sm font-bold text-pool-deep">Follow-up {number}</p>
-        <p className="text-xs text-default-500">{formatDateTime(followup.done_at)}</p>
-        <p className="mt-2 text-sm whitespace-pre-wrap text-default-700">
-          {followup.note || <span className="text-default-400">Sem anotação</span>}
-        </p>
-        <Button
-          size="sm"
-          color="danger"
-          variant="light"
-          className="mt-2 self-end"
-          startContent={<Trash2 className="size-3.5" />}
-          isLoading={remove.isPending}
-          onPress={() => remove.mutate(followup, { onSuccess: () => setOpen(false) })}
-        >
-          Remover
-        </Button>
-      </PopoverContent>
+        </span>
+        <CheckpointLabel>
+          {format(parseISO(followup.done_at), "dd/MM", { locale: ptBR })}
+        </CheckpointLabel>
+      </Popover.Trigger>
+      <Popover.Content placement="bottom" className="w-64">
+        <Popover.Arrow />
+        <Popover.Dialog className="flex flex-col p-3">
+          <Popover.Heading className="text-sm font-bold text-pool-deep">
+            Follow-up {number}
+          </Popover.Heading>
+          <p className="text-xs text-muted">{formatDateTime(followup.done_at)}</p>
+          <p className="mt-2 text-sm whitespace-pre-wrap text-foreground">
+            {followup.note || <span className="text-muted">Sem anotação</span>}
+          </p>
+          <Button
+            size="sm"
+            variant="danger-soft"
+            className="mt-3 self-end"
+            isPending={remove.isPending}
+            onPress={() => remove.mutate(followup, { onSuccess: () => setOpen(false) })}
+          >
+            {({ isPending }) => (
+              <PendingLabel isPending={isPending} icon={<TrashBin className="size-3.5" />}>
+                Remover
+              </PendingLabel>
+            )}
+          </Button>
+        </Popover.Dialog>
+      </Popover.Content>
     </Popover>
   );
 }
@@ -204,57 +201,47 @@ function AddCheckpoint({
   };
 
   return (
-    <Popover isOpen={open} onOpenChange={onOpenChange} placement="bottom" showArrow>
-      <PopoverTrigger>
-        <button
-          type="button"
-          disabled={disabled}
-          title="Registrar follow-up"
-          className="flex w-12 flex-col items-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-pool disabled:opacity-50"
-          aria-label={`Registrar follow-up ${number}`}
-        >
-          <span className="flex size-9 items-center justify-center rounded-full border-2 border-dashed border-pool/60 bg-white text-pool-deep transition-colors hover:border-pool hover:bg-pool-mist">
-            <Plus className="size-4" />
-          </span>
-          <CheckpointLabel>{number}º</CheckpointLabel>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="w-72 items-stretch gap-3 p-3">
-        <p className="text-sm font-bold text-pool-deep">Registrar follow-up {number}</p>
-        <Input
-          type="date"
-          label="Data"
-          labelPlacement="outside"
-          variant="bordered"
-          size="sm"
-          max={today}
-          value={date}
-          onValueChange={setDate}
-          isInvalid={!validDate}
-          errorMessage="Escolha uma data até hoje"
-        />
-        <Textarea
-          label="Anotação"
-          labelPlacement="outside"
-          variant="bordered"
-          size="sm"
-          placeholder="Opcional. Ex.: mandei orçamento, pediu retorno sexta"
-          minRows={2}
-          maxLength={500}
-          value={note}
-          onValueChange={setNote}
-        />
+    <Popover isOpen={open} onOpenChange={onOpenChange}>
+      <div className="flex w-12 flex-col items-center">
         <Button
-          color="primary"
-          size="sm"
-          startContent={!add.isPending && <Check className="size-4" />}
-          isLoading={add.isPending}
-          isDisabled={!validDate}
-          onPress={submit}
+          isIconOnly
+          isDisabled={disabled}
+          variant="outline"
+          aria-label={`Registrar follow-up ${number}`}
+          className="size-9 rounded-full border-2 border-dashed border-pool/60 text-pool-deep transition-[scale,background-color,border-color] duration-200 hover:scale-110 hover:border-pool hover:bg-pool-mist"
         >
-          Marcar como feito
+          <Plus className="size-4" />
         </Button>
-      </PopoverContent>
+        <CheckpointLabel>{number}º</CheckpointLabel>
+      </div>
+      <Popover.Content placement="bottom" className="w-72">
+        <Popover.Arrow />
+        <Popover.Dialog className="flex flex-col gap-3 p-3">
+          <Popover.Heading className="text-sm font-bold text-pool-deep">
+            Registrar follow-up {number}
+          </Popover.Heading>
+          <TextField fullWidth type="date" value={date} onChange={setDate} isInvalid={!validDate}>
+            <Label>Data</Label>
+            <Input variant="secondary" max={today} />
+            <FieldError>Escolha uma data até hoje</FieldError>
+          </TextField>
+          <TextField fullWidth value={note} onChange={setNote} maxLength={500}>
+            <Label>Anotação</Label>
+            <TextArea
+              variant="secondary"
+              rows={2}
+              placeholder="Opcional. Ex.: mandei orçamento, pediu retorno sexta"
+            />
+          </TextField>
+          <Button size="sm" isPending={add.isPending} isDisabled={!validDate} onPress={submit}>
+            {({ isPending }) => (
+              <PendingLabel isPending={isPending} icon={<Check className="size-4" />}>
+                Marcar como feito
+              </PendingLabel>
+            )}
+          </Button>
+        </Popover.Dialog>
+      </Popover.Content>
     </Popover>
   );
 }

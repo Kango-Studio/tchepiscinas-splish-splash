@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PostgrestError } from "@supabase/supabase-js";
-import { addToast } from "@heroui/react";
+import { toast } from "@heroui/react";
 import { getSupabase } from "@/lib/supabase/client";
 import type { LeadFollowup } from "@/lib/leads/schema";
 import { describeDbError } from "./leads-api";
@@ -58,13 +58,11 @@ export function useAddFollowup() {
       qc.setQueryData<LeadFollowup[]>(FOLLOWUPS_QUERY_KEY, (list) =>
         [...(list ?? []), followup].sort(byDoneAt),
       );
-      addToast({ title: "Follow-up registrado", color: "success" });
+      toast.success("Follow-up registrado");
     },
     onError: (error) => {
-      addToast({
-        title: "Não foi possível registrar o follow-up",
+      toast.danger("Não foi possível registrar o follow-up", {
         description: describeDbError(error),
-        color: "danger",
       });
     },
   });
@@ -88,14 +86,10 @@ export function useRemoveFollowup() {
       qc.setQueryData<LeadFollowup[]>(FOLLOWUPS_QUERY_KEY, (list) =>
         list?.filter((f) => f.id !== followup.id),
       );
-      addToast({ title: "Follow-up removido", color: "success" });
+      toast.success("Follow-up removido");
     },
     onError: (error) => {
-      addToast({
-        title: "Não foi possível remover o follow-up",
-        description: describeDbError(error),
-        color: "danger",
-      });
+      toast.danger("Não foi possível remover o follow-up", { description: describeDbError(error) });
     },
   });
 }

@@ -1,8 +1,142 @@
-/* CSS do painel admin: estilos base da landing + tema HeroUI v2.
-   Fica separado de styles.css porque o HeroUI gera ~300 KB de CSS que a landing
-   não usa. As brand tokens do @theme em styles.css mantêm precedência sobre as
-   cores background/foreground/primary/secondary do HeroUI. */
+/* CSS do painel admin: estilos base da landing + HeroUI v3.
+   Fica separado de styles.css porque o HeroUI traz CSS que a landing não usa.
+   Import seletivo (docs HeroUI "Import Strategies"): o Tailwind já vem de styles.css,
+   então não reimportamos "tailwindcss" pelo pacote completo. */
 @import "./styles.css";
 
-@plugin "./hero.ts";
-@source "../node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx,mjs}";
+@import "@heroui/styles/base" layer(base);
+@import "@heroui/styles/base/scrollbar.css" layer(base);
+@import "@heroui/styles/themes/default" layer(theme);
+@import "@heroui/styles/components/index.css" layer(components);
+@import "@heroui/styles/utilities";
+@import "@heroui/styles/variants";
+
+/* ------------------------------------------------------------------------------------------------
+ * Tema Tchê Piscinas para o HeroUI v3
+ * ------------------------------------------------------------------------------------------------
+ * Aplicado em <html data-theme="tche-admin"> pela rota /admin. Fica fora de @layer de
+ * propósito: styles.css (landing) declara --background, --accent, --muted, --border e --radius
+ * em :root sem layer, com outro significado (ex.: --accent é o amarelo do sol, --muted é fundo).
+ * Sem layer e com especificidade maior, estes valores prevalecem só no painel.
+ */
+:root[data-theme="tche-admin"] {
+  color-scheme: light;
+
+  --radius: 0.75rem;
+  --field-radius: 0.875rem;
+
+  /* Base */
+  --background: oklch(0.979 0.008 230); /* #f4f9fc */
+  --foreground: oklch(0.22 0.06 240); /* azul-marinho da marca */
+
+  --surface: oklch(1 0 0);
+  --surface-foreground: var(--foreground);
+  --surface-secondary: oklch(0.965 0.014 228);
+  --surface-secondary-foreground: var(--foreground);
+  --surface-tertiary: oklch(0.945 0.02 228);
+  --surface-tertiary-foreground: var(--foreground);
+
+  --overlay: oklch(1 0 0);
+  --overlay-foreground: var(--foreground);
+
+  --muted: oklch(0.5 0.035 240);
+
+  --default: oklch(0.955 0.016 228);
+  --default-foreground: var(--foreground);
+
+  /* Marca: azul profundo como accent (botões primários, foco, seleção) */
+  --accent: var(--pool-deep);
+  --accent-foreground: oklch(0.99 0 0);
+
+  /* Campos */
+  --field-background: oklch(1 0 0);
+  --field-foreground: var(--foreground);
+  --field-placeholder: oklch(0.62 0.03 240);
+
+  /* Status */
+  --success: oklch(0.62 0.15 155);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: var(--sun);
+  --warning-foreground: var(--foreground);
+  --danger: oklch(0.58 0.22 27);
+  --danger-foreground: oklch(0.99 0 0);
+
+  --segment: oklch(1 0 0);
+  --segment-foreground: var(--foreground);
+
+  --border: oklch(0.9 0.02 225);
+  --separator: oklch(0.93 0.015 225);
+  --focus: var(--pool);
+  --link: var(--pool-deep);
+
+  --backdrop: color-mix(in oklab, var(--pool-deep) 35%, transparent);
+
+  /* Sombras com leve tom azulado da marca */
+  --surface-shadow:
+    0 1px 2px 0 color-mix(in oklab, var(--pool-deep) 6%, transparent),
+    0 2px 8px -2px color-mix(in oklab, var(--pool-deep) 8%, transparent);
+  --overlay-shadow:
+    0 8px 24px -6px color-mix(in oklab, var(--pool-deep) 18%, transparent),
+    0 2px 6px 0 color-mix(in oklab, var(--pool-deep) 8%, transparent);
+  --field-shadow: 0 1px 2px 0 color-mix(in oklab, var(--pool-deep) 8%, transparent);
+
+  --skeleton-animation: shimmer;
+  --tooltip-delay: 400ms;
+  --tooltip-close-delay: 0ms;
+}
+
+/* ------------------------------------------------------------------------------------------------
+ * Motion design do painel (CSS puro, como o HeroUI v3). Desligado com prefers-reduced-motion.
+ * ------------------------------------------------------------------------------------------------ */
+@keyframes admin-rise {
+  from {
+    opacity: 0;
+    translate: 0 12px;
+  }
+}
+@keyframes admin-grow-x {
+  from {
+    scale: 0 1;
+  }
+}
+@keyframes admin-grow-y {
+  from {
+    scale: 1 0;
+  }
+}
+@keyframes admin-pop {
+  from {
+    opacity: 0;
+    scale: 0.6;
+  }
+}
+
+/* Entrada em cascata: style={{ "--i": n }} define a ordem. */
+@utility animate-admin-rise {
+  animation: admin-rise 520ms var(--ease-out-quint) both;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+/* Barras horizontais crescendo da esquerda (ou do centro, com origin-center). */
+@utility animate-admin-grow-x {
+  transform-origin: left center;
+  animation: admin-grow-x 760ms var(--ease-out-expo) both;
+  animation-delay: calc(120ms + var(--i, 0) * 70ms);
+}
+/* Colunas crescendo da base. */
+@utility animate-admin-grow-y {
+  transform-origin: center bottom;
+  animation: admin-grow-y 700ms var(--ease-out-expo) both;
+  animation-delay: calc(120ms + var(--i, 0) * 45ms);
+}
+@utility animate-admin-pop {
+  animation: admin-pop 360ms var(--ease-out-back, cubic-bezier(0.34, 1.56, 0.64, 1)) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-admin-rise,
+  .animate-admin-grow-x,
+  .animate-admin-grow-y,
+  .animate-admin-pop {
+    animation: none;
+  }
+}

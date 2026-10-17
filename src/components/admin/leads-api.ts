@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PostgrestError } from "@supabase/supabase-js";
-import { addToast } from "@heroui/react";
+import { toast } from "@heroui/react";
 import { getSupabase } from "@/lib/supabase/client";
 import { STAGE_LABELS, type Lead, type LeadFormValues, type LeadStage } from "@/lib/leads/schema";
 
@@ -67,7 +67,7 @@ export function useCreateLead() {
     },
     onSuccess: (lead) => {
       qc.setQueryData<Lead[]>(LEADS_QUERY_KEY, (list) => upsertInCache(list, lead));
-      addToast({ title: "Lead cadastrado", description: lead.name, color: "success" });
+      toast.success("Lead cadastrado", { description: lead.name });
     },
   });
 }
@@ -87,7 +87,7 @@ export function useUpdateLead() {
     },
     onSuccess: (lead) => {
       qc.setQueryData<Lead[]>(LEADS_QUERY_KEY, (list) => upsertInCache(list, lead));
-      addToast({ title: "Alterações salvas", description: lead.name, color: "success" });
+      toast.success("Alterações salvas", { description: lead.name });
     },
   });
 }
@@ -117,10 +117,8 @@ export function useUpdateStage() {
       qc.setQueryData<Lead[]>(LEADS_QUERY_KEY, (list) =>
         list?.map((l) => (l.id === id && l.stage === stage ? { ...l, stage: previous } : l)),
       );
-      addToast({
-        title: "Não foi possível mover o lead",
+      toast.danger("Não foi possível mover o lead", {
         description: `${describeDbError(error)} O card voltou para "${STAGE_LABELS[previous]}".`,
-        color: "danger",
       });
     },
     onSuccess: (lead, { stage }) => {
@@ -147,7 +145,7 @@ export function useDeleteLead() {
     },
     onSuccess: (lead) => {
       qc.setQueryData<Lead[]>(LEADS_QUERY_KEY, (list) => list?.filter((l) => l.id !== lead.id));
-      addToast({ title: "Lead excluído", description: lead.name, color: "success" });
+      toast.success("Lead excluído", { description: lead.name });
     },
   });
 }

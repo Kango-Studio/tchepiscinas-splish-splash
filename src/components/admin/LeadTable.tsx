@@ -1,17 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Button,
-  Pagination,
-  Table,
-  TableBody,
-  TableCell,
-  TableColumn,
-  TableHeader,
-  TableRow,
-  Tooltip,
-  type SortDescriptor,
-} from "@heroui/react";
-import { AlertTriangle, Eye } from "lucide-react";
+import { Button, Pagination, Table, Tooltip, type SortDescriptor } from "@heroui/react";
+import { Eye, TriangleExclamation } from "@gravity-ui/icons";
 import { formatBrazilPhone } from "@/lib/leads/phone";
 import { INTEREST_LABELS, type Lead } from "@/lib/leads/schema";
 import { isOverdue, todayISO } from "./filters";
@@ -19,6 +8,19 @@ import { LeadWhatsAppButton, StageChip, formatDate } from "./ui";
 import { FollowupDots } from "./FollowupCheckpoints";
 
 const PAGE_SIZE = 10;
+
+// Páginas visíveis com reticências: 1 … 4 5 6 … 12
+function pageList(page: number, total: number): (number | "…")[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const around = [page - 1, page, page + 1].filter((p) => p > 1 && p < total);
+  return [
+    1,
+    ...(around[0] > 2 ? (["…"] as const) : []),
+    ...around,
+    ...(around[around.length - 1] < total - 1 ? (["…"] as const) : []),
+    total,
+  ];
+}
 
 export function LeadTable({
   leads,
@@ -52,106 +54,149 @@ export function LeadTable({
 
   const pageItems = sorted.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const today = todayISO();
+  const first = (page - 1) * PAGE_SIZE + 1;
+  const last = Math.min(page * PAGE_SIZE, sorted.length);
 
   return (
-    <div className="flex flex-col gap-3">
-      <Table
-        aria-label="Lista de leads"
-        sortDescriptor={sort}
-        onSortChange={setSort}
-        onRowAction={(key) => onOpen(String(key))}
-        classNames={{
-          wrapper: "p-0 shadow-sm border border-default-200",
-          th: "bg-pool-mist/60 text-pool-deep",
-        }}
-        bottomContent={
-          pages > 1 ? (
-            <div className="flex w-full items-center justify-between gap-2 px-3 pb-3">
-              <span className="text-xs text-default-500">
-                {sorted.length} leads · página {page} de {pages}
-              </span>
-              <Pagination size="sm" showControls page={page} total={pages} onChange={setPage} />
-            </div>
-          ) : null
-        }
-      >
-        <TableHeader>
-          <TableColumn key="name">NOME</TableColumn>
-          <TableColumn key="whatsapp">WHATSAPP</TableColumn>
-          <TableColumn key="city" className="hidden md:table-cell">
-            CIDADE
-          </TableColumn>
-          <TableColumn key="interest" className="hidden lg:table-cell">
-            INTERESSE
-          </TableColumn>
-          <TableColumn key="stage">ETAPA</TableColumn>
-          <TableColumn key="followups" className="hidden lg:table-cell">
-            FOLLOW-UPS
-          </TableColumn>
-          <TableColumn key="next_contact" className="hidden md:table-cell">
-            PRÓXIMO CONTATO
-          </TableColumn>
-          <TableColumn key="created_at" allowsSorting className="hidden sm:table-cell">
-            CRIADO EM
-          </TableColumn>
-          <TableColumn key="actions" align="end">
-            AÇÕES
-          </TableColumn>
-        </TableHeader>
-        <TableBody items={pageItems} emptyContent={emptyContent}>
-          {(lead) => {
-            const overdue = isOverdue(lead, today);
-            return (
-              <TableRow key={lead.id} className="cursor-pointer">
-                <TableCell>
-                  <span className="font-semibold">{lead.name}</span>
-                </TableCell>
-                <TableCell className="whitespace-nowrap">
-                  {formatBrazilPhone(lead.whatsapp)}
-                </TableCell>
-                <TableCell className="hidden md:table-cell">{lead.city ?? "—"}</TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  {INTEREST_LABELS[lead.interest]}
-                </TableCell>
-                <TableCell>
-                  <StageChip stage={lead.stage} />
-                </TableCell>
-                <TableCell className="hidden lg:table-cell">
-                  <FollowupDots leadId={lead.id} />
-                </TableCell>
-                <TableCell className="hidden md:table-cell">
-                  <span
-                    className={`inline-flex items-center gap-1 whitespace-nowrap ${overdue ? "font-semibold text-danger" : ""}`}
-                  >
-                    {overdue && <AlertTriangle className="size-3.5" aria-label="Atrasado" />}
-                    {formatDate(lead.next_contact_date)}
-                  </span>
-                </TableCell>
-                <TableCell className="hidden whitespace-nowrap sm:table-cell">
-                  {formatDate(lead.created_at)}
-                </TableCell>
-                <TableCell>
-                  <div className="flex justify-end gap-1.5">
-                    <LeadWhatsAppButton lead={lead} />
-                    <Tooltip content="Ver detalhes" closeDelay={0}>
-                      <Button
-                        isIconOnly
-                        size="sm"
-                        variant="flat"
-                        radius="full"
-                        aria-label={`Ver detalhes de ${lead.name}`}
-                        onPress={() => onOpen(lead.id)}
-                      >
-                        <Eye className="size-4" />
-                      </Button>
-                    </Tooltip>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          }}
-        </TableBody>
-      </Table>
-    </div>
+    <Table>
+      <Table.ScrollContainer>
+        <Table.Content
+          aria-label="Lista de leads"
+          sortDescriptor={sort}
+          onSortChange={setSort}
+          onRowAction={(key) => onOpen(String(key))}
+        >
+          <Table.Header>
+            <Table.Column id="name" isRowHeader>
+              Nome
+            </Table.Column>
+            <Table.Column id="whatsapp">WhatsApp</Table.Column>
+            <Table.Column id="city" className="hidden md:table-cell">
+              Cidade
+            </Table.Column>
+            <Table.Column id="interest" className="hidden lg:table-cell">
+              Interesse
+            </Table.Column>
+            <Table.Column id="stage">Etapa</Table.Column>
+            <Table.Column id="followups" className="hidden lg:table-cell">
+              Follow-ups
+            </Table.Column>
+            <Table.Column id="next_contact" className="hidden md:table-cell">
+              Próximo contato
+            </Table.Column>
+            <Table.Column id="created_at" allowsSorting className="hidden sm:table-cell">
+              {({ sortDirection }) => (
+                <Table.SortableColumnHeader sortDirection={sortDirection}>
+                  Criado em
+                </Table.SortableColumnHeader>
+              )}
+            </Table.Column>
+            <Table.Column id="actions" className="text-end">
+              Ações
+            </Table.Column>
+          </Table.Header>
+          <Table.Body items={pageItems} renderEmptyState={() => emptyContent}>
+            {(lead) => {
+              const overdue = isOverdue(lead, today);
+              return (
+                <Table.Row id={lead.id} className="cursor-pointer">
+                  <Table.Cell>
+                    <span className="font-semibold whitespace-nowrap">{lead.name}</span>
+                  </Table.Cell>
+                  <Table.Cell className="whitespace-nowrap">
+                    {formatBrazilPhone(lead.whatsapp)}
+                  </Table.Cell>
+                  <Table.Cell className="hidden md:table-cell">{lead.city ?? "—"}</Table.Cell>
+                  <Table.Cell className="hidden lg:table-cell">
+                    {INTEREST_LABELS[lead.interest]}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <StageChip stage={lead.stage} />
+                  </Table.Cell>
+                  <Table.Cell className="hidden lg:table-cell">
+                    <FollowupDots leadId={lead.id} />
+                  </Table.Cell>
+                  <Table.Cell className="hidden md:table-cell">
+                    <span
+                      className={`inline-flex items-center gap-1 whitespace-nowrap ${overdue ? "font-semibold text-danger" : ""}`}
+                    >
+                      {overdue && (
+                        <TriangleExclamation className="size-3.5" aria-label="Atrasado" />
+                      )}
+                      {formatDate(lead.next_contact_date)}
+                    </span>
+                  </Table.Cell>
+                  <Table.Cell className="hidden whitespace-nowrap sm:table-cell">
+                    {formatDate(lead.created_at)}
+                  </Table.Cell>
+                  <Table.Cell>
+                    <div className="flex justify-end gap-1.5">
+                      <LeadWhatsAppButton lead={lead} />
+                      <Tooltip delay={300} closeDelay={0}>
+                        <Tooltip.Trigger>
+                          <Button
+                            isIconOnly
+                            size="sm"
+                            variant="tertiary"
+                            className="rounded-full"
+                            aria-label={`Ver detalhes de ${lead.name}`}
+                            onPress={() => onOpen(lead.id)}
+                          >
+                            <Eye className="size-4" />
+                          </Button>
+                        </Tooltip.Trigger>
+                        <Tooltip.Content>Ver detalhes</Tooltip.Content>
+                      </Tooltip>
+                    </div>
+                  </Table.Cell>
+                </Table.Row>
+              );
+            }}
+          </Table.Body>
+        </Table.Content>
+      </Table.ScrollContainer>
+      {pages > 1 && (
+        <Table.Footer>
+          <Pagination size="sm">
+            <Pagination.Summary>
+              {first}–{last} de {sorted.length} leads
+            </Pagination.Summary>
+            <Pagination.Content>
+              <Pagination.Item>
+                <Pagination.Previous
+                  isDisabled={page === 1}
+                  onPress={() => setPage((p) => Math.max(1, p - 1))}
+                >
+                  <Pagination.PreviousIcon />
+                  <span className="hidden sm:inline">Anterior</span>
+                </Pagination.Previous>
+              </Pagination.Item>
+              {pageList(page, pages).map((p, i) =>
+                p === "…" ? (
+                  <Pagination.Item key={`gap-${i}`}>
+                    <Pagination.Ellipsis />
+                  </Pagination.Item>
+                ) : (
+                  <Pagination.Item key={p}>
+                    <Pagination.Link isActive={p === page} onPress={() => setPage(p)}>
+                      {p}
+                    </Pagination.Link>
+                  </Pagination.Item>
+                ),
+              )}
+              <Pagination.Item>
+                <Pagination.Next
+                  isDisabled={page === pages}
+                  onPress={() => setPage((p) => Math.min(pages, p + 1))}
+                >
+                  <span className="hidden sm:inline">Próxima</span>
+                  <Pagination.NextIcon />
+                </Pagination.Next>
+              </Pagination.Item>
+            </Pagination.Content>
+          </Pagination>
+        </Table.Footer>
+      )}
+    </Table>
   );
 }

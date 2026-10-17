@@ -1,5 +1,5 @@
-import type { SyntheticEvent } from "react";
-import { Button, Chip, Tooltip } from "@heroui/react";
+import { useEffect, useRef, useState, type SyntheticEvent } from "react";
+import { Alert, Chip, Spinner, Tooltip, buttonVariants } from "@heroui/react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { WhatsappIcon } from "@/components/icons/whatsapp-icon";
@@ -31,11 +31,11 @@ export function StageChip({ stage, size = "sm" }: { stage: LeadStage; size?: "sm
   return (
     <Chip
       size={size}
-      variant="flat"
-      classNames={{ base: STAGE_STYLES[stage].chip, content: "font-semibold" }}
-      startContent={<span className={`ml-1 size-2 rounded-full ${STAGE_STYLES[stage].dot}`} />}
+      variant="soft"
+      className={`font-semibold whitespace-nowrap ${STAGE_STYLES[stage].chip}`}
     >
-      {STAGE_LABELS[stage]}
+      <span className={`size-2 shrink-0 rounded-full ${STAGE_STYLES[stage].dot}`} aria-hidden />
+      <Chip.Label>{STAGE_LABELS[stage]}</Chip.Label>
     </Chip>
   );
 }
@@ -57,6 +57,75 @@ export const stopCardEvents = {
   onKeyDown: stop,
 };
 
+// Alert composto do v3 (Indicator + Content) com título e descrição opcionais.
+export function StatusAlert({
+  status,
+  title,
+  description,
+  className,
+}: {
+  status: "default" | "accent" | "success" | "warning" | "danger";
+  title: React.ReactNode;
+  description?: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <Alert status={status} className={`animate-admin-rise ${className ?? ""}`}>
+      <Alert.Indicator />
+      <Alert.Content>
+        <Alert.Title>{title}</Alert.Title>
+        {description && <Alert.Description>{description}</Alert.Description>}
+      </Alert.Content>
+    </Alert>
+  );
+}
+
+// Ícone + texto de carregamento dentro de um Button (padrão de render props do v3).
+export function PendingLabel({
+  isPending,
+  icon,
+  children,
+}: {
+  isPending: boolean;
+  icon?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <>
+      {isPending ? <Spinner color="current" size="sm" /> : icon}
+      {children}
+    </>
+  );
+}
+
+// Número que conta de 0 até o valor ao aparecer (respeita prefers-reduced-motion).
+export function CountUp({ value, duration = 700 }: { value: number; duration?: number }) {
+  const [shown, setShown] = useState(0);
+  const from = useRef(0);
+
+  useEffect(() => {
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const start = from.current;
+    from.current = value;
+    if (reduce || start === value) {
+      setShown(value);
+      return;
+    }
+    let frame = 0;
+    const t0 = performance.now();
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 4);
+      setShown(Math.round(start + (value - start) * eased));
+      if (p < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value, duration]);
+
+  return <span className="tabular-nums">{shown}</span>;
+}
+
 export function LeadWhatsAppButton({
   lead,
   size = "sm",
@@ -69,40 +138,43 @@ export function LeadWhatsAppButton({
   const firstName = lead.name.split(" ")[0];
   const href = whatsappChatLink(lead.whatsapp, `Olá, ${firstName}! Aqui é da Tchê Piscinas.`);
   const label = `Abrir WhatsApp de ${lead.name} (${formatBrazilPhone(lead.whatsapp)})`;
+  // Link com aparência de botão: variant function do HeroUI aplicada ao <a>.
+  const className = buttonVariants({
+    size,
+    isIconOnly: !withLabel,
+    className:
+      "bg-whatsapp font-semibold text-white hover:bg-whatsapp/90" +
+      (withLabel ? "" : " rounded-full"),
+  });
 
   if (withLabel) {
     return (
-      <Button
-        as="a"
-        role="link"
+      <a
         href={href}
         target="_blank"
         rel="noopener noreferrer"
-        size={size}
-        className="bg-whatsapp font-semibold text-white"
-        startContent={<WhatsappIcon className="size-4" />}
-        aria-label={label}
-      >
-        WhatsApp
-      </Button>
-    );
-  }
-  return (
-    <Tooltip content="Abrir WhatsApp" closeDelay={0}>
-      <Button
-        as="a"
-        role="link"
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        isIconOnly
-        size={size}
-        radius="full"
-        className="bg-whatsapp text-white"
+        className={className}
         aria-label={label}
       >
         <WhatsappIcon className="size-4" />
-      </Button>
+        WhatsApp
+      </a>
+    );
+  }
+  return (
+    <Tooltip delay={300} closeDelay={0}>
+      <Tooltip.Trigger>
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={className}
+          aria-label={label}
+        >
+          <WhatsappIcon className="size-4" />
+        </a>
+      </Tooltip.Trigger>
+      <Tooltip.Content>Abrir WhatsApp</Tooltip.Content>
     </Tooltip>
   );
 }
