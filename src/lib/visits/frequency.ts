@@ -6,6 +6,7 @@ import {
   startOfWeek,
   subMonths,
 } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 // Média de dias entre visitas consecutivas nos últimos `months` meses.
 // Precisa de pelo menos duas datas diferentes no período.
@@ -29,3 +30,12 @@ export function reportWeek(today: string) {
     end: format(addDays(monday, 6), "yyyy-MM-dd"),
   };
 }
+
+// "2026-10" -> "Outubro de 2026"
+export function monthLabel(month: string) {
+  const label = format(parseISO(`${month}-01`), "MMMM 'de' yyyy", { locale: ptBR });
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+// Mês atual (AAAA-MM) pelo relógio do navegador.
+export const currentMonth = () => format(new Date(), "yyyy-MM");

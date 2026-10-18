@@ -3,11 +3,9 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { AdminStatusScreen } from "@/components/admin/AdminStatusScreen";
 import {
-  VISIT_PERIODS,
   VISIT_TABS,
   VisitsPage,
   type VisitFilters,
-  type VisitPeriod,
   type VisitTab,
 } from "@/components/admin/VisitsPage";
 import { useAdminAuth } from "@/components/admin/auth";
@@ -18,11 +16,8 @@ export const Route = createFileRoute("/admin/visitas")({
       VISIT_TABS.includes(search.aba as VisitTab) && search.aba !== "frequencia"
         ? (search.aba as VisitTab)
         : undefined,
-    piscineiro:
-      typeof search.piscineiro === "string" && search.piscineiro ? search.piscineiro : undefined,
-    periodo: VISIT_PERIODS.includes(search.periodo as VisitPeriod)
-      ? (search.periodo as VisitPeriod)
-      : undefined,
+    mes:
+      typeof search.mes === "string" && /^\d{4}-\d{2}$/.test(search.mes) ? search.mes : undefined,
   }),
   component: AdminVisitsRoute,
 });
