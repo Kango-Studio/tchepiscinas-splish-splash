@@ -215,14 +215,14 @@ export function ClientsPage({
                 <Icon className="size-5" aria-hidden />
               </span>
               <span className="min-w-0">
-                <span className="flex items-center gap-1.5 text-xs font-medium text-muted">
+                <span className="flex items-center gap-1.5 text-xs font-normal text-muted">
                   <span className={`size-2 rounded-full sm:hidden ${FREQUENCY_STYLES[s].dot}`} />
                   {FREQUENCY_LABELS[s]}
                 </span>
                 {data.isPending ? (
                   <Skeleton className="mt-1 h-7 w-10 rounded-md" />
                 ) : (
-                  <span className="block font-display text-2xl font-semibold tracking-tight text-foreground">
+                  <span className="block font-display text-2xl font-medium tracking-tight text-foreground">
                     <CountUp value={counts[s]} />
                   </span>
                 )}
@@ -389,7 +389,7 @@ export function ClientsPage({
                   return (
                     <Table.Row id={row.id} className="cursor-pointer">
                       <Table.Cell>
-                        <span className="block font-medium sm:whitespace-nowrap">{row.name}</span>
+                        <span className="block font-normal sm:whitespace-nowrap">{row.name}</span>
                         {/* No celular: plano e bairro embaixo do nome. */}
                         <span className="block text-xs text-muted">
                           <span className="sm:hidden">
@@ -405,7 +405,7 @@ export function ClientsPage({
                       <Table.Cell>
                         {f && (
                           <span
-                            className={`inline-flex items-center gap-1.5 font-semibold whitespace-nowrap tabular-nums ${tone}`}
+                            className={`inline-flex items-center gap-1.5 font-medium whitespace-nowrap tabular-nums ${tone}`}
                           >
                             {/* O status vira só a cor no celular. */}
                             <span

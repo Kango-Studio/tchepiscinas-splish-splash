@@ -195,14 +195,14 @@ export function FrequencyTab({
                 <Icon className="size-5" aria-hidden />
               </span>
               <span className="min-w-0">
-                <span className="flex items-center gap-1.5 text-xs font-medium text-muted">
+                <span className="flex items-center gap-1.5 text-xs font-normal text-muted">
                   <span className={`size-2 rounded-full sm:hidden ${FREQUENCY_STYLES[s].dot}`} />
                   {s === "ok" ? "OK" : s === "atencao" ? "Em atenção" : "Atrasados"}
                 </span>
                 {isPending ? (
                   <Skeleton className="mt-1 h-7 w-10 rounded-md" />
                 ) : (
-                  <span className="block font-display text-2xl font-semibold tracking-tight text-foreground">
+                  <span className="block font-display text-2xl font-medium tracking-tight text-foreground">
                     <CountUp value={counts[s]} />
                   </span>
                 )}
@@ -249,7 +249,7 @@ export function FrequencyTab({
                             <Persons className="size-4.5" aria-hidden />
                           </span>
                           <span className="min-w-0">
-                            <span className="block font-semibold text-foreground">{g.name}</span>
+                            <span className="block font-medium text-foreground">{g.name}</span>
                             <span className="block text-xs text-muted">
                               {g.clients.length} {g.clients.length === 1 ? "cliente" : "clientes"}
                               {g.tech &&
@@ -264,7 +264,7 @@ export function FrequencyTab({
                             </span>
                           </span>
                         </span>
-                        <span className="flex flex-wrap items-center gap-1.5 pl-12 text-xs font-semibold sm:pl-0">
+                        <span className="flex flex-wrap items-center gap-1.5 pl-12 text-xs font-medium sm:pl-0">
                           <span
                             className={`rounded-full px-2.5 py-1 ${g.late ? FREQUENCY_STYLES.atrasado.chip : "bg-surface-secondary text-muted"}`}
                           >
@@ -337,7 +337,7 @@ function ClientFrequencyRow({
         <Link
           to="/admin/clientes/$clientId"
           params={{ clientId: client.id }}
-          className="font-medium text-foreground hover:text-accent hover:underline"
+          className="font-normal text-foreground hover:text-accent hover:underline"
         >
           {client.name}
         </Link>
@@ -362,7 +362,7 @@ function ClientFrequencyRow({
       </div>
       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 sm:justify-end">
         <span
-          className={`text-sm font-semibold whitespace-nowrap tabular-nums ${FREQUENCY_STYLES[f.status].text}`}
+          className={`text-sm font-medium whitespace-nowrap tabular-nums ${FREQUENCY_STYLES[f.status].text}`}
         >
           {daysLabel(f.days_without_visit)}
           <span className="font-normal text-muted"> sem visita</span>
@@ -500,8 +500,8 @@ function LateReasonsCard({
               <Table.Body items={rows}>
                 {(row) => (
                   <Table.Row id={row.id}>
-                    <Table.Cell className="font-medium whitespace-nowrap">{row.name}</Table.Cell>
-                    <Table.Cell className="text-end font-semibold tabular-nums">
+                    <Table.Cell className="font-normal whitespace-nowrap">{row.name}</Table.Cell>
+                    <Table.Cell className="text-end font-medium tabular-nums">
                       {row.counts.total}
                     </Table.Cell>
                     {columns.map((c) => (

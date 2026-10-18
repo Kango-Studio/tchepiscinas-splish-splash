@@ -44,7 +44,7 @@ export function FrequencyChip({
     ? FREQUENCY_STYLES[status]
     : { dot: "bg-slate-400", chip: "bg-slate-200 text-slate-700" };
   return (
-    <Chip size={size} variant="soft" className={`font-semibold whitespace-nowrap ${style.chip}`}>
+    <Chip size={size} variant="soft" className={`font-medium whitespace-nowrap ${style.chip}`}>
       <span className={`size-2 shrink-0 rounded-full ${style.dot}`} aria-hidden />
       <Chip.Label>{active ? FREQUENCY_LABELS[status] : "Inativo"}</Chip.Label>
     </Chip>
@@ -63,7 +63,7 @@ export function LateCaseChip({ status }: { status: LateCaseStatus }) {
     <Chip
       size="sm"
       variant="soft"
-      className={`font-semibold whitespace-nowrap ${LATE_CASE_STYLES[status]}`}
+      className={`font-medium whitespace-nowrap ${LATE_CASE_STYLES[status]}`}
     >
       <Chip.Label>{LATE_CASE_STATUS_LABELS[status]}</Chip.Label>
     </Chip>
