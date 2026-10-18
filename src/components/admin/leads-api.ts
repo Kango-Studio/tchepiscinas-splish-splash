@@ -13,6 +13,8 @@ export function describeDbError(error: unknown): string {
     return "Sem permissão para esta operação ou o lead não existe mais.";
   }
   if (e?.code === "23514") return "Algum campo está fora do formato aceito.";
+  if (e?.code === "23505") return "Já existe um cadastro com esse nome.";
+  if (e?.code === "23503") return "Não é possível excluir: há registros ligados a este cadastro.";
   if (e?.message?.toLowerCase().includes("jwt")) return "Sessão expirada. Entre novamente.";
   if (e?.message?.toLowerCase().includes("failed to fetch")) return "Sem conexão com o servidor.";
   return "Ocorreu um erro inesperado. Tente novamente.";

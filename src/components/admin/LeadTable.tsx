@@ -157,46 +157,65 @@ export function LeadTable({
       </Table.ScrollContainer>
       {pages > 1 && (
         <Table.Footer>
-          <Pagination size="sm">
-            <Pagination.Summary>
-              {first}–{last} de {sorted.length} leads
-            </Pagination.Summary>
-            <Pagination.Content>
-              <Pagination.Item>
-                <Pagination.Previous
-                  isDisabled={page === 1}
-                  onPress={() => setPage((p) => Math.max(1, p - 1))}
-                >
-                  <Pagination.PreviousIcon />
-                  <span className="hidden sm:inline">Anterior</span>
-                </Pagination.Previous>
-              </Pagination.Item>
-              {pageList(page, pages).map((p, i) =>
-                p === "…" ? (
-                  <Pagination.Item key={`gap-${i}`}>
-                    <Pagination.Ellipsis />
-                  </Pagination.Item>
-                ) : (
-                  <Pagination.Item key={p}>
-                    <Pagination.Link isActive={p === page} onPress={() => setPage(p)}>
-                      {p}
-                    </Pagination.Link>
-                  </Pagination.Item>
-                ),
-              )}
-              <Pagination.Item>
-                <Pagination.Next
-                  isDisabled={page === pages}
-                  onPress={() => setPage((p) => Math.min(pages, p + 1))}
-                >
-                  <span className="hidden sm:inline">Próxima</span>
-                  <Pagination.NextIcon />
-                </Pagination.Next>
-              </Pagination.Item>
-            </Pagination.Content>
-          </Pagination>
+          <TablePager
+            page={page}
+            pages={pages}
+            onPageChange={setPage}
+            summary={`${first}–${last} de ${sorted.length} leads`}
+          />
         </Table.Footer>
       )}
     </Table>
+  );
+}
+
+export function TablePager({
+  page,
+  pages,
+  onPageChange,
+  summary,
+}: {
+  page: number;
+  pages: number;
+  onPageChange: (page: number) => void;
+  summary: string;
+}) {
+  return (
+    <Pagination size="sm">
+      <Pagination.Summary>{summary}</Pagination.Summary>
+      <Pagination.Content>
+        <Pagination.Item>
+          <Pagination.Previous
+            isDisabled={page === 1}
+            onPress={() => onPageChange(Math.max(1, page - 1))}
+          >
+            <Pagination.PreviousIcon />
+            <span className="hidden sm:inline">Anterior</span>
+          </Pagination.Previous>
+        </Pagination.Item>
+        {pageList(page, pages).map((p, i) =>
+          p === "…" ? (
+            <Pagination.Item key={`gap-${i}`}>
+              <Pagination.Ellipsis />
+            </Pagination.Item>
+          ) : (
+            <Pagination.Item key={p}>
+              <Pagination.Link isActive={p === page} onPress={() => onPageChange(p)}>
+                {p}
+              </Pagination.Link>
+            </Pagination.Item>
+          ),
+        )}
+        <Pagination.Item>
+          <Pagination.Next
+            isDisabled={page === pages}
+            onPress={() => onPageChange(Math.min(pages, page + 1))}
+          >
+            <span className="hidden sm:inline">Próxima</span>
+            <Pagination.NextIcon />
+          </Pagination.Next>
+        </Pagination.Item>
+      </Pagination.Content>
+    </Pagination>
   );
 }

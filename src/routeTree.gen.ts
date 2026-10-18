@@ -12,9 +12,12 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminRedefinirSenhaRouteImport } from './routes/admin/redefinir-senha'
+import { Route as AdminClientesIndexRouteImport } from './routes/admin/clientes/index'
+import { Route as AdminClientesClientIdRouteImport } from './routes/admin/clientes/$clientId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -29,6 +32,11 @@ const AdminRouteRoute = AdminRouteRouteImport.update({
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
@@ -46,55 +54,83 @@ const AdminRedefinirSenhaRoute = AdminRedefinirSenhaRouteImport.update({
   path: '/redefinir-senha',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminClientesIndexRoute = AdminClientesIndexRouteImport.update({
+  id: '/clientes/',
+  path: '/clientes/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminClientesClientIdRoute = AdminClientesClientIdRouteImport.update({
+  id: '/clientes/$clientId',
+  path: '/clientes/$clientId',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/clientes/$clientId': typeof AdminClientesClientIdRoute
+  '/admin/clientes/': typeof AdminClientesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
   '/admin': typeof AdminIndexRoute
+  '/admin/clientes/$clientId': typeof AdminClientesClientIdRoute
+  '/admin/clientes': typeof AdminClientesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin/clientes/$clientId': typeof AdminClientesClientIdRoute
+  '/admin/clientes/': typeof AdminClientesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/admin'
+    | '/admin/configuracoes'
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/redefinir-senha'
     | '/admin/'
+    | '/admin/clientes/$clientId'
+    | '/admin/clientes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin/configuracoes'
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/redefinir-senha'
     | '/admin'
+    | '/admin/clientes/$clientId'
+    | '/admin/clientes'
   id:
     | '__root__'
     | '/'
     | '/admin'
+    | '/admin/configuracoes'
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/redefinir-senha'
     | '/admin/'
+    | '/admin/clientes/$clientId'
+    | '/admin/clientes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -125,6 +161,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/configuracoes': {
+      id: '/admin/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/admin/configuracoes'
+      preLoaderRoute: typeof AdminConfiguracoesRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/dashboard': {
       id: '/admin/dashboard'
       path: '/dashboard'
@@ -146,21 +189,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRedefinirSenhaRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/clientes/': {
+      id: '/admin/clientes/'
+      path: '/clientes'
+      fullPath: '/admin/clientes/'
+      preLoaderRoute: typeof AdminClientesIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/clientes/$clientId': {
+      id: '/admin/clientes/$clientId'
+      path: '/clientes/$clientId'
+      fullPath: '/admin/clientes/$clientId'
+      preLoaderRoute: typeof AdminClientesClientIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
 interface AdminRouteRouteChildren {
+  AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminRedefinirSenhaRoute: typeof AdminRedefinirSenhaRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminClientesClientIdRoute: typeof AdminClientesClientIdRoute
+  AdminClientesIndexRoute: typeof AdminClientesIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminRedefinirSenhaRoute: AdminRedefinirSenhaRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminClientesClientIdRoute: AdminClientesClientIdRoute,
+  AdminClientesIndexRoute: AdminClientesIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(

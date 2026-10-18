@@ -5,6 +5,8 @@ import {
   ArrowUpRightFromSquare,
   Bars,
   ChartColumn,
+  Funnel,
+  Gear,
   Persons,
 } from "@gravity-ui/icons";
 import { useLocation } from "@tanstack/react-router";
@@ -13,48 +15,71 @@ import { useAdminAuth } from "./auth";
 
 type NavItem = { href: string; label: string; icon: ComponentType<SVGProps<SVGSVGElement>> };
 
-const NAV: NavItem[] = [
-  { href: "/admin", label: "Leads", icon: Persons },
-  { href: "/admin/dashboard", label: "Dashboard", icon: ChartColumn },
+// Operação primeiro; o funil de vendas fica num grupo à parte.
+const NAV: { label?: string; items: NavItem[] }[] = [
+  {
+    items: [
+      { href: "/admin/clientes", label: "Clientes", icon: Persons },
+      { href: "/admin/configuracoes", label: "Configurações", icon: Gear },
+    ],
+  },
+  {
+    label: "Funil de vendas",
+    items: [
+      { href: "/admin", label: "Leads", icon: Funnel },
+      { href: "/admin/dashboard", label: "Dashboard", icon: ChartColumn },
+    ],
+  },
 ];
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const { state, signOut } = useAdminAuth();
   const email = "session" in state ? state.session.user.email : undefined;
   const pathname = useLocation({ select: (l) => l.pathname.replace(/\/+$/, "") });
-  const isActive = (href: string) => pathname === href;
+  // Subpáginas (ex.: /admin/clientes/<id>) mantêm o item do menu ativo.
+  const isActive = (href: string) =>
+    pathname === href || (href !== "/admin" && pathname.startsWith(`${href}/`));
 
   const navLinks = (size: "md" | "lg") => (
     <>
-      {NAV.map((item) => {
-        const active = isActive(item.href);
-        return (
-          <a
-            key={item.href}
-            href={item.href}
-            aria-current={active ? "page" : undefined}
-            className={`group relative flex items-center gap-3 rounded-xl px-3 text-sm transition-colors duration-200 ${
-              size === "lg" ? "py-3" : "py-2.5"
-            } ${
-              active
-                ? "bg-accent-soft font-semibold text-accent"
-                : "font-medium text-muted hover:bg-default hover:text-foreground"
-            }`}
-          >
-            {/* Barra indicadora da página atual */}
-            <span
-              aria-hidden
-              className={`absolute inset-y-2 left-0 w-1 rounded-full bg-accent transition-all duration-300 ${
-                active ? "opacity-100" : "scale-y-0 opacity-0"
-              }`}
-            />
-            <item.icon
-              className={`size-4.5 transition-transform duration-200 ${active ? "" : "group-hover:scale-110"}`}
-            />
-            {item.label}
-          </a>
-        );
-      })}
+      {NAV.map((section, s) => (
+        <div key={s} className={`flex flex-col gap-1 ${s > 0 ? "mt-4" : ""}`}>
+          {section.label && (
+            <p className="px-3 pb-1 text-[11px] font-semibold tracking-wider text-muted uppercase">
+              {section.label}
+            </p>
+          )}
+          {section.items.map((item) => {
+            const active = isActive(item.href);
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`group relative flex items-center gap-3 rounded-xl px-3 text-sm transition-colors duration-200 ${
+                  size === "lg" ? "py-3" : "py-2.5"
+                } ${
+                  active
+                    ? "bg-accent-soft font-semibold text-accent"
+                    : "font-medium text-muted hover:bg-default hover:text-foreground"
+                }`}
+              >
+                {/* Barra indicadora da página atual */}
+                <span
+                  aria-hidden
+                  className={`absolute inset-y-2 left-0 w-1 rounded-full bg-accent transition-all duration-300 ${
+                    active ? "opacity-100" : "scale-y-0 opacity-0"
+                  }`}
+                />
+                <item.icon
+                  className={`size-4.5 transition-transform duration-200 ${active ? "" : "group-hover:scale-110"}`}
+                />
+                {item.label}
+              </a>
+            );
+          })}
+        </div>
+      ))}
       <a
         href="/"
         target="_blank"
