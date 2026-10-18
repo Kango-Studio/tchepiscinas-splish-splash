@@ -8,14 +8,17 @@ import {
   Select,
   Skeleton,
   Table,
+  Tabs,
   Tooltip,
 } from "@heroui/react";
 import {
   ArrowRotateRight,
   CircleExclamation,
   Comment,
+  ListUl,
   Pencil,
   Plus,
+  Pulse,
   TrashBin,
   Tray,
 } from "@gravity-ui/icons";
@@ -30,6 +33,7 @@ import { TablePager } from "./LeadTable";
 import { useVisitsInRange } from "./visits-api";
 import { useClientRows } from "./visits-ui";
 import { DeleteVisitDialog, VisitModal, type VisitModalState } from "./VisitModal";
+import { ContactModal, FrequencyTab, type ContactTarget } from "./FrequencyTab";
 import { PendingLabel } from "./ui";
 
 export const VISIT_PERIODS = ["7d", "mes", "mes_anterior", "3m"] as const;
@@ -41,7 +45,11 @@ const PERIOD_LABELS: Record<VisitPeriod, string> = {
   "3m": "Últimos 3 meses",
 };
 
-export type VisitFilters = { piscineiro?: string; periodo?: VisitPeriod };
+// "visitas" vira a base da aba Fechamento na etapa 6.
+export const VISIT_TABS = ["frequencia", "visitas"] as const;
+export type VisitTab = (typeof VISIT_TABS)[number];
+
+export type VisitFilters = { aba?: VisitTab; piscineiro?: string; periodo?: VisitPeriod };
 
 const iso = (d: Date) => format(d, "yyyy-MM-dd");
 
@@ -96,13 +104,101 @@ export function VisitsPage({
   filters: VisitFilters;
   onFiltersChange: (filters: VisitFilters) => void;
 }) {
+  const data = useClientRows();
+  const [modal, setModal] = useState<VisitModalState>(null);
+  const [toDelete, setToDelete] = useState<Visit | null>(null);
+  const [contact, setContact] = useState<ContactTarget | null>(null);
+  const tab = filters.aba ?? "frequencia";
+
+  return (
+    <>
+      <div className="flex flex-col gap-5">
+        <div className="animate-admin-rise flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight text-pool-deep md:text-3xl">
+              Visitas
+            </h1>
+            <p className="text-sm text-muted">Frequência dos clientes e registro das visitas.</p>
+          </div>
+          <Button size="lg" onPress={() => setModal({})}>
+            <Plus className="size-4" />
+            Registrar visita
+          </Button>
+        </div>
+
+        <Tabs
+          selectedKey={tab}
+          onSelectionChange={(k) =>
+            onFiltersChange({ ...filters, aba: k === "frequencia" ? undefined : (k as VisitTab) })
+          }
+          className="gap-5"
+        >
+          <Tabs.ListContainer>
+            <Tabs.List aria-label="Seções de visitas">
+              <Tabs.Tab id="frequencia" className="gap-1.5">
+                <Pulse className="size-4" />
+                Frequência
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="visitas" className="gap-1.5">
+                <Tabs.Separator />
+                <ListUl className="size-4" />
+                <span className="sm:hidden">Registradas</span>
+                <span className="hidden sm:inline">Visitas registradas</span>
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            </Tabs.List>
+          </Tabs.ListContainer>
+          <Tabs.Panel id="frequencia" className="animate-admin-rise">
+            <FrequencyTab
+              onRegisterVisit={(c) =>
+                setModal({ clientId: c.id, techId: c.pool_tech_id ?? undefined })
+              }
+              onContact={setContact}
+            />
+          </Tabs.Panel>
+          <Tabs.Panel id="visitas" className="animate-admin-rise">
+            <VisitsListTab
+              filters={filters}
+              onFiltersChange={onFiltersChange}
+              onRegister={() => setModal({})}
+              onEdit={(visit) => setModal({ visit })}
+              onDelete={setToDelete}
+            />
+          </Tabs.Panel>
+        </Tabs>
+      </div>
+
+      {/* Pop-ups fora do Tabs: dentro dele o React Aria os duplicaria. */}
+      <VisitModal state={modal} onClose={() => setModal(null)} />
+      <DeleteVisitDialog
+        visit={toDelete}
+        clientName={toDelete ? data.rows.find((c) => c.id === toDelete.client_id)?.name : undefined}
+        onClose={() => setToDelete(null)}
+      />
+      <ContactModal target={contact} onClose={() => setContact(null)} />
+    </>
+  );
+}
+
+function VisitsListTab({
+  filters,
+  onFiltersChange,
+  onRegister,
+  onEdit,
+  onDelete,
+}: {
+  filters: VisitFilters;
+  onFiltersChange: (filters: VisitFilters) => void;
+  onRegister: () => void;
+  onEdit: (visit: Visit) => void;
+  onDelete: (visit: Visit) => void;
+}) {
   const period = filters.periodo ?? "mes";
   const today = todayISO();
   const range = periodRange(period, today);
   const visitsQuery = useVisitsInRange({ ...range, techId: filters.piscineiro });
   const data = useClientRows();
-  const [modal, setModal] = useState<VisitModalState>(null);
-  const [toDelete, setToDelete] = useState<Visit | null>(null);
   const [page, setPage] = useState(1);
 
   const visits = useMemo(() => visitsQuery.data ?? [], [visitsQuery.data]);
@@ -123,19 +219,6 @@ export function VisitsPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="animate-admin-rise flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-pool-deep md:text-3xl">
-            Visitas
-          </h1>
-          <p className="text-sm text-muted">Registro das visitas dos piscineiros.</p>
-        </div>
-        <Button size="lg" onPress={() => setModal({})}>
-          <Plus className="size-4" />
-          Registrar visita
-        </Button>
-      </div>
-
       <div className="grid grid-cols-2 items-end gap-2.5 sm:flex sm:flex-wrap">
         <div className="sm:w-48">
           <Select
@@ -260,7 +343,7 @@ export function VisitsPage({
                   <EmptyState className="flex flex-col items-center gap-2 py-10 text-center">
                     <Tray className="size-8 text-muted" />
                     <p className="text-sm text-muted">Nenhuma visita neste período.</p>
-                    <Button size="sm" variant="tertiary" onPress={() => setModal({})}>
+                    <Button size="sm" variant="tertiary" onPress={onRegister}>
                       <Plus className="size-4" />
                       Registrar visita
                     </Button>
@@ -311,7 +394,7 @@ export function VisitsPage({
                               variant="tertiary"
                               className="rounded-full"
                               aria-label={`Editar visita de ${clientName(v.client_id)}`}
-                              onPress={() => setModal({ visit: v })}
+                              onPress={() => onEdit(v)}
                             >
                               <Pencil className="size-4" />
                             </Button>
@@ -326,7 +409,7 @@ export function VisitsPage({
                               variant="ghost"
                               className="rounded-full text-muted hover:text-danger"
                               aria-label={`Excluir visita de ${clientName(v.client_id)}`}
-                              onPress={() => setToDelete(v)}
+                              onPress={() => onDelete(v)}
                             >
                               <TrashBin className="size-4" />
                             </Button>
@@ -352,13 +435,6 @@ export function VisitsPage({
           )}
         </Table>
       )}
-
-      <VisitModal state={modal} onClose={() => setModal(null)} />
-      <DeleteVisitDialog
-        visit={toDelete}
-        clientName={toDelete ? clientName(toDelete.client_id) : undefined}
-        onClose={() => setToDelete(null)}
-      />
     </div>
   );
 }

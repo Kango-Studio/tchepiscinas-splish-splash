@@ -264,3 +264,27 @@ export const visitFormSchema = z
 
 export type VisitFormInput = z.input<typeof visitFormSchema>;
 export type VisitFormValues = z.output<typeof visitFormSchema>;
+
+// Registro de que a gestora falou com o piscineiro sobre o atraso.
+export const lateCaseFormSchema = z
+  .object({
+    reason: z.enum(LATE_REASONS, { errorMap: () => ({ message: "Escolha o motivo" }) }),
+    reason_text: optionalText(500),
+  })
+  .superRefine((v, ctx) => {
+    if (v.reason === "outro" && !v.reason_text)
+      ctx.addIssue({ code: "custom", path: ["reason_text"], message: "Descreva o motivo" });
+  });
+
+export type LateCaseFormInput = z.input<typeof lateCaseFormSchema>;
+export type LateCaseFormValues = z.output<typeof lateCaseFormSchema>;
+
+export type ReportSend = {
+  id: string;
+  kind: "pendentes" | "atendimentos";
+  pool_tech_id: string | null;
+  client_id: string | null;
+  period_start: string;
+  period_end: string;
+  sent_at: string;
+};

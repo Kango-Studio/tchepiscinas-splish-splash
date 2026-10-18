@@ -8,10 +8,12 @@ import type {
   ClientFormValues,
   ClientFrequency,
   LateCase,
+  LateCaseFormValues,
   Plan,
   PlanFormValues,
   PoolTech,
   PoolTechFormValues,
+  ReportSend,
   Visit,
   VisitFormValues,
 } from "@/lib/visits/schema";
@@ -29,6 +31,8 @@ export const VISITS_KEYS = {
   visits: ["admin", "visits"] as const,
   clientLateCases: (clientId: string) => ["admin", "late-cases", "client", clientId] as const,
   lateCases: ["admin", "late-cases"] as const,
+  reportSends: (kind: string, periodStart: string) =>
+    ["admin", "report-sends", kind, periodStart] as const,
 };
 
 const STALE = 30_000;
@@ -116,6 +120,75 @@ export function useClientVisits(clientId: string) {
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data as Visit[];
+    },
+  });
+}
+
+// Todos os casos de atraso. Antes de ler, abre os casos dos clientes que
+// passaram a Atrasado (não depende de tarefa agendada: roda ao carregar).
+export function useLateCases() {
+  return useQuery({
+    queryKey: VISITS_KEYS.lateCases,
+    staleTime: STALE,
+    queryFn: async () => {
+      const supabase = getSupabase();
+      const { error: syncError } = await supabase.rpc("sync_late_cases");
+      if (syncError) throw syncError;
+      const { data, error } = await supabase
+        .from("late_cases")
+        .select("*")
+        .order("late_since", { ascending: false });
+      if (error) throw error;
+      return data as LateCase[];
+    },
+  });
+}
+
+export function useRegisterContact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      lateCase,
+      values,
+    }: {
+      lateCase: LateCase;
+      values: LateCaseFormValues;
+    }) => {
+      const { data, error } = await getSupabase()
+        .from("late_cases")
+        .update({
+          ...values,
+          status: "acionado",
+          // Editar o motivo depois mantém a data do primeiro acionamento.
+          contacted_at: lateCase.contacted_at ?? new Date().toISOString(),
+        })
+        .eq("id", lateCase.id)
+        // Só casos ainda abertos (uma visita pode ter fechado o caso).
+        .in("status", ["pendente", "acionado"])
+        .select("*");
+      if (error) throw error;
+      return assertAffected(data)[0] as LateCase;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: VISITS_KEYS.lateCases });
+      toast.success("Acionamento registrado");
+    },
+  });
+}
+
+// Envios de um relatório num período (ex.: pendentes da semana).
+export function useReportSends(kind: ReportSend["kind"], periodStart: string) {
+  return useQuery({
+    queryKey: VISITS_KEYS.reportSends(kind, periodStart),
+    staleTime: STALE,
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from("report_sends")
+        .select("*")
+        .eq("kind", kind)
+        .eq("period_start", periodStart);
+      if (error) throw error;
+      return data as ReportSend[];
     },
   });
 }
