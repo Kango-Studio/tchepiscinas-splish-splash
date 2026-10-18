@@ -3,10 +3,14 @@ import { toBlob } from "html-to-image";
 // Relatórios em PNG gerados no navegador. Nada é enviado ao Supabase
 // (plano gratuito): a imagem pode ser gerada de novo a qualquer momento.
 
-export async function nodeToPngFile(node: HTMLElement, filename: string): Promise<File> {
+export async function nodeToPngFile(
+  node: HTMLElement,
+  filename: string,
+  pixelRatio = 2,
+): Promise<File> {
   // Sem as fontes carregadas, a imagem sai com a fonte padrão do sistema.
   await document.fonts.ready;
-  const blob = await toBlob(node, { pixelRatio: 2, cacheBust: true });
+  const blob = await toBlob(node, { pixelRatio, cacheBust: true });
   if (!blob) throw new Error("Não foi possível gerar a imagem.");
   return new File([blob], filename, { type: "image/png" });
 }

@@ -31,6 +31,7 @@ import {
 } from "@/lib/visits/report-image";
 import type { PoolTech, ReportSend } from "@/lib/visits/schema";
 import { todayISO } from "./filters";
+import { AttendanceReportsSection } from "./AttendanceReports";
 import { describeDbError } from "./leads-api";
 import { useMarkReportSent, useReportSends, useUnmarkReportSent } from "./visits-api";
 import { daysLabel, useClientRows, type ClientRow } from "./visits-ui";
@@ -42,6 +43,7 @@ export function ReportsTab() {
   return (
     <div className="flex flex-col gap-5">
       <PendingReportsSection />
+      <AttendanceReportsSection />
     </div>
   );
 }
