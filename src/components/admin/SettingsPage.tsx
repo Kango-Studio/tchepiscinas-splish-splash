@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { addMonths, format, parseISO } from "date-fns";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -13,11 +14,12 @@ import {
   Skeleton,
   TextField,
 } from "@heroui/react";
-import { CircleExclamation, Pencil, Persons, Plus, TrashBin } from "@gravity-ui/icons";
+import { CircleExclamation, Lock, Pencil, Persons, Plus, TrashBin } from "@gravity-ui/icons";
 import { formatBrazilPhone, maskBrazilPhoneInput } from "@/lib/leads/phone";
 import {
   formatMoney,
   planFormSchema,
+  rateForMonth,
   poolTechFormSchema,
   type Plan,
   type PlanFormValues,
@@ -27,16 +29,18 @@ import {
 } from "@/lib/visits/schema";
 import { describeDbError } from "./leads-api";
 import {
-  useAppSettings,
   useClients,
   useDeletePlan,
   usePlans,
   usePoolTechs,
   useSavePlan,
   useSavePoolTech,
-  useUpdateVisitRate,
+  useDeleteVisitRate,
+  useSaveVisitRate,
+  useVisitRates,
 } from "./visits-api";
-import { ActiveSwitch, FREQUENCY_STYLES, NumberInput } from "./visits-ui";
+import { currentMonth, monthLabel } from "@/lib/visits/frequency";
+import { ActiveSwitch, FREQUENCY_STYLES, NumberInput, OptionSelect } from "./visits-ui";
 import { PendingLabel, StatusAlert } from "./ui";
 
 const stagger = (i: number) => ({ "--i": i }) as React.CSSProperties;
@@ -262,55 +266,124 @@ export function SettingsPage() {
 }
 
 function VisitRateCard() {
-  const settings = useAppSettings();
-  const updateRate = useUpdateVisitRate();
+  const ratesQuery = useVisitRates();
+  const saveRate = useSaveVisitRate();
+  const deleteRate = useDeleteVisitRate();
+  const thisMonth = currentMonth();
+  const nextMonth = format(addMonths(parseISO(`${thisMonth}-01`), 1), "yyyy-MM");
+  const [from, setFrom] = useState(thisMonth);
   const [value, setValue] = useState<number>(Number.NaN);
   const [error, setError] = useState<string | null>(null);
-  const current = settings.data?.visit_rate;
+
+  const rates = useMemo(() => ratesQuery.data ?? [], [ratesQuery.data]);
+  const current = rateForMonth(rates, thisMonth);
+  // Valor que já vale no mês escolhido (para não salvar sem mudança).
+  const valueAtFrom = rateForMonth(rates, from);
 
   useEffect(() => {
-    if (current !== undefined) setValue(current);
+    if (current !== null) setValue(current);
   }, [current]);
 
   const invalid = Number.isNaN(value) || value < 0;
   const save = async () => {
     setError(null);
     try {
-      await updateRate.mutateAsync(value);
+      await saveRate.mutateAsync({ month: `${from}-01`, rate: value });
     } catch (e) {
       setError(describeDbError(e));
     }
   };
 
+  const history = [...rates].sort((a, b) => b.month.localeCompare(a.month));
+  const currentStart = rates
+    .filter((r) => r.month <= `${thisMonth}-01`)
+    .sort((a, b) => a.month.localeCompare(b.month))
+    .at(-1)?.month;
+
   return (
     <Card className="animate-admin-rise gap-4 p-4 sm:p-5" style={stagger(3)}>
       <SectionHeader
         title="Valor por visita"
-        description="Usado no fechamento: visitas do mês × valor = pagamento do piscineiro. Vale para todos."
+        description="Usado no fechamento: visitas do mês × valor = pagamento do piscineiro. Vale para todos. Cada mês usa o valor que estava valendo nele, então mudar o valor não altera meses anteriores."
       />
-      {settings.isError ? (
-        <LoadError error={settings.error} />
-      ) : settings.isPending ? (
+      {ratesQuery.isError ? (
+        <LoadError error={ratesQuery.error} />
+      ) : ratesQuery.isPending ? (
         <Skeleton className="h-16 w-64 rounded-xl" />
       ) : (
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="w-full sm:w-64">
-            <NumberInput
-              label="Valor por visita"
-              currency
-              value={value}
-              onChange={setValue}
-              error={invalid ? "Informe o valor" : undefined}
-            />
+        <>
+          <div className="grid gap-3 sm:flex sm:flex-wrap sm:items-end">
+            <div className="sm:w-56">
+              <NumberInput
+                label="Valor por visita"
+                currency
+                value={value}
+                onChange={setValue}
+                error={invalid ? "Informe o valor" : undefined}
+              />
+            </div>
+            <div className="sm:w-64">
+              <OptionSelect
+                label="Vale a partir de"
+                value={from}
+                onChange={(v) => v && setFrom(v)}
+                options={[
+                  { id: thisMonth, label: `Este mês (${monthLabel(thisMonth)})` },
+                  { id: nextMonth, label: `Próximo mês (${monthLabel(nextMonth)})` },
+                ]}
+              />
+            </div>
+            <Button
+              onPress={save}
+              isPending={saveRate.isPending}
+              isDisabled={invalid || value === valueAtFrom}
+            >
+              {({ isPending }) => <PendingLabel isPending={isPending}>Salvar</PendingLabel>}
+            </Button>
           </div>
-          <Button
-            onPress={save}
-            isPending={updateRate.isPending}
-            isDisabled={invalid || value === current}
-          >
-            {({ isPending }) => <PendingLabel isPending={isPending}>Salvar</PendingLabel>}
-          </Button>
-        </div>
+
+          <div className="flex flex-col gap-1.5">
+            <p className="text-xs text-muted">Histórico</p>
+            <ul className="flex flex-col divide-y divide-separator rounded-xl border border-separator">
+              {history.map((r) => {
+                const month = r.month.slice(0, 7);
+                const isFuture = month > thisMonth;
+                const isCurrent = r.month === currentStart;
+                return (
+                  <li key={r.month} className="flex items-center gap-3 px-3 py-2 text-sm">
+                    <span className="min-w-0 flex-1">
+                      A partir de {monthLabel(month).toLowerCase()}
+                    </span>
+                    <span className="font-medium tabular-nums">{formatMoney(r.rate)}</span>
+                    {isFuture ? (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        isPending={deleteRate.isPending}
+                        onPress={() =>
+                          deleteRate.mutate(r, {
+                            onError: (e) => setError(describeDbError(e)),
+                          })
+                        }
+                      >
+                        Cancelar
+                      </Button>
+                    ) : isCurrent ? (
+                      <Chip size="sm" variant="soft" className="bg-emerald-100 text-emerald-800">
+                        <Chip.Label>Atual</Chip.Label>
+                      </Chip>
+                    ) : (
+                      <Lock
+                        className="size-3.5 text-muted"
+                        aria-label="Mês encerrado, não pode ser alterado"
+                      />
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        </>
       )}
       {error && <StatusAlert status="danger" title="Não foi possível salvar" description={error} />}
     </Card>

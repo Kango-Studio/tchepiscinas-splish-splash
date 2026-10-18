@@ -3,7 +3,6 @@ import type { PostgrestError } from "@supabase/supabase-js";
 import { toast } from "@heroui/react";
 import { getSupabase } from "@/lib/supabase/client";
 import type {
-  AppSettings,
   Client,
   ClientFormValues,
   ClientFrequency,
@@ -16,6 +15,7 @@ import type {
   ReportSend,
   Visit,
   VisitFormValues,
+  VisitRate,
 } from "@/lib/visits/schema";
 
 // Chaves do React Query. Tudo sob "admin" para sair junto no logout.
@@ -24,7 +24,7 @@ export const VISITS_KEYS = {
   poolTechs: ["admin", "pool-techs"] as const,
   clients: ["admin", "clients"] as const,
   frequency: ["admin", "client-frequency"] as const,
-  settings: ["admin", "app-settings"] as const,
+  visitRates: ["admin", "visit-rates"] as const,
   clientVisits: (clientId: string) => ["admin", "visits", "client", clientId] as const,
   visitsInRange: (from: string, to: string, techId?: string) =>
     ["admin", "visits", "range", from, to, techId ?? "all"] as const,
@@ -95,14 +95,18 @@ export function useClientFrequency() {
   });
 }
 
-export function useAppSettings() {
+// Histórico do valor por visita (cada valor vale a partir de um mês).
+export function useVisitRates() {
   return useQuery({
-    queryKey: VISITS_KEYS.settings,
+    queryKey: VISITS_KEYS.visitRates,
     staleTime: STALE,
     queryFn: async () => {
-      const { data, error } = await getSupabase().from("app_settings").select("*").single();
+      const { data, error } = await getSupabase()
+        .from("visit_rates")
+        .select("month, rate")
+        .order("month");
       if (error) throw error;
-      return data as AppSettings;
+      return (data as VisitRate[]).map((r) => ({ ...r, rate: Number(r.rate) }));
     },
   });
 }
@@ -466,21 +470,42 @@ export function useSavePoolTech() {
   });
 }
 
-export function useUpdateVisitRate() {
+// Novo valor a partir de um mês (atual ou futuro; o banco recusa meses passados).
+export function useSaveVisitRate() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (visit_rate: number) => {
+    mutationFn: async (values: VisitRate) => {
       const { data, error } = await getSupabase()
-        .from("app_settings")
-        .update({ visit_rate })
-        .eq("id", true)
-        .select("*");
+        .from("visit_rates")
+        .upsert(values, { onConflict: "month" })
+        .select("month, rate");
       if (error) throw error;
-      return assertAffected(data)[0] as AppSettings;
+      return assertAffected(data)[0] as VisitRate;
     },
-    onSuccess: (settings) => {
-      qc.setQueryData(VISITS_KEYS.settings, settings);
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: VISITS_KEYS.visitRates });
       toast.success("Valor por visita atualizado");
+    },
+  });
+}
+
+// Cancela um valor agendado para um mês futuro.
+export function useDeleteVisitRate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (rate: VisitRate) => {
+      const { data, error } = await getSupabase()
+        .from("visit_rates")
+        .delete()
+        .eq("month", rate.month)
+        .select("month");
+      if (error) throw error;
+      assertAffected(data);
+      return rate;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: VISITS_KEYS.visitRates });
+      toast.success("Mudança de valor cancelada");
     },
   });
 }

@@ -134,7 +134,17 @@ export type LateCase = {
   updated_at: string;
 };
 
-export type AppSettings = { id: true; visit_rate: number; updated_at: string };
+// Valor pago ao piscineiro por visita, a partir de um mês (month = AAAA-MM-01).
+export type VisitRate = { month: string; rate: number };
+
+// Valor vigente num mês ("AAAA-MM"): o último que começou até aquele mês.
+export function rateForMonth(rates: VisitRate[], month: string): number | null {
+  const start = `${month}-01`;
+  const valid = rates
+    .filter((r) => r.month <= start)
+    .sort((a, b) => a.month.localeCompare(b.month));
+  return valid.at(-1)?.rate ?? null;
+}
 
 // Valor cobrado do cliente: personalizado ou o padrão do plano.
 export const clientPrice = (

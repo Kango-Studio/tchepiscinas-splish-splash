@@ -23,11 +23,11 @@ import { Link } from "@tanstack/react-router";
 import { endOfMonth, format, parseISO, startOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { SERVICE_LABELS } from "@/lib/visits/services";
-import { formatMoney, type Visit } from "@/lib/visits/schema";
+import { formatMoney, rateForMonth, type Visit } from "@/lib/visits/schema";
 import { currentMonth, monthLabel } from "@/lib/visits/frequency";
 import { todayISO } from "./filters";
 import { describeDbError } from "./leads-api";
-import { useAppSettings, useVisitsInRange } from "./visits-api";
+import { useVisitRates, useVisitsInRange } from "./visits-api";
 import { useClientRows } from "./visits-ui";
 import { CountUp, PendingLabel } from "./ui";
 
@@ -74,7 +74,7 @@ export function ClosingTab({
   const from = `${month}-01`;
   const to = format(endOfMonth(parseISO(from)), "yyyy-MM-dd");
   const visitsQuery = useVisitsInRange({ from, to });
-  const settings = useAppSettings();
+  const rates = useVisitRates();
   const data = useClientRows();
   const [expanded, setExpanded] = useState<Set<Key>>(new Set());
 
@@ -86,7 +86,8 @@ export function ClosingTab({
     });
   }, []);
 
-  const rate = settings.data?.visit_rate ?? 0;
+  // Valor vigente no mês escolhido: mudanças posteriores não alteram este mês.
+  const rate = rateForMonth(rates.data ?? [], month) ?? 0;
   const visits = useMemo(() => visitsQuery.data ?? [], [visitsQuery.data]);
   const clientName = (id: string) => data.rows.find((c) => c.id === id)?.name ?? "—";
 
@@ -107,8 +108,8 @@ export function ClosingTab({
       .sort((a, b) => b.visits.length - a.visits.length || a.tech.name.localeCompare(b.tech.name));
   }, [visits, data.techs, rate]);
 
-  const error = visitsQuery.error ?? settings.error ?? data.error;
-  const isPending = visitsQuery.isPending || settings.isPending || data.isPending;
+  const error = visitsQuery.error ?? rates.error ?? data.error;
+  const isPending = visitsQuery.isPending || rates.isPending || data.isPending;
 
   return (
     <div className="flex flex-col gap-5">
@@ -151,10 +152,10 @@ export function ClosingTab({
               variant="tertiary"
               onPress={() => {
                 void visitsQuery.refetch();
-                void settings.refetch();
+                void rates.refetch();
                 data.refetch();
               }}
-              isPending={visitsQuery.isFetching || settings.isFetching}
+              isPending={visitsQuery.isFetching || rates.isFetching}
             >
               {({ isPending }) => (
                 <PendingLabel isPending={isPending} icon={<ArrowRotateRight className="size-4" />}>
@@ -342,8 +343,8 @@ export function ClosingTab({
             </Accordion>
           )}
           <p className="-mt-2 text-xs text-muted">
-            O valor por visita vale para todos os meses: se mudar em Configurações, o fechamento de
-            meses anteriores também muda.
+            Cada mês usa o valor por visita vigente naquele mês. Mudar o valor em Configurações não
+            altera meses anteriores.
           </p>
         </>
       )}
