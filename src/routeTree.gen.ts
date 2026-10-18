@@ -16,6 +16,7 @@ import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configura
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminRedefinirSenhaRouteImport } from './routes/admin/redefinir-senha'
+import { Route as AdminVisitasRouteImport } from './routes/admin/visitas'
 import { Route as AdminClientesIndexRouteImport } from './routes/admin/clientes/index'
 import { Route as AdminClientesClientIdRouteImport } from './routes/admin/clientes/$clientId'
 
@@ -54,6 +55,11 @@ const AdminRedefinirSenhaRoute = AdminRedefinirSenhaRouteImport.update({
   path: '/redefinir-senha',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminVisitasRoute = AdminVisitasRouteImport.update({
+  id: '/visitas',
+  path: '/visitas',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminClientesIndexRoute = AdminClientesIndexRouteImport.update({
   id: '/clientes/',
   path: '/clientes/',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
+  '/admin/visitas': typeof AdminVisitasRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/clientes/$clientId': typeof AdminClientesClientIdRoute
   '/admin/clientes/': typeof AdminClientesIndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
+  '/admin/visitas': typeof AdminVisitasRoute
   '/admin': typeof AdminIndexRoute
   '/admin/clientes/$clientId': typeof AdminClientesClientIdRoute
   '/admin/clientes': typeof AdminClientesIndexRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
+  '/admin/visitas': typeof AdminVisitasRoute
   '/admin/': typeof AdminIndexRoute
   '/admin/clientes/$clientId': typeof AdminClientesClientIdRoute
   '/admin/clientes/': typeof AdminClientesIndexRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/redefinir-senha'
+    | '/admin/visitas'
     | '/admin/'
     | '/admin/clientes/$clientId'
     | '/admin/clientes/'
@@ -117,6 +127,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/redefinir-senha'
+    | '/admin/visitas'
     | '/admin'
     | '/admin/clientes/$clientId'
     | '/admin/clientes'
@@ -128,6 +139,7 @@ export interface FileRouteTypes {
     | '/admin/dashboard'
     | '/admin/login'
     | '/admin/redefinir-senha'
+    | '/admin/visitas'
     | '/admin/'
     | '/admin/clientes/$clientId'
     | '/admin/clientes/'
@@ -189,6 +201,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRedefinirSenhaRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/visitas': {
+      id: '/admin/visitas'
+      path: '/visitas'
+      fullPath: '/admin/visitas'
+      preLoaderRoute: typeof AdminVisitasRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/clientes/': {
       id: '/admin/clientes/'
       path: '/clientes'
@@ -211,6 +230,7 @@ interface AdminRouteRouteChildren {
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminRedefinirSenhaRoute: typeof AdminRedefinirSenhaRoute
+  AdminVisitasRoute: typeof AdminVisitasRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminClientesClientIdRoute: typeof AdminClientesClientIdRoute
   AdminClientesIndexRoute: typeof AdminClientesIndexRoute
@@ -221,6 +241,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminDashboardRoute: AdminDashboardRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminRedefinirSenhaRoute: AdminRedefinirSenhaRoute,
+  AdminVisitasRoute: AdminVisitasRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminClientesClientIdRoute: AdminClientesClientIdRoute,
   AdminClientesIndexRoute: AdminClientesIndexRoute,

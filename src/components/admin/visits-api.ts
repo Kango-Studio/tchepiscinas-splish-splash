@@ -13,6 +13,7 @@ import type {
   PoolTech,
   PoolTechFormValues,
   Visit,
+  VisitFormValues,
 } from "@/lib/visits/schema";
 
 // Chaves do React Query. Tudo sob "admin" para sair junto no logout.
@@ -23,6 +24,8 @@ export const VISITS_KEYS = {
   frequency: ["admin", "client-frequency"] as const,
   settings: ["admin", "app-settings"] as const,
   clientVisits: (clientId: string) => ["admin", "visits", "client", clientId] as const,
+  visitsInRange: (from: string, to: string, techId?: string) =>
+    ["admin", "visits", "range", from, to, techId ?? "all"] as const,
   visits: ["admin", "visits"] as const,
   clientLateCases: (clientId: string) => ["admin", "late-cases", "client", clientId] as const,
   lateCases: ["admin", "late-cases"] as const,
@@ -181,6 +184,78 @@ export function useDeleteClient() {
 // Visitas
 // ---------------------------------------------------------------------------
 
+// Visitas por data da visita (inclusive), mais recentes primeiro.
+export function useVisitsInRange({
+  from,
+  to,
+  techId,
+}: {
+  from: string;
+  to: string;
+  techId?: string;
+}) {
+  return useQuery({
+    queryKey: VISITS_KEYS.visitsInRange(from, to, techId),
+    staleTime: STALE,
+    queryFn: async () => {
+      const all: Visit[] = [];
+      for (let start = 0; ; start += 1000) {
+        let query = getSupabase()
+          .from("visits")
+          .select("*")
+          .gte("visit_date", from)
+          .lte("visit_date", to)
+          .order("visit_date", { ascending: false })
+          .order("created_at", { ascending: false })
+          .range(start, start + 999);
+        if (techId) query = query.eq("pool_tech_id", techId);
+        const { data, error } = await query;
+        if (error) throw error;
+        all.push(...(data as Visit[]));
+        if (data.length < 1000) return all;
+      }
+    },
+  });
+}
+
+// Outras visitas do cliente na mesma data (aviso de visita repetida).
+export async function findSameDayVisits(clientId: string, date: string, excludeId?: string) {
+  let query = getSupabase()
+    .from("visits")
+    .select("id, pool_tech_id, created_at")
+    .eq("client_id", clientId)
+    .eq("visit_date", date);
+  if (excludeId) query = query.neq("id", excludeId);
+  const { data, error } = await query;
+  if (error) throw error;
+  return data as Pick<Visit, "id" | "pool_tech_id" | "created_at">[];
+}
+
+// Toda mudança em visitas recalcula frequência e pode fechar casos de atraso.
+function invalidateVisitData(qc: ReturnType<typeof useQueryClient>) {
+  void qc.invalidateQueries({ queryKey: VISITS_KEYS.visits });
+  void qc.invalidateQueries({ queryKey: VISITS_KEYS.frequency });
+  void qc.invalidateQueries({ queryKey: VISITS_KEYS.lateCases });
+}
+
+export function useSaveVisit() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, values }: { id?: string; values: VisitFormValues }) => {
+      const table = getSupabase().from("visits");
+      const { data, error } = id
+        ? await table.update(values).eq("id", id).select("*")
+        : await table.insert(values).select("*");
+      if (error) throw error;
+      return assertAffected(data)[0] as Visit;
+    },
+    onSuccess: (_visit, { id }) => {
+      invalidateVisitData(qc);
+      toast.success(id ? "Visita atualizada" : "Visita registrada");
+    },
+  });
+}
+
 export function useDeleteVisit() {
   const qc = useQueryClient();
   return useMutation({
@@ -195,9 +270,7 @@ export function useDeleteVisit() {
       return visit;
     },
     onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: VISITS_KEYS.visits });
-      void qc.invalidateQueries({ queryKey: VISITS_KEYS.frequency });
-      void qc.invalidateQueries({ queryKey: VISITS_KEYS.lateCases });
+      invalidateVisitData(qc);
       toast.success("Visita excluída");
     },
   });

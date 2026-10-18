@@ -4,6 +4,7 @@ import {
   ArrowRightFromSquare,
   ArrowUpRightFromSquare,
   Bars,
+  Calendar,
   ChartColumn,
   Funnel,
   Gear,
@@ -19,6 +20,7 @@ type NavItem = { href: string; label: string; icon: ComponentType<SVGProps<SVGSV
 const NAV: { label?: string; items: NavItem[] }[] = [
   {
     items: [
+      { href: "/admin/visitas", label: "Visitas", icon: Calendar },
       { href: "/admin/clientes", label: "Clientes", icon: Persons },
       { href: "/admin/configuracoes", label: "Configurações", icon: Gear },
     ],

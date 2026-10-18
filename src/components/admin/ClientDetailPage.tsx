@@ -1,20 +1,11 @@
 import { useMemo, useState } from "react";
-import {
-  AlertDialog,
-  Button,
-  Card,
-  Chip,
-  EmptyState,
-  Skeleton,
-  Tooltip,
-  buttonVariants,
-  toast,
-} from "@heroui/react";
+import { Button, Card, Chip, EmptyState, Skeleton, Tooltip, buttonVariants } from "@heroui/react";
 import {
   ArrowLeft,
   ArrowRotateRight,
   CircleExclamation,
   Pencil,
+  Plus,
   TrashBin,
   Tray,
 } from "@gravity-ui/icons";
@@ -33,8 +24,9 @@ import {
 } from "@/lib/visits/schema";
 import { todayISO } from "./filters";
 import { describeDbError } from "./leads-api";
-import { useClientLateCases, useClientVisits, useDeleteVisit } from "./visits-api";
+import { useClientLateCases, useClientVisits } from "./visits-api";
 import { ClientDrawer } from "./ClientDrawer";
+import { DeleteVisitDialog, VisitModal, type VisitModalState } from "./VisitModal";
 import {
   FREQUENCY_STYLES,
   FrequencyChip,
@@ -60,8 +52,8 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
   const data = useClientRows();
   const visitsQuery = useClientVisits(clientId);
   const casesQuery = useClientLateCases(clientId);
-  const deleteVisit = useDeleteVisit();
   const [editing, setEditing] = useState(false);
+  const [visitModal, setVisitModal] = useState<VisitModalState>(null);
   const [visitToDelete, setVisitToDelete] = useState<Visit | null>(null);
 
   const client = data.rows.find((c) => c.id === clientId);
@@ -76,16 +68,6 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
       ),
     [visits, today],
   );
-
-  const onDeleteVisit = async () => {
-    if (!visitToDelete) return;
-    try {
-      await deleteVisit.mutateAsync(visitToDelete);
-    } catch (error) {
-      toast.danger("Não foi possível excluir a visita", { description: describeDbError(error) });
-    }
-    setVisitToDelete(null);
-  };
 
   const backLink = (
     <Link
@@ -190,6 +172,14 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
             <Button variant="secondary" onPress={() => setEditing(true)}>
               <Pencil className="size-4" />
               Editar
+            </Button>
+            <Button
+              onPress={() =>
+                setVisitModal({ clientId: client.id, techId: client.pool_tech_id ?? undefined })
+              }
+            >
+              <Plus className="size-4" />
+              Registrar visita
             </Button>
           </div>
         </div>
@@ -335,21 +325,38 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
                               {gap !== null && ` · ${daysLabel(gap)} depois da anterior`}
                             </p>
                           </div>
-                          <Tooltip delay={300} closeDelay={0}>
-                            <Tooltip.Trigger>
-                              <Button
-                                isIconOnly
-                                size="sm"
-                                variant="ghost"
-                                className="rounded-full text-muted hover:text-danger"
-                                aria-label={`Excluir visita de ${formatDate(v.visit_date)}`}
-                                onPress={() => setVisitToDelete(v)}
-                              >
-                                <TrashBin className="size-4" />
-                              </Button>
-                            </Tooltip.Trigger>
-                            <Tooltip.Content>Excluir visita</Tooltip.Content>
-                          </Tooltip>
+                          <div className="flex gap-1">
+                            <Tooltip delay={300} closeDelay={0}>
+                              <Tooltip.Trigger>
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  variant="ghost"
+                                  className="rounded-full text-muted hover:text-accent"
+                                  aria-label={`Editar visita de ${formatDate(v.visit_date)}`}
+                                  onPress={() => setVisitModal({ visit: v })}
+                                >
+                                  <Pencil className="size-4" />
+                                </Button>
+                              </Tooltip.Trigger>
+                              <Tooltip.Content>Editar visita</Tooltip.Content>
+                            </Tooltip>
+                            <Tooltip delay={300} closeDelay={0}>
+                              <Tooltip.Trigger>
+                                <Button
+                                  isIconOnly
+                                  size="sm"
+                                  variant="ghost"
+                                  className="rounded-full text-muted hover:text-danger"
+                                  aria-label={`Excluir visita de ${formatDate(v.visit_date)}`}
+                                  onPress={() => setVisitToDelete(v)}
+                                >
+                                  <TrashBin className="size-4" />
+                                </Button>
+                              </Tooltip.Trigger>
+                              <Tooltip.Content>Excluir visita</Tooltip.Content>
+                            </Tooltip>
+                          </div>
                         </div>
                         {v.services.length > 0 && (
                           <ul className="mt-2 flex flex-wrap gap-1.5">
@@ -430,33 +437,8 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
         onDeleted={() => navigate({ to: "/admin/clientes" })}
       />
 
-      <AlertDialog.Backdrop
-        isOpen={!!visitToDelete}
-        onOpenChange={(open) => !open && setVisitToDelete(null)}
-      >
-        <AlertDialog.Container>
-          <AlertDialog.Dialog className="sm:max-w-100">
-            <AlertDialog.Header>
-              <AlertDialog.Icon status="danger" />
-              <AlertDialog.Heading>Excluir visita?</AlertDialog.Heading>
-            </AlertDialog.Header>
-            <AlertDialog.Body>
-              <p>
-                A visita de <strong>{formatDate(visitToDelete?.visit_date ?? null)}</strong> será
-                removida. Os dias sem visita e o fechamento do mês são recalculados.
-              </p>
-            </AlertDialog.Body>
-            <AlertDialog.Footer>
-              <Button slot="close" variant="tertiary">
-                Cancelar
-              </Button>
-              <Button variant="danger" onPress={onDeleteVisit} isPending={deleteVisit.isPending}>
-                {({ isPending }) => <PendingLabel isPending={isPending}>Excluir</PendingLabel>}
-              </Button>
-            </AlertDialog.Footer>
-          </AlertDialog.Dialog>
-        </AlertDialog.Container>
-      </AlertDialog.Backdrop>
+      <VisitModal state={visitModal} onClose={() => setVisitModal(null)} />
+      <DeleteVisitDialog visit={visitToDelete} onClose={() => setVisitToDelete(null)} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { normalizeBrazilPhone } from "@/lib/leads/phone";
-import type { ServiceKey } from "./services";
+import { format } from "date-fns";
+import { SERVICE_KEYS, type ServiceKey } from "./services";
 
 // Tabelas da migration 20261016140000_visitas.sql.
 
@@ -235,3 +236,31 @@ export const poolTechFormSchema = z.object({
 
 export type PoolTechFormInput = z.input<typeof poolTechFormSchema>;
 export type PoolTechFormValues = z.output<typeof poolTechFormSchema>;
+
+// Visita. A data não pode ser futura (o banco também recusa).
+export const visitFormSchema = z
+  .object({
+    pool_tech_id: z.string().min(1, "Escolha o piscineiro"),
+    client_id: z.string().min(1, "Escolha o cliente"),
+    visit_date: z
+      .string()
+      .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data")
+      .refine((v) => v <= format(new Date(), "yyyy-MM-dd"), "A data não pode ser no futuro"),
+    services: z
+      .array(z.enum(SERVICE_KEYS as [ServiceKey, ...ServiceKey[]]))
+      .min(1, "Marque ao menos um serviço"),
+    service_other: optionalText(200),
+    notes: optionalText(2000),
+  })
+  .superRefine((v, ctx) => {
+    if (v.services.includes("outro") && !v.service_other)
+      ctx.addIssue({ code: "custom", path: ["service_other"], message: "Descreva o serviço" });
+  })
+  // O texto de "Outro" só é gravado com o serviço marcado.
+  .transform((v) => ({
+    ...v,
+    service_other: v.services.includes("outro") ? v.service_other : null,
+  }));
+
+export type VisitFormInput = z.input<typeof visitFormSchema>;
+export type VisitFormValues = z.output<typeof visitFormSchema>;

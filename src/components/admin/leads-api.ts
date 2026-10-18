@@ -10,7 +10,7 @@ const PAGE = 1000;
 export function describeDbError(error: unknown): string {
   const e = error as Partial<PostgrestError> | undefined;
   if (e?.code === "PGRST116" || e?.code === "42501") {
-    return "Sem permissão para esta operação ou o lead não existe mais.";
+    return "Sem permissão para esta operação ou o registro não existe mais.";
   }
   if (e?.code === "23514") return "Algum campo está fora do formato aceito.";
   if (e?.code === "23505") return "Já existe um cadastro com esse nome.";
