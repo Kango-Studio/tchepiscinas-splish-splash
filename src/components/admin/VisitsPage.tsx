@@ -15,6 +15,7 @@ import {
   ArrowRotateRight,
   CircleExclamation,
   Comment,
+  FileText,
   ListUl,
   Pencil,
   Plus,
@@ -34,6 +35,7 @@ import { useVisitsInRange } from "./visits-api";
 import { useClientRows } from "./visits-ui";
 import { DeleteVisitDialog, VisitModal, type VisitModalState } from "./VisitModal";
 import { ContactModal, FrequencyTab, type ContactTarget } from "./FrequencyTab";
+import { ReportsTab } from "./ReportsTab";
 import { PendingLabel } from "./ui";
 
 export const VISIT_PERIODS = ["7d", "mes", "mes_anterior", "3m"] as const;
@@ -46,7 +48,7 @@ const PERIOD_LABELS: Record<VisitPeriod, string> = {
 };
 
 // "visitas" vira a base da aba Fechamento na etapa 6.
-export const VISIT_TABS = ["frequencia", "visitas"] as const;
+export const VISIT_TABS = ["frequencia", "relatorios", "visitas"] as const;
 export type VisitTab = (typeof VISIT_TABS)[number];
 
 export type VisitFilters = { aba?: VisitTab; piscineiro?: string; periodo?: VisitPeriod };
@@ -136,13 +138,19 @@ export function VisitsPage({
           <Tabs.ListContainer>
             <Tabs.List aria-label="Seções de visitas">
               <Tabs.Tab id="frequencia" className="gap-1.5">
-                <Pulse className="size-4" />
+                <Pulse className="size-4 max-sm:hidden" />
                 Frequência
+                <Tabs.Indicator />
+              </Tabs.Tab>
+              <Tabs.Tab id="relatorios" className="gap-1.5">
+                <Tabs.Separator />
+                <FileText className="size-4 max-sm:hidden" />
+                Relatórios
                 <Tabs.Indicator />
               </Tabs.Tab>
               <Tabs.Tab id="visitas" className="gap-1.5">
                 <Tabs.Separator />
-                <ListUl className="size-4" />
+                <ListUl className="size-4 max-sm:hidden" />
                 <span className="sm:hidden">Registradas</span>
                 <span className="hidden sm:inline">Visitas registradas</span>
                 <Tabs.Indicator />
@@ -156,6 +164,9 @@ export function VisitsPage({
               }
               onContact={setContact}
             />
+          </Tabs.Panel>
+          <Tabs.Panel id="relatorios" className="animate-admin-rise">
+            <ReportsTab />
           </Tabs.Panel>
           <Tabs.Panel id="visitas" className="animate-admin-rise">
             <VisitsListTab

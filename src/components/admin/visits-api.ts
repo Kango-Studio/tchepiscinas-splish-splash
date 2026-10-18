@@ -193,6 +193,53 @@ export function useReportSends(kind: ReportSend["kind"], periodStart: string) {
   });
 }
 
+type ReportTarget = Pick<ReportSend, "kind" | "period_start" | "period_end"> &
+  ({ pool_tech_id: string; client_id?: null } | { client_id: string; pool_tech_id?: null });
+
+// Registra o envio (só o registro: a imagem não é guardada).
+export function useMarkReportSent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (target: ReportTarget) => {
+      const { data, error } = await getSupabase()
+        .from("report_sends")
+        .insert({ pool_tech_id: null, client_id: null, ...target })
+        .select("*");
+      // Já registrado (outro clique ou outra aba): não é erro.
+      if (error?.code === "23505") return null;
+      if (error) throw error;
+      return assertAffected(data)[0] as ReportSend;
+    },
+    onSuccess: (_send, target) => {
+      void qc.invalidateQueries({
+        queryKey: VISITS_KEYS.reportSends(target.kind, target.period_start),
+      });
+    },
+  });
+}
+
+export function useUnmarkReportSent() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (send: ReportSend) => {
+      const { data, error } = await getSupabase()
+        .from("report_sends")
+        .delete()
+        .eq("id", send.id)
+        .select("id");
+      if (error) throw error;
+      assertAffected(data);
+      return send;
+    },
+    onSuccess: (send) => {
+      void qc.invalidateQueries({
+        queryKey: VISITS_KEYS.reportSends(send.kind, send.period_start),
+      });
+      toast.success("Envio desfeito");
+    },
+  });
+}
+
 export function useClientLateCases(clientId: string) {
   return useQuery({
     queryKey: VISITS_KEYS.clientLateCases(clientId),
