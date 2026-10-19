@@ -6,6 +6,7 @@ import {
   Bars,
   Calendar,
   ChartColumn,
+  Flask,
   Funnel,
   Gear,
   Persons,
@@ -22,6 +23,7 @@ const NAV: { label?: string; items: NavItem[] }[] = [
     items: [
       { href: "/admin/visitas", label: "Visitas", icon: Calendar },
       { href: "/admin/clientes", label: "Clientes", icon: Persons },
+      { href: "/admin/produtos", label: "Produtos", icon: Flask },
       { href: "/admin/configuracoes", label: "Configurações", icon: Gear },
     ],
   },

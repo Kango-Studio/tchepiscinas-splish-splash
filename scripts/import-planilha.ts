@@ -1,11 +1,13 @@
 // Importação única da planilha "Controle de Visitas" (abas Piscineiros,
-// Clientes e Visitas) para o Supabase. O gasto de produtos é importado na
-// etapa de Produtos, depois da aprovação da correspondência de nomes.
+// Clientes e Visitas) para o Supabase. O gasto de produtos é importado à
+// parte, com --produtos (correspondência de nomes aprovada pela gestora).
 //
 // Simulação (não grava nada, mostra o relatório):
 //   node --env-file=.env scripts/import-planilha.ts "C:/caminho/Controle de Visitas.xlsx"
 // Gravação (só roda com as tabelas vazias e sem pendências):
 //   node --env-file=.env scripts/import-planilha.ts "C:/caminho/Controle de Visitas.xlsx" --gravar
+// Gasto de produtos (simulação; acrescente --gravar para gravar):
+//   node --env-file=.env scripts/import-planilha.ts "C:/caminho/Controle de Visitas.xlsx" --produtos
 //
 // Usa SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY do .env (ignora o RLS; roda só
 // no computador, nunca no navegador).
@@ -126,18 +128,144 @@ const SERVICE_BY_LABEL = new Map(
 
 type Problem = string;
 
+// ---------------------------------------------------------------------------
+// Gasto de produtos (etapa 8): nomes antigos -> produtos padronizados,
+// correspondência aprovada pela gestora.
+// ---------------------------------------------------------------------------
+
+const PRODUCT_ALIASES: Record<string, string> = {
+  "3kg cloro": "Cloro 3kg",
+  "2,5kg cloro": "Cloro 2,5kg",
+  "cloro granulado": "Cloro granulado",
+  "3kg de dicloro": "Dicloro 3kg",
+  "balde de cloro": "Cloro balde 10kg",
+  "sulfato de aluminio": "Sulfato de alumínio 2kg",
+  "sulfato de aluminio 2kg": "Sulfato de alumínio 2kg",
+  "2kg sulfato": "Sulfato de alumínio 2kg",
+  barrilha: "Barrilha 1,5kg",
+  "1,5 kg barrilha": "Barrilha 1,5kg",
+  algicida: "Algicida 1L",
+  "algicida 1 litro": "Algicida 1L",
+  "algicida choque": "Algicida 1L",
+  clarificante: "Clarificante 1L",
+  alcalinizante: "Elevador de alcalinidade",
+};
+
+async function importProducts(wb: ExcelJS.Workbook, apply: boolean) {
+  const rows = sheetRows(wb, "Gasto de Produtos")
+    .slice(1)
+    .filter((r) => clean(r[2]));
+  const blocking: Problem[] = [];
+  const usages = rows.flatMap((r, i) => {
+    const line = i + 3;
+    const product = PRODUCT_ALIASES[norm(r[2])];
+    if (!product) blocking.push(`Linha ${line}: produto "${clean(r[2])}" sem correspondência`);
+    if (!(r[0] instanceof Date)) blocking.push(`Linha ${line}: data inválida "${clean(r[0])}"`);
+    const quantity = Number(r[3]);
+    if (!(quantity > 0)) blocking.push(`Linha ${line}: quantidade inválida "${clean(r[3])}"`);
+    // Células com fórmula (ex.: IA do Google Sheets) não são observação de verdade.
+    const rawNotes = r[4];
+    const notes = typeof rawNotes === "string" && clean(rawNotes) ? clean(rawNotes) : null;
+    if (!product || !(r[0] instanceof Date) || !(quantity > 0)) return [];
+    return [
+      {
+        line,
+        used_on: isoDate(r[0]),
+        tech: clean(r[1]),
+        product,
+        quantity,
+        notes,
+        original: clean(r[2]),
+      },
+    ];
+  });
+
+  const productNames = [...new Set(Object.values(PRODUCT_ALIASES))].sort();
+  console.log(`\nProdutos padronizados: ${productNames.length}`);
+  for (const p of productNames) {
+    const from = [...new Set(usages.filter((u) => u.product === p).map((u) => u.original))];
+    const total = usages.filter((u) => u.product === p).reduce((s, u) => s + u.quantity, 0);
+    console.log(`  ${p.padEnd(26)} ${String(total).padStart(3)} itens  <- ${from.join(" | ")}`);
+  }
+  console.log(`\nLançamentos: ${usages.length} de ${rows.length} linhas`);
+  const byTech = new Map<string, number>();
+  for (const u of usages) byTech.set(u.tech, (byTech.get(u.tech) ?? 0) + u.quantity);
+  for (const [t, n] of byTech) console.log(`  ${t}: ${n} itens`);
+  if (blocking.length) {
+    console.log(`\nPendências (${blocking.length}):`);
+    for (const b of blocking) console.log(`  ✗ ${b}`);
+  }
+  if (!apply) {
+    console.log("\nSimulação concluída. Nada foi gravado.");
+    return;
+  }
+  if (blocking.length) {
+    console.error("\nResolva as pendências antes de gravar.");
+    process.exit(1);
+  }
+
+  const db = supabaseAdmin();
+  const { count, error: countErr } = await db
+    .from("product_usages")
+    .select("id", { count: "exact", head: true });
+  if (countErr) throw countErr;
+  if (count)
+    throw new Error(`product_usages já tem ${count} registros. A importação só roda uma vez.`);
+
+  const { data: techRows, error: techErr } = await db.from("pool_techs").select("id, name");
+  if (techErr) throw techErr;
+  const techId = new Map(techRows.map((t) => [norm(t.name), t.id as string]));
+  const missingTech = [...new Set(usages.map((u) => u.tech))].filter((t) => !techId.has(norm(t)));
+  if (missingTech.length) throw new Error(`Piscineiros não cadastrados: ${missingTech.join(", ")}`);
+
+  // Reaproveita produtos já cadastrados no painel com o mesmo nome.
+  const { data: existing, error: prodErr } = await db.from("products").select("id, name");
+  if (prodErr) throw prodErr;
+  const productId = new Map(existing.map((p) => [norm(p.name), p.id as string]));
+  const toCreate = productNames.filter((p) => !productId.has(norm(p)));
+  if (toCreate.length) {
+    const { data: created, error } = await db
+      .from("products")
+      .insert(toCreate.map((name) => ({ name })))
+      .select("id, name");
+    if (error) throw error;
+    for (const p of created) productId.set(norm(p.name), p.id as string);
+  }
+
+  const { error: usageErr } = await db.from("product_usages").insert(
+    usages.map((u) => ({
+      used_on: u.used_on,
+      pool_tech_id: techId.get(norm(u.tech)),
+      product_id: productId.get(norm(u.product)),
+      quantity: u.quantity,
+      notes: u.notes,
+    })),
+  );
+  if (usageErr) throw usageErr;
+  console.log(`\nGravado: ${toCreate.length} produtos novos, ${usages.length} lançamentos.`);
+}
+
+function supabaseAdmin() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("Defina SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY no .env");
+  return createClient(url, key, { auth: { persistSession: false } });
+}
+
 async function main() {
-  const [file, flag] = process.argv.slice(2);
+  const [file, ...flags] = process.argv.slice(2);
   if (!file) {
     console.error(
-      'Uso: node --env-file=.env scripts/import-planilha.ts "<planilha.xlsx>" [--gravar]',
+      'Uso: node --env-file=.env scripts/import-planilha.ts "<planilha.xlsx>" [--produtos] [--gravar]',
     );
     process.exit(1);
   }
-  const apply = flag === "--gravar";
+  const apply = flags.includes("--gravar");
 
   const wb = new ExcelJS.Workbook();
   await wb.xlsx.readFile(file);
+
+  if (flags.includes("--produtos")) return importProducts(wb, apply);
 
   const blocking: Problem[] = [];
   const warnings: Problem[] = [];

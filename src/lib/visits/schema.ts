@@ -298,3 +298,57 @@ export type ReportSend = {
   period_end: string;
   sent_at: string;
 };
+
+// ---------------------------------------------------------------------------
+// Produtos (gasto por piscineiro)
+// ---------------------------------------------------------------------------
+
+export type Product = {
+  id: string;
+  name: string;
+  unit_price: number | null;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type ProductUsage = {
+  id: string;
+  used_on: string; // YYYY-MM-DD
+  pool_tech_id: string;
+  product_id: string;
+  quantity: number;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export const productFormSchema = z.object({
+  name: nameField(80),
+  unit_price: z
+    .union([z.number(), z.nan()])
+    .optional()
+    .transform((v) => (v === undefined || Number.isNaN(v) ? null : v))
+    .refine((v) => v === null || v >= 0, "Valor inválido"),
+  active: z.boolean(),
+});
+
+export type ProductFormInput = z.input<typeof productFormSchema>;
+export type ProductFormValues = z.output<typeof productFormSchema>;
+
+export const usageFormSchema = z.object({
+  used_on: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Informe a data")
+    .refine((v) => v <= format(new Date(), "yyyy-MM-dd"), "A data não pode ser no futuro"),
+  pool_tech_id: z.string().min(1, "Escolha o piscineiro"),
+  product_id: z.string().min(1, "Escolha o produto"),
+  quantity: z
+    .number({ invalid_type_error: "Informe a quantidade" })
+    .positive("A quantidade precisa ser maior que zero")
+    .max(9999, "Quantidade muito alta"),
+  notes: optionalText(500),
+});
+
+export type UsageFormInput = z.input<typeof usageFormSchema>;
+export type UsageFormValues = z.output<typeof usageFormSchema>;

@@ -12,7 +12,11 @@ import type {
   PlanFormValues,
   PoolTech,
   PoolTechFormValues,
+  Product,
+  ProductFormValues,
+  ProductUsage,
   ReportSend,
+  UsageFormValues,
   Visit,
   VisitFormValues,
   VisitRate,
@@ -506,6 +510,110 @@ export function useDeleteVisitRate() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: VISITS_KEYS.visitRates });
       toast.success("Mudança de valor cancelada");
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Produtos e gasto por piscineiro
+// ---------------------------------------------------------------------------
+
+export const PRODUCT_KEYS = {
+  products: ["admin", "products"] as const,
+  usages: ["admin", "product-usages"] as const,
+};
+
+export function useProducts() {
+  return useQuery({
+    queryKey: PRODUCT_KEYS.products,
+    staleTime: STALE,
+    queryFn: async () => {
+      const { data, error } = await getSupabase().from("products").select("*").order("name");
+      if (error) throw error;
+      return (data as Product[]).map((p) => ({
+        ...p,
+        unit_price: p.unit_price === null ? null : Number(p.unit_price),
+      }));
+    },
+  });
+}
+
+export function useSaveProduct() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, values }: { id?: string; values: ProductFormValues }) => {
+      const table = getSupabase().from("products");
+      const { data, error } = id
+        ? await table.update(values).eq("id", id).select("*")
+        : await table.insert(values).select("*");
+      if (error) throw error;
+      return assertAffected(data)[0] as Product;
+    },
+    onSuccess: (product, { id }) => {
+      void qc.invalidateQueries({ queryKey: PRODUCT_KEYS.products });
+      toast.success(id ? "Produto atualizado" : "Produto cadastrado", {
+        description: product.name,
+      });
+    },
+  });
+}
+
+// Todos os lançamentos (volume pequeno: algumas dezenas por mês).
+export function useProductUsages() {
+  return useQuery({
+    queryKey: PRODUCT_KEYS.usages,
+    staleTime: STALE,
+    queryFn: async () => {
+      const all: ProductUsage[] = [];
+      for (let start = 0; ; start += 1000) {
+        const { data, error } = await getSupabase()
+          .from("product_usages")
+          .select("*")
+          .order("used_on", { ascending: false })
+          .order("created_at", { ascending: false })
+          .range(start, start + 999);
+        if (error) throw error;
+        all.push(...(data as ProductUsage[]).map((u) => ({ ...u, quantity: Number(u.quantity) })));
+        if (data.length < 1000) return all;
+      }
+    },
+  });
+}
+
+export function useSaveUsage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, values }: { id?: string; values: UsageFormValues }) => {
+      const table = getSupabase().from("product_usages");
+      const { data, error } = id
+        ? await table.update(values).eq("id", id).select("*")
+        : await table.insert(values).select("*");
+      if (error) throw error;
+      return assertAffected(data)[0] as ProductUsage;
+    },
+    onSuccess: (_usage, { id }) => {
+      void qc.invalidateQueries({ queryKey: PRODUCT_KEYS.usages });
+      toast.success(id ? "Lançamento atualizado" : "Gasto lançado");
+    },
+  });
+}
+
+export function useDeleteUsage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (usage: ProductUsage) => {
+      const { data, error } = await getSupabase()
+        .from("product_usages")
+        .delete()
+        .eq("id", usage.id)
+        .select("id");
+      if (error) throw error;
+      assertAffected(data);
+      return usage;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: PRODUCT_KEYS.usages });
+      toast.success("Lançamento excluído");
     },
   });
 }

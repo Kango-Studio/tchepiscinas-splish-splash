@@ -15,6 +15,7 @@ import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
+import { Route as AdminProdutosRouteImport } from './routes/admin/produtos'
 import { Route as AdminRedefinirSenhaRouteImport } from './routes/admin/redefinir-senha'
 import { Route as AdminVisitasRouteImport } from './routes/admin/visitas'
 import { Route as AdminClientesIndexRouteImport } from './routes/admin/clientes/index'
@@ -50,6 +51,11 @@ const AdminLoginRoute = AdminLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminProdutosRoute = AdminProdutosRouteImport.update({
+  id: '/produtos',
+  path: '/produtos',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminRedefinirSenhaRoute = AdminRedefinirSenhaRouteImport.update({
   id: '/redefinir-senha',
   path: '/redefinir-senha',
@@ -77,6 +83,7 @@ export interface FileRoutesByFullPath {
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/produtos': typeof AdminProdutosRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
   '/admin/visitas': typeof AdminVisitasRoute
   '/admin/': typeof AdminIndexRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/produtos': typeof AdminProdutosRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
   '/admin/visitas': typeof AdminVisitasRoute
   '/admin': typeof AdminIndexRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
   '/admin/login': typeof AdminLoginRoute
+  '/admin/produtos': typeof AdminProdutosRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
   '/admin/visitas': typeof AdminVisitasRoute
   '/admin/': typeof AdminIndexRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/admin/configuracoes'
     | '/admin/dashboard'
     | '/admin/login'
+    | '/admin/produtos'
     | '/admin/redefinir-senha'
     | '/admin/visitas'
     | '/admin/'
@@ -126,6 +136,7 @@ export interface FileRouteTypes {
     | '/admin/configuracoes'
     | '/admin/dashboard'
     | '/admin/login'
+    | '/admin/produtos'
     | '/admin/redefinir-senha'
     | '/admin/visitas'
     | '/admin'
@@ -138,6 +149,7 @@ export interface FileRouteTypes {
     | '/admin/configuracoes'
     | '/admin/dashboard'
     | '/admin/login'
+    | '/admin/produtos'
     | '/admin/redefinir-senha'
     | '/admin/visitas'
     | '/admin/'
@@ -194,6 +206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminLoginRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/produtos': {
+      id: '/admin/produtos'
+      path: '/produtos'
+      fullPath: '/admin/produtos'
+      preLoaderRoute: typeof AdminProdutosRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/redefinir-senha': {
       id: '/admin/redefinir-senha'
       path: '/redefinir-senha'
@@ -229,6 +248,7 @@ interface AdminRouteRouteChildren {
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
   AdminLoginRoute: typeof AdminLoginRoute
+  AdminProdutosRoute: typeof AdminProdutosRoute
   AdminRedefinirSenhaRoute: typeof AdminRedefinirSenhaRoute
   AdminVisitasRoute: typeof AdminVisitasRoute
   AdminIndexRoute: typeof AdminIndexRoute
@@ -240,6 +260,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminDashboardRoute: AdminDashboardRoute,
   AdminLoginRoute: AdminLoginRoute,
+  AdminProdutosRoute: AdminProdutosRoute,
   AdminRedefinirSenhaRoute: AdminRedefinirSenhaRoute,
   AdminVisitasRoute: AdminVisitasRoute,
   AdminIndexRoute: AdminIndexRoute,
