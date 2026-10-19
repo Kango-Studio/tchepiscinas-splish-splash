@@ -1,4 +1,5 @@
 import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   DndContext,
   DragOverlay,
@@ -109,9 +110,15 @@ export function LeadKanban({ leads, onOpen, onMove }: Props) {
         ))}
       </div>
 
-      <DragOverlay dropAnimation={null}>
-        {activeLead ? <LeadCardView lead={activeLead} today={today} overlay /> : null}
-      </DragOverlay>
+      {/* No body: o overlay usa position: fixed, e qualquer ancestral com
+          transform/translate (ex.: o painel com animate-admin-rise, que mantém
+          o translate final) vira a referência e desloca a cópia do cursor. */}
+      {createPortal(
+        <DragOverlay dropAnimation={null}>
+          {activeLead ? <LeadCardView lead={activeLead} today={today} overlay /> : null}
+        </DragOverlay>,
+        document.body,
+      )}
     </DndContext>
   );
 }
