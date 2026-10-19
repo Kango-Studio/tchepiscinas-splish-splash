@@ -7,15 +7,17 @@ import {
   Button,
   Checkbox,
   CloseButton,
-  Drawer,
+  Modal,
   FieldError,
   Input,
   InputGroup,
   Label,
   ListBox,
   Select,
+  Spinner,
   TextArea,
   TextField,
+  toast,
 } from "@heroui/react";
 import { TrashBin } from "@gravity-ui/icons";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -40,6 +42,7 @@ import {
   findLeadsByPhone,
   useCreateLead,
   useDeleteLead,
+  useLead,
   useUpdateLead,
 } from "./leads-api";
 import {
@@ -54,7 +57,7 @@ import { isOverdue } from "./filters";
 import { PRINT_INSTRUCTIONS, type PrintPrefill } from "./PrintImportModal";
 import { FollowupTracker } from "./FollowupCheckpoints";
 
-export type DrawerState =
+export type LeadModalState =
   | { mode: "closed" }
   | { mode: "create"; fromPrint?: PrintPrefill }
   | { mode: "edit"; leadId: string };
@@ -82,48 +85,123 @@ function toFormInput(lead?: Lead, fromPrint?: PrintPrefill): LeadFormInput {
   };
 }
 
-export function LeadDrawer({
+// Pop-up do lead. Editar abre pela URL (?lead=<id>) e busca o lead no banco;
+// cadastrar (manual ou por print) fica só na tela.
+export function LeadModal({
   state,
-  leads,
   onClose,
   onOpenLead,
 }: {
-  state: DrawerState;
-  leads: Lead[];
+  state: LeadModalState;
   onClose: () => void;
   onOpenLead: (id: string) => void;
 }) {
   const isMobile = useIsMobile();
-  const lead = state.mode === "edit" ? leads.find((l) => l.id === state.leadId) : undefined;
-  const isOpen = state.mode === "create" || (state.mode === "edit" && !!lead);
+  const leadId = state.mode === "edit" ? state.leadId : undefined;
+  const leadQuery = useLead(leadId);
+  const lead = leadQuery.data ?? undefined;
+  const notFound = !!leadId && leadQuery.isSuccess && !leadQuery.data;
   const fromPrint = state.mode === "create" ? state.fromPrint : undefined;
-  const formKey =
-    state.mode === "edit"
-      ? `edit-${state.leadId}`
-      : `${state.mode}-${fromPrint?.previewUrl ?? "manual"}`;
-  const placement = isMobile ? "bottom" : "right";
+  const formKey = leadId ? `edit-${leadId}` : `${state.mode}-${fromPrint?.previewUrl ?? "manual"}`;
+
+  // Alterações não salvas: X, Esc, clique fora, Fechar e "Abrir" outro lead
+  // perguntam antes. pendingAction é o que roda se a gestora descartar.
+  const [dirty, setDirty] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
+  const guard = (action: () => void) => (dirty ? setPendingAction(() => action) : action());
+
+  // Link com ID que não existe (excluído ou digitado errado): avisa e fecha.
+  useEffect(() => {
+    if (!notFound) return;
+    toast.danger("Lead não encontrado", {
+      description: "Pode ter sido excluído. Confira o link.",
+    });
+    onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notFound]);
+
+  const isOpen = state.mode === "create" || (!!leadId && !notFound);
 
   return (
-    <Drawer.Backdrop isOpen={isOpen} onOpenChange={(open) => !open && onClose()} variant="blur">
-      <Drawer.Content placement={placement}>
-        <Drawer.Dialog
-          aria-label={lead ? `Lead ${lead.name}` : "Novo lead"}
-          className={isMobile ? "max-h-[92dvh]" : "sm:w-xl"}
-        >
-          {isMobile && <Drawer.Handle />}
-          <Drawer.CloseTrigger aria-label="Fechar" />
-          {isOpen && (
-            <LeadFormPanel
-              key={formKey}
-              lead={lead}
-              fromPrint={fromPrint}
-              onClose={onClose}
-              onOpenLead={onOpenLead}
-            />
-          )}
-        </Drawer.Dialog>
-      </Drawer.Content>
-    </Drawer.Backdrop>
+    <>
+      <Modal.Backdrop
+        isOpen={isOpen}
+        onOpenChange={(open) => !open && guard(onClose)}
+        variant="blur"
+      >
+        <Modal.Container size={isMobile ? "full" : "lg"} scroll="inside">
+          <Modal.Dialog
+            aria-label={lead ? `Lead ${lead.name}` : leadId ? "Lead" : "Novo lead"}
+            className="md:w-[min(960px,calc(100vw-5rem))] md:max-w-none"
+          >
+            <Modal.CloseTrigger aria-label="Fechar" />
+            {leadId && leadQuery.isError ? (
+              <Modal.Body className="py-6">
+                <StatusAlert
+                  status="danger"
+                  title="Não foi possível carregar o lead"
+                  description={describeDbError(leadQuery.error)}
+                />
+              </Modal.Body>
+            ) : leadId && !lead ? (
+              <Modal.Body className="flex min-h-60 items-center justify-center">
+                <Spinner aria-label="Carregando lead" />
+              </Modal.Body>
+            ) : (
+              isOpen && (
+                <LeadFormPanel
+                  key={formKey}
+                  lead={lead}
+                  fromPrint={fromPrint}
+                  onClose={onClose}
+                  requestClose={() => guard(onClose)}
+                  onOpenLead={(id) => guard(() => onOpenLead(id))}
+                  onDirtyChange={setDirty}
+                />
+              )
+            )}
+          </Modal.Dialog>
+        </Modal.Container>
+      </Modal.Backdrop>
+
+      <AlertDialog.Backdrop
+        isOpen={!!pendingAction}
+        onOpenChange={(open) => !open && setPendingAction(null)}
+      >
+        <AlertDialog.Container>
+          <AlertDialog.Dialog className="sm:max-w-100">
+            <AlertDialog.Header>
+              <AlertDialog.Icon status="warning" />
+              <AlertDialog.Heading>Descartar alterações?</AlertDialog.Heading>
+            </AlertDialog.Header>
+            <AlertDialog.Body>
+              <p>
+                {lead
+                  ? "As alterações feitas neste lead não foram salvas."
+                  : "O lead ainda não foi cadastrado."}{" "}
+                Se sair agora, elas serão perdidas.
+              </p>
+            </AlertDialog.Body>
+            <AlertDialog.Footer>
+              <Button slot="close" variant="tertiary">
+                Continuar editando
+              </Button>
+              <Button
+                variant="danger"
+                onPress={() => {
+                  const action = pendingAction;
+                  setPendingAction(null);
+                  setDirty(false);
+                  action?.();
+                }}
+              >
+                Descartar
+              </Button>
+            </AlertDialog.Footer>
+          </AlertDialog.Dialog>
+        </AlertDialog.Container>
+      </AlertDialog.Backdrop>
+    </>
   );
 }
 
@@ -223,12 +301,17 @@ function LeadFormPanel({
   lead,
   fromPrint,
   onClose,
+  requestClose,
   onOpenLead,
+  onDirtyChange,
 }: {
   lead?: Lead;
   fromPrint?: PrintPrefill;
+  // onClose fecha direto (depois de salvar/excluir); requestClose pergunta antes.
   onClose: () => void;
+  requestClose: () => void;
   onOpenLead: (id: string) => void;
+  onDirtyChange: (dirty: boolean) => void;
 }) {
   const isEdit = !!lead;
   const createLead = useCreateLead();
@@ -253,10 +336,15 @@ function LeadFormPanel({
     defaultValues: toFormInput(lead, fromPrint),
   });
 
-  // Etapa alterada por fora (arrastando no Kanban) com o drawer aberto.
+  // Lead recarregado do banco (ou etapa mudada no Kanban) sem edição pendente.
   useEffect(() => {
     if (lead && !isDirty) reset(toFormInput(lead));
   }, [lead, isDirty, reset]);
+
+  // Dados vindos do print ainda não estão salvos, mesmo sem edição.
+  const unsaved = isDirty || !!fromPrint;
+  useEffect(() => onDirtyChange(unsaved), [unsaved, onDirtyChange]);
+  useEffect(() => () => onDirtyChange(false), [onDirtyChange]);
 
   const checkDuplicates = async (raw: string) => {
     const phone = normalizeBrazilPhone(raw);
@@ -317,35 +405,37 @@ function LeadFormPanel({
 
   return (
     <>
-      <Drawer.Header className="border-b border-separator pb-4">
+      <Modal.Header className="border-b border-separator pb-4">
         {lead ? (
-          <>
-            <div className="flex flex-wrap items-center gap-2 pr-8">
-              <Drawer.Heading className="text-xl font-semibold text-pool-deep">
-                {lead.name}
-              </Drawer.Heading>
-              <StageChip stage={lead.stage} />
-              {isOverdue(lead) && (
-                <span className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-semibold text-danger-soft-foreground">
-                  Contato atrasado
-                </span>
-              )}
+          <div className="flex flex-col gap-3 pr-8 md:flex-row md:items-end md:justify-between">
+            <div className="flex min-w-0 flex-col gap-1.5">
+              <div className="flex flex-wrap items-center gap-2">
+                <Modal.Heading className="text-xl font-semibold text-pool-deep">
+                  {lead.name}
+                </Modal.Heading>
+                <StageChip stage={lead.stage} />
+                {isOverdue(lead) && (
+                  <span className="rounded-full bg-danger-soft px-2 py-0.5 text-xs font-semibold text-danger-soft-foreground">
+                    Contato atrasado
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
+                <span>Origem: {SOURCE_LABELS[lead.source]}</span>
+                <span>Criado em {formatDateTime(lead.created_at)}</span>
+                <span>Atualizado em {formatDateTime(lead.updated_at)}</span>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted">
-              <span>Origem: {SOURCE_LABELS[lead.source]}</span>
-              <span>Criado em {formatDateTime(lead.created_at)}</span>
-              <span>Atualizado em {formatDateTime(lead.updated_at)}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <LeadWhatsAppButton lead={lead} withLabel />
+            <div className="flex shrink-0 items-center gap-2">
               <span className="text-sm text-muted">{formatBrazilPhone(lead.whatsapp)}</span>
+              <LeadWhatsAppButton lead={lead} withLabel />
             </div>
-          </>
+          </div>
         ) : fromPrint ? (
           <>
-            <Drawer.Heading className="pr-8 text-xl font-semibold text-pool-deep">
+            <Modal.Heading className="pr-8 text-xl font-semibold text-pool-deep">
               Novo lead a partir do print
-            </Drawer.Heading>
+            </Modal.Heading>
             <div className="flex gap-3">
               <a
                 href={fromPrint.previewUrl}
@@ -369,13 +459,14 @@ function LeadFormPanel({
             </div>
           </>
         ) : (
-          <Drawer.Heading className="pr-8 text-xl font-semibold text-pool-deep">
+          <Modal.Heading className="pr-8 text-xl font-semibold text-pool-deep">
             Novo lead
-          </Drawer.Heading>
+          </Modal.Heading>
         )}
-      </Drawer.Header>
+      </Modal.Header>
 
-      <Drawer.Body className="flex flex-col gap-5 py-5 text-foreground">
+      {/* Só o meio rola; cabeçalho e rodapé ficam fixos. */}
+      <Modal.Body className="flex flex-col gap-5 py-5 text-foreground">
         {/* Salva na hora, independente do botão "Salvar alterações". */}
         {lead && <FollowupTracker leadId={lead.id} />}
         <form
@@ -384,7 +475,9 @@ function LeadFormPanel({
           noValidate
           className="flex flex-col gap-5"
         >
-          <section className="grid gap-4 sm:grid-cols-2">
+          {/* 3 colunas no computador, 2 em telas médias, 1 no celular. "dense"
+              sobe o E-mail para a 1ª linha quando o aviso de duplicado ocupa a 2ª. */}
+          <section className="grid grid-flow-row-dense gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <FormTextField control={control} name="name" label="Nome" isRequired />
             <Controller
               control={control}
@@ -410,48 +503,46 @@ function LeadFormPanel({
                 </TextField>
               )}
             />
-          </section>
 
-          {duplicates.length > 0 && (
-            <Alert status="warning" className="animate-admin-rise">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Title>Já existe lead com este WhatsApp</Alert.Title>
-                <Alert.Description>
-                  <ul className="mt-1 flex flex-col gap-1 text-sm">
-                    {duplicates.map((d) => (
-                      <li key={d.id} className="flex flex-wrap items-center gap-2">
-                        <strong>{d.name}</strong>
-                        <span>
-                          · {STAGE_LABELS[d.stage as LeadStage]} · criado em{" "}
-                          {formatDate(d.created_at)}
-                        </span>
-                        <Button size="sm" variant="ghost" onPress={() => onOpenLead(d.id)}>
-                          Abrir
-                        </Button>
-                      </li>
-                    ))}
-                  </ul>
-                  {!duplicateConfirmed ? (
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      className="mt-2"
-                      onPress={() => setDuplicateConfirmed(true)}
-                    >
-                      Entendi, salvar mesmo assim
-                    </Button>
-                  ) : (
-                    <span className="mt-2 block text-xs">
-                      Confirmado. Clique em salvar para continuar.
-                    </span>
-                  )}
-                </Alert.Description>
-              </Alert.Content>
-            </Alert>
-          )}
+            {duplicates.length > 0 && (
+              <Alert status="warning" className="animate-admin-rise col-span-full">
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>Já existe lead com este WhatsApp</Alert.Title>
+                  <Alert.Description>
+                    <ul className="mt-1 flex flex-col gap-1 text-sm">
+                      {duplicates.map((d) => (
+                        <li key={d.id} className="flex flex-wrap items-center gap-2">
+                          <strong>{d.name}</strong>
+                          <span>
+                            · {STAGE_LABELS[d.stage as LeadStage]} · criado em{" "}
+                            {formatDate(d.created_at)}
+                          </span>
+                          <Button size="sm" variant="ghost" onPress={() => onOpenLead(d.id)}>
+                            Abrir
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                    {!duplicateConfirmed ? (
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        className="mt-2"
+                        onPress={() => setDuplicateConfirmed(true)}
+                      >
+                        Entendi, salvar mesmo assim
+                      </Button>
+                    ) : (
+                      <span className="mt-2 block text-xs">
+                        Confirmado. Clique em salvar para continuar.
+                      </span>
+                    )}
+                  </Alert.Description>
+                </Alert.Content>
+              </Alert>
+            )}
 
-          <section className="grid gap-4 sm:grid-cols-2">
             <FormTextField
               control={control}
               name="email"
@@ -495,9 +586,6 @@ function LeadFormPanel({
               placeholder="Ex.: Porto Alegre"
             />
             <FormTextField control={control} name="neighborhood" label="Bairro" />
-          </section>
-
-          <section className="grid gap-4 sm:grid-cols-2">
             <FormSelect
               control={control}
               name="stage"
@@ -572,9 +660,9 @@ function LeadFormPanel({
             />
           )}
         </form>
-      </Drawer.Body>
+      </Modal.Body>
 
-      <Drawer.Footer className="flex-wrap border-t border-separator pt-4">
+      <Modal.Footer className="flex-wrap border-t border-separator pt-4">
         {fromPrint && (
           <Checkbox isSelected={printChecked} onChange={setPrintChecked} className="mr-auto">
             <Checkbox.Content>
@@ -591,7 +679,7 @@ function LeadFormPanel({
             Excluir
           </Button>
         )}
-        <Button variant="tertiary" onPress={onClose}>
+        <Button variant="tertiary" onPress={requestClose}>
           {isEdit ? "Fechar" : "Cancelar"}
         </Button>
         <Button
@@ -606,7 +694,7 @@ function LeadFormPanel({
             </PendingLabel>
           )}
         </Button>
-      </Drawer.Footer>
+      </Modal.Footer>
 
       <AlertDialog.Backdrop isOpen={confirmDelete} onOpenChange={setConfirmDelete}>
         <AlertDialog.Container>

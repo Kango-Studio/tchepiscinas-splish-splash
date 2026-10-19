@@ -22,7 +22,7 @@ import { LeadFiltersBar } from "./LeadFiltersBar";
 import { LeadStats } from "./LeadStats";
 import { LeadKanban } from "./LeadKanban";
 import { LeadTable } from "./LeadTable";
-import { LeadDrawer, type DrawerState } from "./LeadDrawer";
+import { LeadModal, type LeadModalState } from "./LeadModal";
 import { PrintImportModal } from "./PrintImportModal";
 import { PendingLabel } from "./ui";
 
@@ -31,18 +31,25 @@ export type LeadsView = "kanban" | "lista";
 export function LeadsPage({
   view,
   onViewChange,
+  leadId,
+  onLeadChange,
 }: {
   view: LeadsView;
   onViewChange: (v: LeadsView) => void;
+  // Lead aberto no pop-up, vindo da URL (?lead=<id>).
+  leadId?: string;
+  onLeadChange: (id: string | undefined) => void;
 }) {
   const leadsQuery = useLeads();
   const updateStage = useUpdateStage();
   const [filters, setFilters] = useState<LeadFilters>(EMPTY_FILTERS);
-  const [drawer, setDrawer] = useState<DrawerState>({ mode: "closed" });
+  // Cadastro (manual ou por print) não vai para a URL; editar vai.
+  const [creating, setCreating] = useState<LeadModalState>({ mode: "closed" });
+  const modal: LeadModalState = leadId ? { mode: "edit", leadId } : creating;
   const [printOpen, setPrintOpen] = useState(false);
 
   // A prévia do print vive só na memória do navegador; libera ao sair do cadastro.
-  const printPreviewUrl = drawer.mode === "create" ? drawer.fromPrint?.previewUrl : undefined;
+  const printPreviewUrl = creating.mode === "create" ? creating.fromPrint?.previewUrl : undefined;
   useEffect(() => {
     return () => {
       if (printPreviewUrl) URL.revokeObjectURL(printPreviewUrl);
@@ -61,7 +68,17 @@ export function LeadsPage({
     [allLeads, filters],
   );
 
-  const openLead = useCallback((id: string) => setDrawer({ mode: "edit", leadId: id }), []);
+  const openLead = useCallback(
+    (id: string) => {
+      setCreating({ mode: "closed" });
+      onLeadChange(id);
+    },
+    [onLeadChange],
+  );
+  const closeModal = () => {
+    if (leadId) onLeadChange(undefined);
+    else setCreating({ mode: "closed" });
+  };
   const moveLead = useCallback(
     (lead: Lead, stage: LeadStage) =>
       updateStage.mutate({ id: lead.id, stage, previous: lead.stage }),
@@ -112,7 +129,7 @@ export function LeadsPage({
                 </Tabs.Tab>
               </Tabs.List>
             </Tabs.ListContainer>
-            <Button onPress={() => setDrawer({ mode: "create" })}>
+            <Button onPress={() => setCreating({ mode: "create" })}>
               <Plus className="size-4" />
               Novo lead
             </Button>
@@ -182,7 +199,7 @@ export function LeadsPage({
                   manualmente.
                 </p>
               </div>
-              <Button onPress={() => setDrawer({ mode: "create" })}>
+              <Button onPress={() => setCreating({ mode: "create" })}>
                 <Plus className="size-4" />
                 Cadastrar primeiro lead
               </Button>
@@ -208,20 +225,15 @@ export function LeadsPage({
 
       {/* Fora do Tabs: o React Aria renderiza os filhos do Tabs duas vezes (uma
           numa árvore oculta para montar as abas). Overlays ali dentro ficavam
-          duplicados, um bloqueava o outro e qualquer clique fechava o drawer. */}
-      <LeadDrawer
-        state={drawer}
-        leads={allLeads}
-        onClose={() => setDrawer({ mode: "closed" })}
-        onOpenLead={openLead}
-      />
+          duplicados, um bloqueava o outro e qualquer clique fechava o pop-up. */}
+      <LeadModal state={modal} onClose={closeModal} onOpenLead={openLead} />
 
       <PrintImportModal
         isOpen={printOpen}
         onClose={() => setPrintOpen(false)}
         onContinue={(fromPrint) => {
           setPrintOpen(false);
-          setDrawer({ mode: "create", fromPrint });
+          setCreating({ mode: "create", fromPrint });
         }}
       />
     </>

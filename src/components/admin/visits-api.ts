@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { toast } from "@heroui/react";
 import { getSupabase } from "@/lib/supabase/client";
+import { isNotFoundError } from "./leads-api";
 import type {
   Client,
   ClientFormValues,
@@ -33,6 +34,8 @@ export const VISITS_KEYS = {
   visitsInRange: (from: string, to: string, techId?: string) =>
     ["admin", "visits", "range", from, to, techId ?? "all"] as const,
   visits: ["admin", "visits"] as const,
+  recentVisits: ["admin", "visits", "recent"] as const,
+  visit: (id: string) => ["admin", "visits", "detail", id] as const,
   clientLateCases: (clientId: string) => ["admin", "late-cases", "client", clientId] as const,
   lateCases: ["admin", "late-cases"] as const,
   reportSends: (kind: string, periodStart: string) =>
@@ -342,6 +345,43 @@ export function useVisitsInRange({
         all.push(...(data as Visit[]));
         if (data.length < 1000) return all;
       }
+    },
+  });
+}
+
+// Últimas visitas lançadas (pela hora do registro, não pela data da visita).
+export function useRecentVisits(limit = 3) {
+  return useQuery({
+    queryKey: VISITS_KEYS.recentVisits,
+    staleTime: STALE,
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from("visits")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data as Visit[];
+    },
+  });
+}
+
+// Visita aberta pela URL (?visita=<id>): sempre busca no banco. null = não existe.
+export function useVisit(id: string | undefined) {
+  return useQuery({
+    queryKey: VISITS_KEYS.visit(id ?? ""),
+    enabled: !!id,
+    staleTime: 0,
+    retry: (count, error) => !isNotFoundError(error) && count < 2,
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from("visits")
+        .select("*")
+        .eq("id", id!)
+        .maybeSingle();
+      if (isNotFoundError(error)) return null;
+      if (error) throw error;
+      return data as Visit | null;
     },
   });
 }

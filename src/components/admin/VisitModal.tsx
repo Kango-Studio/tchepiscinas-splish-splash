@@ -1,4 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
+import {
+  differenceInCalendarDays,
+  differenceInHours,
+  differenceInMinutes,
+  format,
+  parseISO,
+} from "date-fns";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -16,6 +23,7 @@ import {
   TextArea,
   TextField,
   ToggleButton,
+  toast,
 } from "@heroui/react";
 import { Check } from "@gravity-ui/icons";
 import { SERVICE_GROUPS } from "@/lib/visits/services";
@@ -27,7 +35,13 @@ import {
 } from "@/lib/visits/schema";
 import { todayISO } from "./filters";
 import { describeDbError } from "./leads-api";
-import { findSameDayVisits, useDeleteVisit, useSaveVisit } from "./visits-api";
+import {
+  findSameDayVisits,
+  useDeleteVisit,
+  useRecentVisits,
+  useSaveVisit,
+  useVisit,
+} from "./visits-api";
 import {
   FREQUENCY_STYLES,
   FrequencyChip,
@@ -37,21 +51,55 @@ import {
 } from "./visits-ui";
 import { PendingLabel, StatusAlert, formatDate, formatDateTime } from "./ui";
 
-// Aberto vazio (topo da tela Visitas), com cliente/piscineiro preenchidos
-// (botão no cliente) ou com uma visita para editar.
-export type VisitModalState = { visit?: Visit; clientId?: string; techId?: string } | null;
+// Registro de visita nova: vazio (topo da tela Visitas) ou com cliente e
+// piscineiro preenchidos (botão no cliente). Fica só na tela.
+export type VisitModalState = { clientId?: string; techId?: string } | null;
 
-export function VisitModal({ state, onClose }: { state: VisitModalState; onClose: () => void }) {
+// Editar uma visita abre pela URL (?visita=<id>): editId vem dela e
+// onEditChange(undefined) tira o parâmetro.
+export function VisitModal({
+  state,
+  editId,
+  onClose,
+  onEditChange,
+}: {
+  state: VisitModalState;
+  editId?: string;
+  onClose: () => void;
+  onEditChange: (id: string | undefined) => void;
+}) {
+  // Fecha tudo (X, Esc, clique fora).
+  const closeAll = () => {
+    if (editId) onEditChange(undefined);
+    if (state) onClose();
+  };
   return (
-    <Modal.Backdrop isOpen={!!state} onOpenChange={(open) => !open && onClose()} variant="blur">
+    <Modal.Backdrop
+      isOpen={!!state || !!editId}
+      onOpenChange={(open) => !open && closeAll()}
+      variant="blur"
+    >
       <Modal.Container size="lg" scroll="inside">
         <Modal.Dialog className="sm:max-w-2xl">
           <Modal.CloseTrigger aria-label="Fechar" />
+          {/* Visita aberta em "Últimas registradas": edita por cima do registro,
+              que fica escondido (sem perder o que já foi preenchido) e volta ao salvar. */}
           {state && (
-            <VisitForm
-              key={state.visit?.id ?? `new-${state.clientId ?? ""}`}
-              state={state}
-              onClose={onClose}
+            <div className={editId ? "hidden" : "contents"}>
+              <VisitForm
+                key={`new-${state.clientId ?? ""}`}
+                state={state}
+                onClose={onClose}
+                onEditRecent={(v) => onEditChange(v.id)}
+              />
+            </div>
+          )}
+          {editId && (
+            <VisitEditForm
+              key={editId}
+              id={editId}
+              onClose={() => onEditChange(undefined)}
+              cancelLabel={state ? "Voltar" : undefined}
             />
           )}
         </Modal.Dialog>
@@ -60,18 +108,62 @@ export function VisitModal({ state, onClose }: { state: VisitModalState; onClose
   );
 }
 
+// Busca a visita no banco pelo ID antes de montar o formulário.
+function VisitEditForm({
+  id,
+  onClose,
+  cancelLabel,
+}: {
+  id: string;
+  onClose: () => void;
+  cancelLabel?: string;
+}) {
+  const query = useVisit(id);
+  const notFound = query.isSuccess && !query.data;
+
+  useEffect(() => {
+    if (!notFound) return;
+    toast.danger("Visita não encontrada", {
+      description: "Pode ter sido excluída. Confira o link.",
+    });
+    onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [notFound]);
+
+  if (query.isError)
+    return (
+      <Modal.Body className="py-6">
+        <StatusAlert
+          status="danger"
+          title="Não foi possível carregar a visita"
+          description={describeDbError(query.error)}
+        />
+      </Modal.Body>
+    );
+  if (!query.data)
+    return (
+      <Modal.Body className="flex justify-center py-16">
+        <Spinner aria-label="Carregando visita" />
+      </Modal.Body>
+    );
+  return <VisitForm state={{ visit: query.data }} onClose={onClose} cancelLabel={cancelLabel} />;
+}
+
 type SubmitMode = "close" | "another";
 type SameDay = Awaited<ReturnType<typeof findSameDayVisits>>;
 
 // Os valores iniciais dependem dos clientes (piscineiro responsável), então
 // o formulário só monta com a lista carregada.
-function VisitForm({
-  state,
-  onClose,
-}: {
-  state: NonNullable<VisitModalState>;
+type VisitFormProps = {
+  state: { visit?: Visit; clientId?: string; techId?: string };
   onClose: () => void;
-}) {
+  // Só no registro: abre uma das últimas visitas para editar.
+  onEditRecent?: (visit: Visit) => void;
+  // Botão de sair do formulário (padrão: Cancelar/Fechar, oculto no celular).
+  cancelLabel?: string;
+};
+
+function VisitForm({ state, ...props }: VisitFormProps) {
   const data = useClientRows();
   if (data.error)
     return (
@@ -89,19 +181,19 @@ function VisitForm({
         <Spinner />
       </Modal.Body>
     );
-  return <VisitFormBody state={state} data={data} onClose={onClose} />;
+  return <VisitFormBody state={state} data={data} {...props} />;
 }
 
 function VisitFormBody({
   state,
   data,
   onClose,
-}: {
-  state: NonNullable<VisitModalState>;
-  data: ReturnType<typeof useClientRows>;
-  onClose: () => void;
-}) {
+  onEditRecent,
+  cancelLabel,
+}: VisitFormProps & { data: ReturnType<typeof useClientRows> }) {
   const { visit } = state;
+  // Dois formulários podem estar montados (registro escondido + edição).
+  const formId = useId();
   const saveVisit = useSaveVisit();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [sameDay, setSameDay] = useState<{ visits: SameDay; mode: SubmitMode } | null>(null);
@@ -216,7 +308,7 @@ function VisitFormBody({
         )}
       </Modal.Header>
       <Modal.Body>
-        <form id="visit-form" onSubmit={submit("close")} noValidate className="flex flex-col gap-5">
+        <form id={formId} onSubmit={submit("close")} noValidate className="flex flex-col gap-5">
           {lastSaved && (
             <p className="animate-admin-rise flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
               <Check className="size-4 shrink-0" />
@@ -427,6 +519,8 @@ function VisitFormBody({
             )}
           />
 
+          {!visit && onEditRecent && <RecentVisits data={data} onOpen={onEditRecent} />}
+
           {sameDay && (
             <Alert status="warning" className="animate-admin-rise">
               <Alert.Indicator />
@@ -478,8 +572,12 @@ function VisitFormBody({
       </Modal.Body>
       {/* No celular os dois botões de salvar dividem a linha; fechar fica no X. */}
       <Modal.Footer>
-        <Button variant="tertiary" onPress={onClose} className="mr-auto hidden sm:inline-flex">
-          {lastSaved ? "Fechar" : "Cancelar"}
+        <Button
+          variant="tertiary"
+          onPress={onClose}
+          className={cancelLabel ? "mr-auto" : "mr-auto hidden sm:inline-flex"}
+        >
+          {cancelLabel ?? (lastSaved ? "Fechar" : "Cancelar")}
         </Button>
         {!visit && (
           <Button
@@ -495,7 +593,7 @@ function VisitFormBody({
         )}
         <Button
           type="submit"
-          form="visit-form"
+          form={formId}
           className="flex-1 sm:flex-none"
           isPending={busy}
           isDisabled={!!visit && !isDirty}
@@ -508,6 +606,74 @@ function VisitFormBody({
         </Button>
       </Modal.Footer>
     </>
+  );
+}
+
+// "há 2 min", "há 3 h", "ontem", "há 4 dias".
+function registeredAgo(iso: string, now: Date) {
+  const at = parseISO(iso);
+  const minutes = differenceInMinutes(now, at);
+  if (minutes < 1) return "agora mesmo";
+  if (minutes < 60) return `há ${minutes} min`;
+  const days = differenceInCalendarDays(now, at);
+  if (days === 0) return `há ${differenceInHours(now, at)} h`;
+  if (days === 1) return "ontem";
+  return `há ${days} dias`;
+}
+
+// Hora atual que avança sozinha, para o "há N min" não ficar parado.
+function useNow(intervalMs = 30_000) {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(new Date()), intervalMs);
+    return () => clearInterval(timer);
+  }, [intervalMs]);
+  return now;
+}
+
+// As 3 últimas visitas lançadas (qualquer piscineiro), para conferir o que já
+// entrou. Some enquanto carrega ou se der erro: é só uma ajuda.
+function RecentVisits({
+  data,
+  onOpen,
+}: {
+  data: ReturnType<typeof useClientRows>;
+  onOpen: (visit: Visit) => void;
+}) {
+  const recent = useRecentVisits();
+  const now = useNow();
+  if (!recent.data?.length) return null;
+
+  const techName = (id: string) => data.techs.find((t) => t.id === id)?.name ?? "Piscineiro";
+  const clientName = (id: string) => data.rows.find((c) => c.id === id)?.name ?? "Cliente";
+
+  return (
+    <section aria-label="Últimas registradas" className="-mb-2 flex flex-col gap-0.5">
+      <p className="text-[11px] font-semibold tracking-wider text-muted uppercase">
+        Últimas registradas
+      </p>
+      <ul className="flex flex-col">
+        {recent.data.map((v) => (
+          <li key={v.id}>
+            <button
+              type="button"
+              onClick={() => onOpen(v)}
+              title="Abrir para editar"
+              className="-mx-2 flex w-[calc(100%+1rem)] rounded-lg px-2 py-1 text-left text-xs text-muted transition-colors duration-200 hover:bg-pool-mist/50 hover:text-pool-deep focus-visible:outline-2 focus-visible:outline-accent"
+            >
+              {/* No celular os nomes encurtam; data e "há quanto tempo" ficam. */}
+              <span className="min-w-0 truncate">
+                {techName(v.pool_tech_id)} · {clientName(v.client_id)}
+              </span>
+              <span className="shrink-0 whitespace-pre">
+                {" · "}
+                {format(parseISO(v.visit_date), "dd/MM")} · {registeredAgo(v.created_at, now)}
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </section>
   );
 }
 

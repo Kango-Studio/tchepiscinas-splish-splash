@@ -18,6 +18,7 @@ export const Route = createFileRoute("/admin/visitas")({
         : undefined,
     mes:
       typeof search.mes === "string" && /^\d{4}-\d{2}$/.test(search.mes) ? search.mes : undefined,
+    visita: typeof search.visita === "string" && search.visita ? search.visita : undefined,
   }),
   component: AdminVisitsRoute,
 });

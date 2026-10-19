@@ -12,8 +12,8 @@ import { ClosingTab } from "./ClosingTab";
 export const VISIT_TABS = ["frequencia", "relatorios", "fechamento"] as const;
 export type VisitTab = (typeof VISIT_TABS)[number];
 
-// mes: "AAAA-MM" do fechamento.
-export type VisitFilters = { aba?: VisitTab; mes?: string };
+// mes: "AAAA-MM" do fechamento. visita: ID da visita aberta para editar.
+export type VisitFilters = { aba?: VisitTab; mes?: string; visita?: string };
 
 export function VisitsPage({
   filters,
@@ -91,7 +91,7 @@ export function VisitsPage({
               onMonthChange={(mes) =>
                 onFiltersChange({ ...filters, mes: mes === currentMonth() ? undefined : mes })
               }
-              onEdit={(visit) => setModal({ visit })}
+              onEdit={(visit) => onFiltersChange({ ...filters, visita: visit.id })}
               onDelete={setToDelete}
             />
           </Tabs.Panel>
@@ -99,7 +99,12 @@ export function VisitsPage({
       </div>
 
       {/* Pop-ups fora do Tabs: dentro dele o React Aria os duplicaria. */}
-      <VisitModal state={modal} onClose={() => setModal(null)} />
+      <VisitModal
+        state={modal}
+        editId={filters.visita}
+        onClose={() => setModal(null)}
+        onEditChange={(visita) => onFiltersChange({ ...filters, visita })}
+      />
       <DeleteVisitDialog
         visit={toDelete}
         clientName={toDelete ? data.rows.find((c) => c.id === toDelete.client_id)?.name : undefined}

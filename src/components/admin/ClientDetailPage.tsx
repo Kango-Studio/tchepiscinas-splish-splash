@@ -47,7 +47,16 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
-export function ClientDetailPage({ clientId }: { clientId: string }) {
+export function ClientDetailPage({
+  clientId,
+  visitId,
+  onVisitChange,
+}: {
+  clientId: string;
+  // Visita aberta para editar, vinda da URL (?visita=<id>).
+  visitId?: string;
+  onVisitChange: (id: string | undefined) => void;
+}) {
   const navigate = useNavigate();
   const data = useClientRows();
   const visitsQuery = useClientVisits(clientId);
@@ -334,7 +343,7 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
                                   variant="ghost"
                                   className="rounded-full text-muted hover:text-accent"
                                   aria-label={`Editar visita de ${formatDate(v.visit_date)}`}
-                                  onPress={() => setVisitModal({ visit: v })}
+                                  onPress={() => onVisitChange(v.id)}
                                 >
                                   <Pencil className="size-4" />
                                 </Button>
@@ -437,7 +446,12 @@ export function ClientDetailPage({ clientId }: { clientId: string }) {
         onDeleted={() => navigate({ to: "/admin/clientes" })}
       />
 
-      <VisitModal state={visitModal} onClose={() => setVisitModal(null)} />
+      <VisitModal
+        state={visitModal}
+        editId={visitId}
+        onClose={() => setVisitModal(null)}
+        onEditChange={onVisitChange}
+      />
       <DeleteVisitDialog visit={visitToDelete} onClose={() => setVisitToDelete(null)} />
     </div>
   );

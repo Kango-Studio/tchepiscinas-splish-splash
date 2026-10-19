@@ -5,6 +5,8 @@ import { getSupabase } from "@/lib/supabase/client";
 import { STAGE_LABELS, type Lead, type LeadFormValues, type LeadStage } from "@/lib/leads/schema";
 
 export const LEADS_QUERY_KEY = ["admin", "leads"] as const;
+// Fora de LEADS_QUERY_KEY: as mutações mexem na lista sem afetar o lead aberto.
+export const leadQueryKey = (id: string) => ["admin", "lead", id] as const;
 const PAGE = 1000;
 
 export function describeDbError(error: unknown): string {
@@ -37,6 +39,31 @@ async function fetchAllLeads(): Promise<Lead[]> {
 
 export function useLeads() {
   return useQuery({ queryKey: LEADS_QUERY_KEY, queryFn: fetchAllLeads, staleTime: 30_000 });
+}
+
+// Lead aberto pela URL: sempre busca no banco ao abrir. null = não existe.
+export function useLead(id: string | undefined) {
+  return useQuery({
+    queryKey: leadQueryKey(id ?? ""),
+    enabled: !!id,
+    staleTime: 0,
+    retry: (count, error) => !isNotFoundError(error) && count < 2,
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from("leads")
+        .select("*")
+        .eq("id", id!)
+        .maybeSingle();
+      // ID fora do formato (link editado à mão) também é "não encontrado".
+      if (isNotFoundError(error)) return null;
+      if (error) throw error;
+      return data as Lead | null;
+    },
+  });
+}
+
+export function isNotFoundError(error: unknown) {
+  return (error as Partial<PostgrestError> | null)?.code === "22P02";
 }
 
 export async function findLeadsByPhone(whatsapp: string, excludeId?: string) {
@@ -89,6 +116,7 @@ export function useUpdateLead() {
     },
     onSuccess: (lead) => {
       qc.setQueryData<Lead[]>(LEADS_QUERY_KEY, (list) => upsertInCache(list, lead));
+      qc.setQueryData(leadQueryKey(lead.id), lead);
       toast.success("Alterações salvas", { description: lead.name });
     },
   });
@@ -114,10 +142,14 @@ export function useUpdateStage() {
       qc.setQueryData<Lead[]>(LEADS_QUERY_KEY, (list) =>
         list?.map((l) => (l.id === id ? { ...l, stage } : l)),
       );
+      qc.setQueryData<Lead | null>(leadQueryKey(id), (l) => l && { ...l, stage });
     },
     onError: (error, { id, stage, previous }) => {
       qc.setQueryData<Lead[]>(LEADS_QUERY_KEY, (list) =>
         list?.map((l) => (l.id === id && l.stage === stage ? { ...l, stage: previous } : l)),
+      );
+      qc.setQueryData<Lead | null>(leadQueryKey(id), (l) =>
+        l?.stage === stage ? { ...l, stage: previous } : l,
       );
       toast.danger("Não foi possível mover o lead", {
         description: `${describeDbError(error)} O card voltou para "${STAGE_LABELS[previous]}".`,
@@ -127,6 +159,7 @@ export function useUpdateStage() {
       qc.setQueryData<Lead[]>(LEADS_QUERY_KEY, (list) =>
         list?.map((l) => (l.id === lead.id && l.stage === stage ? lead : l)),
       );
+      qc.setQueryData<Lead | null>(leadQueryKey(lead.id), (l) => (l?.stage === stage ? lead : l));
     },
   });
 }
@@ -147,6 +180,7 @@ export function useDeleteLead() {
     },
     onSuccess: (lead) => {
       qc.setQueryData<Lead[]>(LEADS_QUERY_KEY, (list) => list?.filter((l) => l.id !== lead.id));
+      qc.removeQueries({ queryKey: leadQueryKey(lead.id) });
       toast.success("Lead excluído", { description: lead.name });
     },
   });
