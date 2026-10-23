@@ -11,7 +11,7 @@ import "../../admin.css";
 export const Route = createFileRoute("/admin")({
   ssr: false,
   head: () => ({
-    meta: [{ title: "Painel | Tchê Piscinas" }, { name: "robots", content: "noindex, nofollow" }],
+    meta: [{ title: "Painel | Tchê Piscinas" }],
   }),
   component: AdminRoot,
 });

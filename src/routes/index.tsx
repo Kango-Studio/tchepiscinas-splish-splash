@@ -115,6 +115,7 @@ export const Route = createFileRoute("/")({
           "Manutenção, limpeza e tratamento de piscinas residenciais e de condomínios em Porto Alegre e região.",
       },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
     scripts: [
       {
         type: "application/ld+json",
