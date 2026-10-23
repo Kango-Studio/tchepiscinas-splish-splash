@@ -569,6 +569,7 @@ function Plans() {
           {plans.map((p, i) => (
             <div
               key={i}
+              id={p.clientType === "condominio" ? "condominios" : undefined}
               className={`reveal relative rounded-2xl md:rounded-3xl p-5 md:p-7 flex flex-col border transition-all ${
                 p.highlight
                   ? "bg-gradient-pool text-white border-transparent shadow-pool md:scale-[1.02] md:-translate-y-3"

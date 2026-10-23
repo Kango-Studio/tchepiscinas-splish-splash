@@ -71,7 +71,7 @@ function ItemRow({
 
 export function ComparisonSection() {
   return (
-    <section className="pt-8 pb-12 md:pt-10 md:pb-17 bg-white">
+    <section id="servicos" className="pt-8 pb-12 md:pt-10 md:pb-17 bg-white">
       <div className="mx-auto max-w-310 px-4 sm:px-6">
         {/* Header */}
         <div
