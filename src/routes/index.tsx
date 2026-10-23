@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SITE_URL } from "./__root";
 import { createWhatsAppLink } from "@/lib/whatsapp";
+import { useWhatsAppConversion } from "@/lib/google-ads";
 import {
   Droplets,
   Waves,
@@ -115,6 +116,7 @@ export const Route = createFileRoute("/")({
           "Manutenção, limpeza e tratamento de piscinas residenciais e de condomínios em Porto Alegre e região.",
       },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
     scripts: [
       {
         type: "application/ld+json",
@@ -147,6 +149,7 @@ function useReveal() {
 
 function LandingPage() {
   useReveal();
+  useWhatsAppConversion();
   return (
     <QuoteFormProvider>
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
@@ -568,6 +571,7 @@ function Plans() {
           {plans.map((p, i) => (
             <div
               key={i}
+              id={p.clientType === "condominio" ? "condominios" : undefined}
               className={`reveal relative rounded-2xl md:rounded-3xl p-5 md:p-7 flex flex-col border transition-all ${
                 p.highlight
                   ? "bg-gradient-pool text-white border-transparent shadow-pool md:scale-[1.02] md:-translate-y-3"

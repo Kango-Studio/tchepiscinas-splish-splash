@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /admin
 
-Sitemap: https://www.tchepiscinas.com/sitemap.xml
+Sitemap: https://tchepiscinas.com/sitemap.xml
