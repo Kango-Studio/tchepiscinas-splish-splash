@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { SITE_URL } from "./__root";
 import { createWhatsAppLink } from "@/lib/whatsapp";
+import { useWhatsAppConversion } from "@/lib/google-ads";
 import {
   Droplets,
   Waves,
@@ -148,6 +149,7 @@ function useReveal() {
 
 function LandingPage() {
   useReveal();
+  useWhatsAppConversion();
   return (
     <QuoteFormProvider>
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
