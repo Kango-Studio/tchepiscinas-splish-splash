@@ -31,6 +31,7 @@ import {
   installmentDueDates,
   isOpenCharge,
   kitFormSchema,
+  formatMonth,
   nextDueDate,
   paymentFormSchema,
   splitInstallments,
@@ -147,6 +148,7 @@ export function ClientFinanceTab({
 
 function PaymentCard({ client, onEdit }: { client: ClientRow; onEdit: () => void }) {
   const price = clientPrice(client, client.plan);
+  const recurring = !!client.dia_vencimento && !!client.mensalidade_desde;
   return (
     <Card className="animate-admin-rise gap-2 p-4 sm:p-5" style={stagger(1)}>
       <div className="flex items-center justify-between gap-2">
@@ -186,6 +188,27 @@ function PaymentCard({ client, onEdit }: { client: ClientRow; onEdit: () => void
             </>
           ) : (
             <span className="text-muted">Não informado</span>
+          )}
+        </InfoRow>
+        <InfoRow label="Cobrança recorrente">
+          {client.billing_type === "parceria" ? (
+            <span className="text-muted">Não se aplica</span>
+          ) : !client.active ? (
+            <span className="text-muted">Parada (cliente inativo)</span>
+          ) : recurring ? (
+            <>
+              <span className="text-emerald-700">Todo mês</span>
+              <span className="block text-xs font-normal text-muted">
+                desde {formatMonth(client.mensalidade_desde!)}
+              </span>
+            </>
+          ) : (
+            <>
+              <span className="text-muted">Desligada</span>
+              <span className="block text-xs font-normal text-muted">
+                {client.dia_vencimento ? "falta o mês de início" : "falta o dia e o mês de início"}
+              </span>
+            </>
           )}
         </InfoRow>
       </dl>
@@ -595,8 +618,13 @@ function PaymentForm({ client, onClose }: { client: ClientRow; onClose: () => vo
       forma_pagamento: client.forma_pagamento ?? "",
       custom_price: client.custom_price ?? undefined,
       dia_vencimento: client.dia_vencimento ?? undefined,
+      mensalidade_desde: client.mensalidade_desde?.slice(0, 7) ?? "",
     },
   });
+  const startMonth = watch("mensalidade_desde");
+  const currentMonthInput = todayISO().slice(0, 7);
+  // Só avisa quando o mês de início muda para trás (o resto já foi gerado).
+  const startChanged = startMonth !== (client.mensalidade_desde?.slice(0, 7) ?? "");
 
   const method = watch("forma_pagamento");
   const options = PAYMENT_METHODS.map((m) => ({
@@ -687,6 +715,37 @@ function PaymentForm({ client, onClose }: { client: ClientRow; onClose: () => vo
               )}
             />
           </div>
+          <Controller
+            control={control}
+            name="mensalidade_desde"
+            render={({ field, fieldState }) => (
+              <TextField
+                fullWidth
+                type="month"
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                isInvalid={!!fieldState.error}
+              >
+                <Label>Cobrar a partir de</Label>
+                <Input variant="secondary" />
+                {!fieldState.error && (
+                  <p className="text-xs text-muted">
+                    A mensalidade é gerada sozinha todo mês, a partir deste mês, enquanto o cliente
+                    estiver ativo. Mês passado gera as mensalidades desde lá. Vazio = não gera.
+                  </p>
+                )}
+                <FieldError>{fieldState.error?.message}</FieldError>
+              </TextField>
+            )}
+          />
+          {startChanged && startMonth && startMonth < currentMonthInput && (
+            <StatusAlert
+              status="warning"
+              title={`Vai gerar as mensalidades desde ${formatMonth(`${startMonth}-01`)}`}
+              description="Os meses que já tiverem mensalidade lançada (inclusive cancelada) não são gerados de novo."
+            />
+          )}
           {submitError && (
             <StatusAlert
               status="danger"
@@ -951,9 +1010,10 @@ function ChargeForm({
           observacao: charge.observacao ?? "",
         }
       : {
-          tipo: "mensalidade",
-          valor: price && client.billing_type === "pago" ? price : undefined,
-          vencimento: client.dia_vencimento ? nextDueDate(client.dia_vencimento, today) : today,
+          // Mensalidades são geradas sozinhas; lançamento manual costuma ser avulso.
+          tipo: "avulso",
+          valor: undefined,
+          vencimento: today,
           status: "pendente",
           link_pagamento: "",
           data_envio_link: "",

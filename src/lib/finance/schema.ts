@@ -119,25 +119,61 @@ const optionalText = (max: number) =>
 const notFuture = (v: string) => v <= format(new Date(), "yyyy-MM-dd");
 
 // Forma de pagamento, valor da mensalidade (clients.custom_price) e vencimento.
-export const paymentFormSchema = z.object({
-  forma_pagamento: z
-    .union([z.enum(PAYMENT_METHODS), z.literal("")])
-    .optional()
-    .transform((v) => (v ? v : null)),
-  custom_price: z
-    .union([z.number(), z.nan()])
-    .optional()
-    .transform((v) => (v === undefined || Number.isNaN(v) ? null : v))
-    .refine((v) => v === null || v >= 0, "Valor inválido"),
-  dia_vencimento: z
-    .union([z.number(), z.nan()])
-    .optional()
-    .transform((v) => (v === undefined || Number.isNaN(v) ? null : v))
-    .refine(
-      (v) => v === null || (Number.isInteger(v) && v >= 1 && v <= 31),
-      "Use um dia de 1 a 31",
-    ),
-});
+// Mensalidade recorrente: só é gerada com dia de vencimento e mês de início.
+export const paymentFormSchema = z
+  .object({
+    forma_pagamento: z
+      .union([z.enum(PAYMENT_METHODS), z.literal("")])
+      .optional()
+      .transform((v) => (v ? v : null)),
+    custom_price: z
+      .union([z.number(), z.nan()])
+      .optional()
+      .transform((v) => (v === undefined || Number.isNaN(v) ? null : v))
+      .refine((v) => v === null || v >= 0, "Valor inválido"),
+    dia_vencimento: z
+      .union([z.number(), z.nan()])
+      .optional()
+      .transform((v) => (v === undefined || Number.isNaN(v) ? null : v))
+      .refine(
+        (v) => v === null || (Number.isInteger(v) && v >= 1 && v <= 31),
+        "Use um dia de 1 a 31",
+      ),
+    // Campo de mês ("AAAA-MM"); grava o dia 1.
+    mensalidade_desde: z
+      .string()
+      .optional()
+      .refine((v) => !v || /^\d{4}-\d{2}$/.test(v), "Informe o mês")
+      .transform((v) => (v ? `${v}-01` : null)),
+  })
+  .superRefine((v, ctx) => {
+    if (v.mensalidade_desde && v.dia_vencimento === null)
+      ctx.addIssue({
+        code: "custom",
+        path: ["dia_vencimento"],
+        message: "Informe o dia para gerar a mensalidade",
+      });
+  });
+
+// Mês "AAAA-MM-01" → "nov/2026".
+export const formatMonth = (iso: string) => {
+  const [y, m] = iso.split("-");
+  const names = [
+    "jan",
+    "fev",
+    "mar",
+    "abr",
+    "mai",
+    "jun",
+    "jul",
+    "ago",
+    "set",
+    "out",
+    "nov",
+    "dez",
+  ];
+  return `${names[Number(m) - 1]}/${y}`;
+};
 
 export type PaymentFormInput = z.input<typeof paymentFormSchema>;
 export type PaymentFormValues = z.output<typeof paymentFormSchema>;

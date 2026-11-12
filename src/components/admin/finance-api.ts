@@ -49,6 +49,10 @@ export function useClientCharges(clientId: string) {
     queryKey: FINANCE_KEYS.clientCharges(clientId),
     staleTime: STALE,
     queryFn: async () => {
+      // Gera as mensalidades recorrentes que faltam antes de listar.
+      const gen = await getSupabase().rpc("gerar_mensalidades", { p_cliente_id: clientId });
+      // PGRST202 = função ainda não criada (migration não aplicada): só lista.
+      if (gen.error && gen.error.code !== "PGRST202") throw gen.error;
       const { data, error } = await getSupabase()
         .from("cobrancas_situacao")
         .select("*")
@@ -91,6 +95,8 @@ export function useSavePayment() {
     },
     onSuccess: (client) => {
       void qc.invalidateQueries({ queryKey: VISITS_KEYS.clients });
+      // Recarregar as cobranças gera as mensalidades com a configuração nova.
+      void qc.invalidateQueries({ queryKey: FINANCE_KEYS.clientCharges(client.id) });
       toast.success("Pagamento atualizado", { description: client.name });
     },
   });

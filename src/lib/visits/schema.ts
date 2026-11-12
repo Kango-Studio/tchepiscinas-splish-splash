@@ -50,6 +50,8 @@ export type Client = {
   forma_pagamento: PaymentMethod | null;
   dia_vencimento: number | null;
   etapa_onboarding: OnboardingStage;
+  // Primeiro mês (AAAA-MM-01) da mensalidade recorrente. Vazio = não gera.
+  mensalidade_desde: string | null;
   created_at: string;
   updated_at: string;
 };
