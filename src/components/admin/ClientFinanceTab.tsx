@@ -25,6 +25,7 @@ import { PAYMENT_METHODS, clientPrice, formatMoney } from "@/lib/visits/schema";
 import {
   CHARGE_STATUS_LABELS,
   CHARGE_TYPE_LABELS,
+  MANUAL_CHARGE_TYPES,
   EDITABLE_STATUSES,
   PAYMENT_METHOD_LABELS,
   chargeFormSchema,
@@ -1011,8 +1012,8 @@ function ChargeForm({
           observacao: charge.observacao ?? "",
         }
       : {
-          // Mensalidades são geradas sozinhas; lançamento manual costuma ser avulso.
-          tipo: "avulso",
+          // Mensalidades são geradas sozinhas: o tipo é escolhido a cada lançamento.
+          tipo: undefined,
           valor: undefined,
           vencimento: today,
           status: "pendente",
@@ -1061,17 +1062,19 @@ function ChargeForm({
               <Controller
                 control={control}
                 name="tipo"
-                render={({ field }) => (
+                render={({ field, fieldState }) => (
                   <OptionSelect
                     label="Tipo"
                     isRequired
-                    value={field.value}
+                    value={field.value ?? ""}
+                    error={fieldState.error?.message}
                     onChange={(v) => {
-                      field.onChange(v || "mensalidade");
+                      if (!v) return;
+                      field.onChange(v);
                       if (v === "mensalidade" && !getValues("valor") && price)
                         setValue("valor", price);
                     }}
-                    options={(["mensalidade", "avulso"] as const).map((t) => ({
+                    options={MANUAL_CHARGE_TYPES.map((t) => ({
                       id: t,
                       label: CHARGE_TYPE_LABELS[t],
                     }))}

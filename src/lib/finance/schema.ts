@@ -11,13 +11,29 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   boleto: "Boleto",
 };
 
-export const CHARGE_TYPES = ["mensalidade", "kit", "avulso"] as const;
+export const CHARGE_TYPES = [
+  "mensalidade",
+  "kit",
+  "produtos",
+  "manutencao_extra",
+  "avulso",
+] as const;
 export type ChargeType = (typeof CHARGE_TYPES)[number];
 export const CHARGE_TYPE_LABELS: Record<ChargeType, string> = {
   mensalidade: "Mensalidade",
   kit: "Kit de produtos",
-  avulso: "Avulso",
+  produtos: "Produtos",
+  manutencao_extra: "Manutenção extra",
+  // Valor antigo do banco; no painel aparece como "Outro".
+  avulso: "Outro",
 };
+// Tipos que podem ser lançados à mão (kit só pelo "Nova compra").
+export const MANUAL_CHARGE_TYPES = [
+  "produtos",
+  "manutencao_extra",
+  "avulso",
+  "mensalidade",
+] as const;
 
 // Status gravado. "atrasado" existe no banco, mas o painel não grava: a
 // situação real vem da view cobrancas_situacao.
@@ -200,7 +216,7 @@ export type KitFormValues = z.output<typeof kitFormSchema>;
 
 export const chargeFormSchema = z
   .object({
-    tipo: z.enum(CHARGE_TYPES),
+    tipo: z.enum(CHARGE_TYPES, { errorMap: () => ({ message: "Escolha o tipo" }) }),
     valor: z
       .number({ invalid_type_error: "Informe o valor" })
       .positive("Informe o valor")
