@@ -70,7 +70,7 @@ function ResetPasswordPage() {
       return;
     }
     setDone(true);
-    setTimeout(() => navigate({ to: "/admin", replace: true }), 1500);
+    setTimeout(() => navigate({ to: "/admin/financeiro", replace: true }), 1500);
   };
 
   if (!isSupabaseConfigured) {

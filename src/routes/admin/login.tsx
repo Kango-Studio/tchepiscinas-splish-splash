@@ -30,7 +30,7 @@ function LoginPage() {
   const [mode, setMode] = useState<"login" | "reset">("login");
 
   useEffect(() => {
-    if (state.status === "admin") navigate({ to: "/admin", replace: true });
+    if (state.status === "admin") navigate({ to: "/admin/financeiro", replace: true });
   }, [state.status, navigate]);
 
   if (state.status === "not_configured") {

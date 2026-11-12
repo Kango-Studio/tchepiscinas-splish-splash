@@ -10,6 +10,7 @@ import {
   Funnel,
   Gear,
   Persons,
+  Wallet,
 } from "@gravity-ui/icons";
 import { useLocation } from "@tanstack/react-router";
 import logo from "@/assets/logo.webp";
@@ -21,6 +22,7 @@ type NavItem = { href: string; label: string; icon: ComponentType<SVGProps<SVGSV
 const NAV: { label?: string; items: NavItem[] }[] = [
   {
     items: [
+      { href: "/admin/financeiro", label: "Financeiro", icon: Wallet },
       { href: "/admin/visitas", label: "Visitas", icon: Calendar },
       { href: "/admin/clientes", label: "Clientes", icon: Persons },
       { href: "/admin/produtos", label: "Produtos", icon: Flask },

@@ -52,6 +52,12 @@ export type Client = {
   etapa_onboarding: OnboardingStage;
   // Primeiro mês (AAAA-MM-01) da mensalidade recorrente. Vazio = não gera.
   mensalidade_desde: string | null;
+  // Data de cada etapa da esteira (migration 20261112160000_financeiro_esteira.sql).
+  venda_fechada_em: string | null;
+  kit_pago_em: string | null;
+  primeira_visita_em: string | null;
+  link_enviado_em: string | null;
+  ativo_em: string | null;
   created_at: string;
   updated_at: string;
 };

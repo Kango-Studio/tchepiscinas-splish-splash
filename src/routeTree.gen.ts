@@ -14,6 +14,7 @@ import { Route as AdminRouteRouteImport } from './routes/admin/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminConfiguracoesRouteImport } from './routes/admin/configuracoes'
 import { Route as AdminDashboardRouteImport } from './routes/admin/dashboard'
+import { Route as AdminFinanceiroRouteImport } from './routes/admin/financeiro'
 import { Route as AdminLoginRouteImport } from './routes/admin/login'
 import { Route as AdminProdutosRouteImport } from './routes/admin/produtos'
 import { Route as AdminRedefinirSenhaRouteImport } from './routes/admin/redefinir-senha'
@@ -44,6 +45,11 @@ const AdminConfiguracoesRoute = AdminConfiguracoesRouteImport.update({
 const AdminDashboardRoute = AdminDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminFinanceiroRoute = AdminFinanceiroRouteImport.update({
+  id: '/financeiro',
+  path: '/financeiro',
   getParentRoute: () => AdminRouteRoute,
 } as any)
 const AdminLoginRoute = AdminLoginRouteImport.update({
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteRouteWithChildren
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/produtos': typeof AdminProdutosRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/produtos': typeof AdminProdutosRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
@@ -108,6 +116,7 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteRouteWithChildren
   '/admin/configuracoes': typeof AdminConfiguracoesRoute
   '/admin/dashboard': typeof AdminDashboardRoute
+  '/admin/financeiro': typeof AdminFinanceiroRoute
   '/admin/login': typeof AdminLoginRoute
   '/admin/produtos': typeof AdminProdutosRoute
   '/admin/redefinir-senha': typeof AdminRedefinirSenhaRoute
@@ -123,6 +132,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/configuracoes'
     | '/admin/dashboard'
+    | '/admin/financeiro'
     | '/admin/login'
     | '/admin/produtos'
     | '/admin/redefinir-senha'
@@ -135,6 +145,7 @@ export interface FileRouteTypes {
     | '/'
     | '/admin/configuracoes'
     | '/admin/dashboard'
+    | '/admin/financeiro'
     | '/admin/login'
     | '/admin/produtos'
     | '/admin/redefinir-senha'
@@ -148,6 +159,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/admin/configuracoes'
     | '/admin/dashboard'
+    | '/admin/financeiro'
     | '/admin/login'
     | '/admin/produtos'
     | '/admin/redefinir-senha'
@@ -199,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminDashboardRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/financeiro': {
+      id: '/admin/financeiro'
+      path: '/financeiro'
+      fullPath: '/admin/financeiro'
+      preLoaderRoute: typeof AdminFinanceiroRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/login': {
       id: '/admin/login'
       path: '/login'
@@ -247,6 +266,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteRouteChildren {
   AdminConfiguracoesRoute: typeof AdminConfiguracoesRoute
   AdminDashboardRoute: typeof AdminDashboardRoute
+  AdminFinanceiroRoute: typeof AdminFinanceiroRoute
   AdminLoginRoute: typeof AdminLoginRoute
   AdminProdutosRoute: typeof AdminProdutosRoute
   AdminRedefinirSenhaRoute: typeof AdminRedefinirSenhaRoute
@@ -259,6 +279,7 @@ interface AdminRouteRouteChildren {
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminConfiguracoesRoute: AdminConfiguracoesRoute,
   AdminDashboardRoute: AdminDashboardRoute,
+  AdminFinanceiroRoute: AdminFinanceiroRoute,
   AdminLoginRoute: AdminLoginRoute,
   AdminProdutosRoute: AdminProdutosRoute,
   AdminRedefinirSenhaRoute: AdminRedefinirSenhaRoute,

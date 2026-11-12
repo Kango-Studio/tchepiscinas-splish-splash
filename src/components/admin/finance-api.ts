@@ -1,8 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
 import type { PostgrestError } from "@supabase/supabase-js";
 import { toast } from "@heroui/react";
 import { getSupabase } from "@/lib/supabase/client";
-import type { Client } from "@/lib/visits/schema";
+import type { Client, OnboardingStage } from "@/lib/visits/schema";
 import type {
   Charge,
   ChargeFormValues,
@@ -10,6 +10,7 @@ import type {
   KitPurchase,
   PaymentFormValues,
 } from "@/lib/finance/schema";
+import type { StageDateField } from "@/lib/finance/onboarding";
 import { describeDbError } from "./leads-api";
 import { VISITS_KEYS } from "./visits-api";
 
@@ -17,6 +18,7 @@ export const FINANCE_KEYS = {
   all: ["admin", "finance"] as const,
   clientCharges: (clientId: string) => ["admin", "finance", "charges", clientId] as const,
   clientKits: (clientId: string) => ["admin", "finance", "kits", clientId] as const,
+  pending: ["admin", "finance", "pending"] as const,
 };
 
 const STALE = 30_000;
@@ -25,6 +27,13 @@ const STALE = 30_000;
 function assertAffected<T>(data: T[] | null): T[] {
   if (!data || data.length === 0) throw { code: "42501" } satisfies Partial<PostgrestError>;
   return data;
+}
+
+// Gatilhos do banco mudam a etapa da esteira ao gravar cobranças: depois de
+// qualquer gravação, recarrega o financeiro e os clientes.
+function refresh(qc: QueryClient) {
+  void qc.invalidateQueries({ queryKey: FINANCE_KEYS.all });
+  void qc.invalidateQueries({ queryKey: VISITS_KEYS.clients });
 }
 
 // Mensagens específicas das travas do financeiro; o resto usa a padrão.
@@ -43,16 +52,24 @@ const toCharge = (c: Charge): Charge => ({
   valor: Number(c.valor),
   dias_atraso: Number(c.dias_atraso),
 });
+const toKit = (k: KitPurchase): KitPurchase => ({ ...k, valor_total: Number(k.valor_total) });
+
+// Lança as mensalidades recorrentes que faltam (de um cliente ou de todos).
+async function generateFees(clientId?: string) {
+  const gen = await getSupabase().rpc(
+    "gerar_mensalidades",
+    clientId ? { p_cliente_id: clientId } : {},
+  );
+  // PGRST202 = função ainda não criada (migration não aplicada): só lista.
+  if (gen.error && gen.error.code !== "PGRST202") throw gen.error;
+}
 
 export function useClientCharges(clientId: string) {
   return useQuery({
     queryKey: FINANCE_KEYS.clientCharges(clientId),
     staleTime: STALE,
     queryFn: async () => {
-      // Gera as mensalidades recorrentes que faltam antes de listar.
-      const gen = await getSupabase().rpc("gerar_mensalidades", { p_cliente_id: clientId });
-      // PGRST202 = função ainda não criada (migration não aplicada): só lista.
-      if (gen.error && gen.error.code !== "PGRST202") throw gen.error;
+      await generateFees(clientId);
       const { data, error } = await getSupabase()
         .from("cobrancas_situacao")
         .select("*")
@@ -76,7 +93,34 @@ export function useClientKits(clientId: string) {
         .eq("cliente_id", clientId)
         .order("data_compra", { ascending: false });
       if (error) throw error;
-      return (data as KitPurchase[]).map((k) => ({ ...k, valor_total: Number(k.valor_total) }));
+      return (data as KitPurchase[]).map(toKit);
+    },
+  });
+}
+
+// Tela Financeiro: lança as mensalidades de todos e traz o que está em aberto
+// e as compras de kit (volume pequeno).
+export function usePendingFinance() {
+  return useQuery({
+    queryKey: FINANCE_KEYS.pending,
+    staleTime: STALE,
+    queryFn: async () => {
+      await generateFees();
+      const supabase = getSupabase();
+      const [charges, kits] = await Promise.all([
+        supabase
+          .from("cobrancas_situacao")
+          .select("*")
+          .in("status", ["pendente", "link_enviado", "atrasado"])
+          .order("vencimento"),
+        supabase.from("kit_compras").select("*").order("data_compra", { ascending: false }),
+      ]);
+      if (charges.error) throw charges.error;
+      if (kits.error) throw kits.error;
+      return {
+        charges: (charges.data as Charge[]).map(toCharge),
+        kits: (kits.data as KitPurchase[]).map(toKit),
+      };
     },
   });
 }
@@ -94,10 +138,40 @@ export function useSavePayment() {
       return assertAffected(data)[0] as Client;
     },
     onSuccess: (client) => {
-      void qc.invalidateQueries({ queryKey: VISITS_KEYS.clients });
       // Recarregar as cobranças gera as mensalidades com a configuração nova.
-      void qc.invalidateQueries({ queryKey: FINANCE_KEYS.clientCharges(client.id) });
+      refresh(qc);
       toast.success("Pagamento atualizado", { description: client.name });
+    },
+  });
+}
+
+// Esteira: etapa atual e a data de cada etapa (edição manual).
+export type OnboardingPatch = { etapa_onboarding?: OnboardingStage } & Partial<
+  Record<StageDateField, string | null>
+>;
+
+export function useSaveOnboarding() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      clientId,
+      patch,
+    }: {
+      clientId: string;
+      patch: OnboardingPatch;
+      message?: string;
+    }) => {
+      const { data, error } = await getSupabase()
+        .from("clients")
+        .update(patch)
+        .eq("id", clientId)
+        .select("id");
+      if (error) throw error;
+      return assertAffected(data)[0];
+    },
+    onSuccess: (_row, { message }) => {
+      refresh(qc);
+      toast.success(message ?? "Esteira atualizada");
     },
   });
 }
@@ -118,13 +192,31 @@ export function useRegisterKit() {
       if (error) throw error;
       return data as string;
     },
-    onSuccess: (_id, { clientId, values }) => {
-      void qc.invalidateQueries({ queryKey: FINANCE_KEYS.clientKits(clientId) });
-      void qc.invalidateQueries({ queryKey: FINANCE_KEYS.clientCharges(clientId) });
+    onSuccess: (_id, { values }) => {
+      refresh(qc);
       toast.success("Kit registrado", {
         description:
           values.parcelas === 1 ? "Parcela única gerada" : `${values.parcelas} parcelas geradas`,
       });
+    },
+  });
+}
+
+export function useMarkRefillOffered() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ kit, date }: { kit: KitPurchase; date: string }) => {
+      const { data, error } = await getSupabase()
+        .from("kit_compras")
+        .update({ reposicao_oferecida_em: date })
+        .eq("id", kit.id)
+        .select("id");
+      if (error) throw error;
+      return assertAffected(data)[0];
+    },
+    onSuccess: () => {
+      refresh(qc);
+      toast.success("Reposição marcada como oferecida");
     },
   });
 }
@@ -148,14 +240,14 @@ export function useSaveCharge() {
       if (error) throw error;
       return assertAffected(data)[0];
     },
-    onSuccess: (_row, { clientId, id }) => {
-      void qc.invalidateQueries({ queryKey: FINANCE_KEYS.clientCharges(clientId) });
+    onSuccess: (_row, { id }) => {
+      refresh(qc);
       toast.success(id ? "Cobrança atualizada" : "Cobrança lançada");
     },
   });
 }
 
-// Ações rápidas do histórico: marcar paga, cancelar, reabrir.
+// Ações rápidas: marcar paga, link enviado, cancelar.
 export function useUpdateChargeStatus() {
   const qc = useQueryClient();
   return useMutation({
@@ -164,7 +256,9 @@ export function useUpdateChargeStatus() {
       patch,
     }: {
       charge: Charge;
-      patch: Partial<Pick<Charge, "status" | "data_pagamento" | "data_envio_link">>;
+      patch: Partial<
+        Pick<Charge, "status" | "data_pagamento" | "data_envio_link" | "link_pagamento">
+      >;
       message: string;
     }) => {
       const { data, error } = await getSupabase()
@@ -175,8 +269,8 @@ export function useUpdateChargeStatus() {
       if (error) throw error;
       return assertAffected(data)[0];
     },
-    onSuccess: (_row, { charge, message }) => {
-      void qc.invalidateQueries({ queryKey: FINANCE_KEYS.clientCharges(charge.cliente_id) });
+    onSuccess: (_row, { message }) => {
+      refresh(qc);
       toast.success(message);
     },
   });

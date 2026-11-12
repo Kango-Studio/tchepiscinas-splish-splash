@@ -274,7 +274,14 @@ export function useClientLateCases(clientId: string) {
 export function useSaveClient() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, values }: { id?: string; values: ClientFormValues }) => {
+    mutationFn: async ({
+      id,
+      values,
+    }: {
+      id?: string;
+      // Cliente novo também grava a etapa inicial da esteira.
+      values: ClientFormValues & Partial<Pick<Client, "etapa_onboarding" | "venda_fechada_em">>;
+    }) => {
       const table = getSupabase().from("clients");
       const { data, error } = id
         ? await table.update(values).eq("id", id).select("*")
@@ -406,6 +413,9 @@ function invalidateVisitData(qc: ReturnType<typeof useQueryClient>) {
   void qc.invalidateQueries({ queryKey: VISITS_KEYS.visits });
   void qc.invalidateQueries({ queryKey: VISITS_KEYS.frequency });
   void qc.invalidateQueries({ queryKey: VISITS_KEYS.lateCases });
+  // A 1ª visita avança a esteira do cliente (gatilho no banco).
+  void qc.invalidateQueries({ queryKey: VISITS_KEYS.clients });
+  void qc.invalidateQueries({ queryKey: ["admin", "finance"] });
 }
 
 export function useSaveVisit() {

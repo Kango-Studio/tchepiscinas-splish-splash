@@ -84,6 +84,8 @@ export type KitPurchase = {
   parcelas: number;
   data_compra: string;
   observacao: string | null;
+  // Quando a reposição (~3 meses) foi oferecida: tira o aviso azul.
+  reposicao_oferecida_em: string | null;
   created_at: string;
   updated_at: string;
 };

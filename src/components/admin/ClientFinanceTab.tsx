@@ -21,7 +21,9 @@ import {
 } from "@heroui/react";
 import { ArrowUpRightFromSquare, Check, CircleXmark, Pencil, Plus } from "@gravity-ui/icons";
 import { differenceInCalendarDays, parseISO } from "date-fns";
-import { PAYMENT_METHODS, clientPrice, formatMoney } from "@/lib/visits/schema";
+import { ONBOARDING_STAGES, PAYMENT_METHODS, clientPrice, formatMoney } from "@/lib/visits/schema";
+import { STAGE_DATE_FIELD, STAGE_LABELS, STAGE_STATUS, stageIndex } from "@/lib/finance/onboarding";
+import { LinkSentDialog, OnboardingDialog } from "./finance-dialogs";
 import {
   CHARGE_STATUS_LABELS,
   CHARGE_TYPE_LABELS,
@@ -69,6 +71,8 @@ export type FinanceDialog =
   | { kind: "charge"; charge?: Charge }
   | { kind: "pay"; charge: Charge }
   | { kind: "cancel"; charge: Charge }
+  | { kind: "onboarding" }
+  | { kind: "link"; charge?: Charge }
   | null;
 
 const STATUS_STYLES: Record<ChargeStatus, string> = {
@@ -127,6 +131,18 @@ export function ClientFinanceTab({
   return (
     <div className="grid items-start gap-4 lg:grid-cols-3">
       <div className="flex flex-col gap-4">
+        <OnboardingCard
+          client={client}
+          onEdit={() => onOpen({ kind: "onboarding" })}
+          onLinkSent={() =>
+            onOpen({
+              kind: "link",
+              charge: charges
+                .filter((c) => c.tipo === "mensalidade" && isOpenCharge(c))
+                .sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0],
+            })
+          }
+        />
         <PaymentCard client={client} onEdit={() => onOpen({ kind: "payment" })} />
         <KitsCard
           kits={kitsQuery.data}
@@ -144,6 +160,96 @@ export function ClientFinanceTab({
         />
       </div>
     </div>
+  );
+}
+
+// Esteira do cliente novo: as 5 etapas com a data de cada uma.
+function OnboardingCard({
+  client,
+  onEdit,
+  onLinkSent,
+}: {
+  client: ClientRow;
+  onEdit: () => void;
+  onLinkSent: () => void;
+}) {
+  const current = stageIndex(client.etapa_onboarding);
+  const hasDates = ONBOARDING_STAGES.some((s) => client[STAGE_DATE_FIELD[s]]);
+
+  // Cliente antigo (já ativo, sem datas): só uma linha.
+  if (client.etapa_onboarding === "ativo" && !hasDates) {
+    return (
+      <Card className="animate-admin-rise gap-1 p-4 sm:p-5" style={stagger(0)}>
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-display text-base font-semibold text-foreground">Esteira</h2>
+          <Button size="sm" variant="ghost" onPress={onEdit}>
+            <Pencil className="size-4" />
+            Editar
+          </Button>
+        </div>
+        <p className="text-sm text-muted">Cliente ativo (cadastrado antes da esteira).</p>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="animate-admin-rise gap-3 p-4 sm:p-5" style={stagger(0)}>
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="font-display text-base font-semibold text-foreground">Esteira</h2>
+        <Button size="sm" variant="ghost" onPress={onEdit}>
+          <Pencil className="size-4" />
+          Editar
+        </Button>
+      </div>
+      <ol className="flex flex-col">
+        {ONBOARDING_STAGES.map((s, i) => {
+          const date = client[STAGE_DATE_FIELD[s]];
+          const done = i <= current;
+          const isCurrent = i === current;
+          return (
+            <li key={s} className="group relative flex gap-3 pb-3 last:pb-0">
+              <span
+                aria-hidden
+                className={`absolute top-4 bottom-0 left-2.25 w-0.5 group-last:hidden ${
+                  i < current ? "bg-emerald-400" : "bg-separator"
+                }`}
+              />
+              <span
+                aria-hidden
+                className={`relative mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border-2 ${
+                  done
+                    ? "border-emerald-500 bg-emerald-500 text-white"
+                    : "border-separator bg-surface"
+                }`}
+              >
+                {done && <Check className="size-3" />}
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className={`text-sm ${isCurrent ? "font-semibold" : done ? "" : "text-muted"}`}>
+                  {STAGE_LABELS[s]}
+                </p>
+                <p className="text-xs text-muted">
+                  {date ? formatDate(date) : done ? "sem data" : "—"}
+                </p>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      {client.etapa_onboarding !== "ativo" && (
+        <div className="flex flex-col gap-2 rounded-xl bg-surface-secondary p-3">
+          <p className="text-sm">
+            Agora: <span className="font-semibold">{STAGE_STATUS[client.etapa_onboarding]}</span>
+          </p>
+          {client.etapa_onboarding === "aguardando_link" && (
+            <Button size="sm" onPress={onLinkSent}>
+              <Check className="size-4" />
+              Marcar link enviado
+            </Button>
+          )}
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -510,6 +616,11 @@ export function FinanceDialogs({
       </Modal.Backdrop>
       <PayDialog charge={dialog?.kind === "pay" ? dialog.charge : null} onClose={onClose} />
       <CancelDialog charge={dialog?.kind === "cancel" ? dialog.charge : null} onClose={onClose} />
+      <OnboardingDialog client={client} isOpen={dialog?.kind === "onboarding"} onClose={onClose} />
+      <LinkSentDialog
+        target={dialog?.kind === "link" ? { client, charge: dialog.charge } : null}
+        onClose={onClose}
+      />
     </>
   );
 }
@@ -1222,7 +1333,7 @@ function ChargeForm({
 
 // --- Marcar paga -------------------------------------------------------------
 
-function PayDialog({ charge, onClose }: { charge: Charge | null; onClose: () => void }) {
+export function PayDialog({ charge, onClose }: { charge: Charge | null; onClose: () => void }) {
   const update = useUpdateChargeStatus();
   const today = todayISO();
   const [date, setDate] = useState(today);

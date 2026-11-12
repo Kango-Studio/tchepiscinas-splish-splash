@@ -36,6 +36,7 @@ import {
 import { todayISO } from "./filters";
 import { describeDbError } from "./leads-api";
 import { useClientLateCases, useClientVisits } from "./visits-api";
+import { STAGE_CHIP, STAGE_STATUS } from "@/lib/finance/onboarding";
 import { ClientDrawer } from "./ClientDrawer";
 import { ClientFinanceTab, FinanceDialogs, type FinanceDialog } from "./ClientFinanceTab";
 import { DeleteVisitDialog, VisitModal, type VisitModalState } from "./VisitModal";
@@ -175,6 +176,15 @@ export function ClientDetailPage({
                 {client.name}
               </h1>
               {f && <FrequencyChip status={f.status} active={client.active} size="md" />}
+              {client.etapa_onboarding !== "ativo" && (
+                <Chip
+                  size="md"
+                  variant="soft"
+                  className={`font-semibold ${STAGE_CHIP[client.etapa_onboarding]}`}
+                >
+                  <Chip.Label>Esteira: {STAGE_STATUS[client.etapa_onboarding]}</Chip.Label>
+                </Chip>
+              )}
               {client.billing_type === "parceria" && (
                 <Chip
                   size="md"

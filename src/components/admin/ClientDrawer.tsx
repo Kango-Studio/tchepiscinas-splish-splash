@@ -27,6 +27,7 @@ import {
   type PoolTech,
 } from "@/lib/visits/schema";
 import { PAYMENT_METHOD_LABELS } from "@/lib/finance/schema";
+import { todayISO } from "./filters";
 import { describeDbError } from "./leads-api";
 import { useDeleteClient, useSaveClient } from "./visits-api";
 import { ActiveSwitch, NumberInput, OptionSelect } from "./visits-ui";
@@ -183,7 +184,13 @@ function ClientForm({
   const onSubmit = async (values: ClientFormValues) => {
     setSubmitError(null);
     try {
-      const saved = await saveClient.mutateAsync({ id: client?.id, values });
+      // Cliente novo entra na esteira em "venda fechada" (dá para mudar na aba Financeiro).
+      const saved = await saveClient.mutateAsync({
+        id: client?.id,
+        values: client
+          ? values
+          : { ...values, etapa_onboarding: "venda_fechada", venda_fechada_em: todayISO() },
+      });
       onSaved?.(saved);
       onClose();
     } catch (error) {
