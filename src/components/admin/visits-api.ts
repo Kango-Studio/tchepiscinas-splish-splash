@@ -285,6 +285,8 @@ export function useSaveClient() {
     onSuccess: (client, { id }) => {
       void qc.invalidateQueries({ queryKey: VISITS_KEYS.clients });
       void qc.invalidateQueries({ queryKey: VISITS_KEYS.frequency });
+      // Cobranças recarregadas geram as mensalidades com a configuração nova.
+      void qc.invalidateQueries({ queryKey: ["admin", "finance"] });
       toast.success(id ? "Alterações salvas" : "Cliente cadastrado", { description: client.name });
     },
   });

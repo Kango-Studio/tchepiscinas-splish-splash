@@ -19,12 +19,14 @@ import {
   BILLING_TYPES,
   clientFormSchema,
   formatMoney,
+  PAYMENT_METHODS,
   type Client,
   type ClientFormInput,
   type ClientFormValues,
   type Plan,
   type PoolTech,
 } from "@/lib/visits/schema";
+import { PAYMENT_METHOD_LABELS } from "@/lib/finance/schema";
 import { describeDbError } from "./leads-api";
 import { useDeleteClient, useSaveClient } from "./visits-api";
 import { ActiveSwitch, NumberInput, OptionSelect } from "./visits-ui";
@@ -44,6 +46,9 @@ function toFormInput(client?: Client): ClientFormInput {
     billing_type: client?.billing_type ?? "pago",
     partnership_terms: client?.partnership_terms ?? "",
     notes: client?.notes ?? "",
+    forma_pagamento: client?.forma_pagamento ?? "",
+    dia_vencimento: client?.dia_vencimento ?? undefined,
+    mensalidade_desde: client?.mensalidade_desde?.slice(0, 7) ?? "",
   };
 }
 
@@ -275,7 +280,7 @@ function ClientForm({
               name="custom_price"
               render={({ field, fieldState }) => (
                 <NumberInput
-                  label="Valor personalizado"
+                  label="Valor da mensalidade"
                   currency
                   value={field.value}
                   onChange={field.onChange}
@@ -304,6 +309,81 @@ function ClientForm({
               )}
             />
           </section>
+
+          {billingType === "pago" && (
+            <section className="animate-admin-rise flex flex-col gap-4 rounded-2xl bg-surface-secondary/60 p-4">
+              <div>
+                <h3 className="text-sm font-semibold">Mensalidade recorrente</h3>
+                <p className="text-xs text-muted">
+                  Com o dia e o mês de início, a mensalidade é lançada sozinha todo mês, no dia de
+                  vencimento, enquanto o cliente estiver ativo. A do mês que vem já fica na lista da
+                  aba Financeiro para dar baixa.
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Controller
+                  control={control}
+                  name="forma_pagamento"
+                  render={({ field, fieldState }) => (
+                    <OptionSelect
+                      label="Forma de pagamento"
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      error={fieldState.error?.message}
+                      options={PAYMENT_METHODS.map((m) => ({
+                        id: m,
+                        label:
+                          m === "boleto"
+                            ? "Boleto (só clientes antigos)"
+                            : PAYMENT_METHOD_LABELS[m],
+                      }))}
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="dia_vencimento"
+                  render={({ field, fieldState }) => (
+                    <NumberInput
+                      label="Dia de vencimento"
+                      minValue={1}
+                      maxValue={31}
+                      value={field.value}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      error={fieldState.error?.message}
+                      description="Dia 29 a 31 vira o último dia em meses curtos"
+                    />
+                  )}
+                />
+                <Controller
+                  control={control}
+                  name="mensalidade_desde"
+                  render={({ field, fieldState }) => (
+                    <TextField
+                      fullWidth
+                      type="month"
+                      className="sm:col-span-2"
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      onBlur={field.onBlur}
+                      isInvalid={!!fieldState.error}
+                    >
+                      <Label>Cobrar a partir de</Label>
+                      <Input variant="secondary" />
+                      {!fieldState.error && (
+                        <p className="text-xs text-muted">
+                          Mês passado lança as mensalidades desde lá. Vazio = não lança.
+                        </p>
+                      )}
+                      <FieldError>{fieldState.error?.message}</FieldError>
+                    </TextField>
+                  )}
+                />
+              </div>
+            </section>
+          )}
 
           {billingType === "parceria" && (
             <Controller
