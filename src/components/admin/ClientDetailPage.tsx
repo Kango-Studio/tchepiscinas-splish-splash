@@ -1,13 +1,24 @@
 import { useMemo, useState } from "react";
-import { Button, Card, Chip, EmptyState, Skeleton, Tooltip, buttonVariants } from "@heroui/react";
+import {
+  Button,
+  Card,
+  Chip,
+  EmptyState,
+  Skeleton,
+  Tabs,
+  Tooltip,
+  buttonVariants,
+} from "@heroui/react";
 import {
   ArrowLeft,
   ArrowRotateRight,
   CircleExclamation,
   Pencil,
+  Person,
   Plus,
   TrashBin,
   Tray,
+  Wallet,
 } from "@gravity-ui/icons";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { format, parseISO } from "date-fns";
@@ -26,6 +37,7 @@ import { todayISO } from "./filters";
 import { describeDbError } from "./leads-api";
 import { useClientLateCases, useClientVisits } from "./visits-api";
 import { ClientDrawer } from "./ClientDrawer";
+import { ClientFinanceTab, FinanceDialogs, type FinanceDialog } from "./ClientFinanceTab";
 import { DeleteVisitDialog, VisitModal, type VisitModalState } from "./VisitModal";
 import {
   FREQUENCY_STYLES,
@@ -47,15 +59,23 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
   );
 }
 
+export const CLIENT_TABS = ["geral", "financeiro"] as const;
+export type ClientTab = (typeof CLIENT_TABS)[number];
+
 export function ClientDetailPage({
   clientId,
   visitId,
   onVisitChange,
+  tab = "geral",
+  onTabChange,
 }: {
   clientId: string;
   // Visita aberta para editar, vinda da URL (?visita=<id>).
   visitId?: string;
   onVisitChange: (id: string | undefined) => void;
+  // Aba aberta, vinda da URL (?aba=financeiro).
+  tab?: ClientTab;
+  onTabChange: (tab: ClientTab) => void;
 }) {
   const navigate = useNavigate();
   const data = useClientRows();
@@ -64,6 +84,7 @@ export function ClientDetailPage({
   const [editing, setEditing] = useState(false);
   const [visitModal, setVisitModal] = useState<VisitModalState>(null);
   const [visitToDelete, setVisitToDelete] = useState<Visit | null>(null);
+  const [financeDialog, setFinanceDialog] = useState<FinanceDialog>(null);
 
   const client = data.rows.find((c) => c.id === clientId);
   const techName = (id: string | null) => data.techs.find((t) => t.id === id)?.name ?? "—";
@@ -194,248 +215,282 @@ export function ClientDetailPage({
         </div>
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-3">
-        <div className="flex flex-col gap-4">
-          {/* Frequência */}
-          <Card className="animate-admin-rise gap-4 p-4 sm:p-5" style={stagger(1)}>
-            <h2 className="font-display text-base font-semibold text-foreground">Frequência</h2>
-            {f && (
-              <>
-                <div className="flex items-end gap-3">
-                  <p
-                    className={`font-display text-4xl leading-none font-semibold tracking-tight tabular-nums ${
-                      client.active ? FREQUENCY_STYLES[f.status].text : "text-muted"
-                    }`}
-                  >
-                    {f.days_without_visit}
-                  </p>
-                  <p className="pb-0.5 text-sm text-muted">
-                    {f.days_without_visit === 1 ? "dia" : "dias"} sem visita
-                    {!f.last_visit_date && " (desde o cadastro)"}
-                  </p>
-                </div>
-                <dl className="divide-y divide-separator">
-                  <InfoRow label="Última visita">{formatDate(f.last_visit_date)}</InfoRow>
-                  <InfoRow label="Visitas no mês">
-                    <span className="tabular-nums">
-                      {f.visits_this_month} de {f.expected_visits}
-                    </span>
-                  </InfoRow>
-                  <InfoRow label="Média entre visitas (3 meses)">
-                    {avgGap === null
-                      ? "—"
-                      : `${avgGap.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dias`}
-                  </InfoRow>
-                  {client.active && f.status !== "atrasado" && (
-                    <InfoRow label="Fica atrasado em">{formatDate(f.late_since)}</InfoRow>
-                  )}
-                </dl>
-              </>
-            )}
-          </Card>
-
-          {/* Dados */}
-          <Card className="animate-admin-rise gap-2 p-4 sm:p-5" style={stagger(2)}>
-            <h2 className="font-display text-base font-semibold text-foreground">Dados</h2>
-            <dl className="divide-y divide-separator">
-              <InfoRow label="Situação">{client.active ? "Ativo" : "Inativo"}</InfoRow>
-              <InfoRow label="Plano">{client.plan?.name ?? "—"}</InfoRow>
-              <InfoRow label="Valor">
-                {client.billing_type === "parceria" ? (
-                  <span className="text-muted">Não entra na receita</span>
-                ) : (
+      <Tabs
+        selectedKey={tab}
+        onSelectionChange={(k) => onTabChange(k as ClientTab)}
+        className="gap-5"
+      >
+        <Tabs.ListContainer>
+          <Tabs.List aria-label="Seções do cliente">
+            <Tabs.Tab id="geral" className="gap-1.5">
+              <Person className="size-4 max-sm:hidden" />
+              Visão geral
+              <Tabs.Indicator />
+            </Tabs.Tab>
+            <Tabs.Tab id="financeiro" className="gap-1.5">
+              <Tabs.Separator />
+              <Wallet className="size-4 max-sm:hidden" />
+              Financeiro
+              <Tabs.Indicator />
+            </Tabs.Tab>
+          </Tabs.List>
+        </Tabs.ListContainer>
+        <Tabs.Panel id="financeiro">
+          <ClientFinanceTab client={client} onOpen={setFinanceDialog} />
+        </Tabs.Panel>
+        <Tabs.Panel id="geral">
+          <div className="grid items-start gap-4 lg:grid-cols-3">
+            <div className="flex flex-col gap-4">
+              {/* Frequência */}
+              <Card className="animate-admin-rise gap-4 p-4 sm:p-5" style={stagger(1)}>
+                <h2 className="font-display text-base font-semibold text-foreground">Frequência</h2>
+                {f && (
                   <>
-                    {formatMoney(price)}
-                    <span className="block text-xs font-normal text-muted">
-                      {client.custom_price !== null ? "personalizado" : "padrão do plano"}
-                    </span>
+                    <div className="flex items-end gap-3">
+                      <p
+                        className={`font-display text-4xl leading-none font-semibold tracking-tight tabular-nums ${
+                          client.active ? FREQUENCY_STYLES[f.status].text : "text-muted"
+                        }`}
+                      >
+                        {f.days_without_visit}
+                      </p>
+                      <p className="pb-0.5 text-sm text-muted">
+                        {f.days_without_visit === 1 ? "dia" : "dias"} sem visita
+                        {!f.last_visit_date && " (desde o cadastro)"}
+                      </p>
+                    </div>
+                    <dl className="divide-y divide-separator">
+                      <InfoRow label="Última visita">{formatDate(f.last_visit_date)}</InfoRow>
+                      <InfoRow label="Visitas no mês">
+                        <span className="tabular-nums">
+                          {f.visits_this_month} de {f.expected_visits}
+                        </span>
+                      </InfoRow>
+                      <InfoRow label="Média entre visitas (3 meses)">
+                        {avgGap === null
+                          ? "—"
+                          : `${avgGap.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} dias`}
+                      </InfoRow>
+                      {client.active && f.status !== "atrasado" && (
+                        <InfoRow label="Fica atrasado em">{formatDate(f.late_since)}</InfoRow>
+                      )}
+                    </dl>
                   </>
                 )}
-              </InfoRow>
-              <InfoRow label="Cobrança">{BILLING_LABELS[client.billing_type]}</InfoRow>
-              {client.billing_type === "parceria" && (
-                <InfoRow label="Contrapartida">{client.partnership_terms ?? "—"}</InfoRow>
-              )}
-              <InfoRow label="Piscineiro">{client.tech?.name ?? "—"}</InfoRow>
-              <InfoRow label="WhatsApp">
-                {client.whatsapp ? (
-                  formatBrazilPhone(client.whatsapp)
-                ) : (
-                  <span className="text-muted">Não informado</span>
-                )}
-              </InfoRow>
-              <InfoRow label="Bairro">{client.neighborhood ?? "—"}</InfoRow>
-              <InfoRow label="Cadastrado em">{formatDate(client.created_at)}</InfoRow>
-            </dl>
-            {client.notes && (
-              <div className="rounded-xl bg-surface-secondary p-3 text-sm whitespace-pre-line">
-                {client.notes}
-              </div>
-            )}
-          </Card>
-        </div>
+              </Card>
 
-        <div className="flex flex-col gap-4 lg:col-span-2">
-          {/* Histórico de visitas */}
-          <Card className="animate-admin-rise gap-4 p-4 sm:p-5" style={stagger(3)}>
-            <div className="flex items-baseline justify-between gap-2">
-              <h2 className="font-display text-base font-semibold text-foreground">
-                Histórico de visitas
-              </h2>
-              {visitsQuery.isSuccess && (
-                <span className="text-xs text-muted">
-                  {visits.length} {visits.length === 1 ? "visita" : "visitas"}
-                </span>
-              )}
+              {/* Dados */}
+              <Card className="animate-admin-rise gap-2 p-4 sm:p-5" style={stagger(2)}>
+                <h2 className="font-display text-base font-semibold text-foreground">Dados</h2>
+                <dl className="divide-y divide-separator">
+                  <InfoRow label="Situação">{client.active ? "Ativo" : "Inativo"}</InfoRow>
+                  <InfoRow label="Plano">{client.plan?.name ?? "—"}</InfoRow>
+                  <InfoRow label="Valor">
+                    {client.billing_type === "parceria" ? (
+                      <span className="text-muted">Não entra na receita</span>
+                    ) : (
+                      <>
+                        {formatMoney(price)}
+                        <span className="block text-xs font-normal text-muted">
+                          {client.custom_price !== null ? "personalizado" : "padrão do plano"}
+                        </span>
+                      </>
+                    )}
+                  </InfoRow>
+                  <InfoRow label="Cobrança">{BILLING_LABELS[client.billing_type]}</InfoRow>
+                  {client.billing_type === "parceria" && (
+                    <InfoRow label="Contrapartida">{client.partnership_terms ?? "—"}</InfoRow>
+                  )}
+                  <InfoRow label="Piscineiro">{client.tech?.name ?? "—"}</InfoRow>
+                  <InfoRow label="WhatsApp">
+                    {client.whatsapp ? (
+                      formatBrazilPhone(client.whatsapp)
+                    ) : (
+                      <span className="text-muted">Não informado</span>
+                    )}
+                  </InfoRow>
+                  <InfoRow label="Bairro">{client.neighborhood ?? "—"}</InfoRow>
+                  <InfoRow label="Cadastrado em">{formatDate(client.created_at)}</InfoRow>
+                </dl>
+                {client.notes && (
+                  <div className="rounded-xl bg-surface-secondary p-3 text-sm whitespace-pre-line">
+                    {client.notes}
+                  </div>
+                )}
+              </Card>
             </div>
-            {visitsQuery.isError ? (
-              <p className="text-sm text-danger">{describeDbError(visitsQuery.error)}</p>
-            ) : visitsQuery.isPending ? (
-              <div className="flex flex-col gap-3">
-                {Array.from({ length: 3 }).map((_, i) => (
-                  <Skeleton key={i} className="h-20 rounded-xl" />
-                ))}
-              </div>
-            ) : visits.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted">Nenhuma visita registrada.</p>
-            ) : (
-              <ol className="relative flex flex-col">
-                {visits.map((v, i) => {
-                  const gap =
-                    i < visits.length - 1
-                      ? Math.round(
-                          (parseISO(v.visit_date).getTime() -
-                            parseISO(visits[i + 1].visit_date).getTime()) /
-                            86_400_000,
-                        )
-                      : null;
-                  return (
-                    <li key={v.id} className="group relative flex gap-3 pb-5 last:pb-0">
-                      {/* Linha do tempo */}
-                      <span
-                        aria-hidden
-                        className="absolute top-3 bottom-0 left-1.25 w-0.5 bg-separator group-last:hidden"
-                      />
-                      <span
-                        aria-hidden
-                        className="relative mt-1.5 size-3 shrink-0 rounded-full border-2 border-pool bg-surface"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
-                          <div>
-                            <p className="font-semibold text-foreground">
-                              {format(parseISO(v.visit_date), "dd/MM/yyyy", { locale: ptBR })}
-                              <span className="ml-2 text-xs font-normal text-muted">
-                                {format(parseISO(v.visit_date), "EEEE", { locale: ptBR })}
-                              </span>
-                            </p>
-                            <p className="text-xs text-muted">
-                              {techName(v.pool_tech_id)}
-                              {gap !== null && ` · ${daysLabel(gap)} depois da anterior`}
+
+            <div className="flex flex-col gap-4 lg:col-span-2">
+              {/* Histórico de visitas */}
+              <Card className="animate-admin-rise gap-4 p-4 sm:p-5" style={stagger(3)}>
+                <div className="flex items-baseline justify-between gap-2">
+                  <h2 className="font-display text-base font-semibold text-foreground">
+                    Histórico de visitas
+                  </h2>
+                  {visitsQuery.isSuccess && (
+                    <span className="text-xs text-muted">
+                      {visits.length} {visits.length === 1 ? "visita" : "visitas"}
+                    </span>
+                  )}
+                </div>
+                {visitsQuery.isError ? (
+                  <p className="text-sm text-danger">{describeDbError(visitsQuery.error)}</p>
+                ) : visitsQuery.isPending ? (
+                  <div className="flex flex-col gap-3">
+                    {Array.from({ length: 3 }).map((_, i) => (
+                      <Skeleton key={i} className="h-20 rounded-xl" />
+                    ))}
+                  </div>
+                ) : visits.length === 0 ? (
+                  <p className="py-6 text-center text-sm text-muted">Nenhuma visita registrada.</p>
+                ) : (
+                  <ol className="relative flex flex-col">
+                    {visits.map((v, i) => {
+                      const gap =
+                        i < visits.length - 1
+                          ? Math.round(
+                              (parseISO(v.visit_date).getTime() -
+                                parseISO(visits[i + 1].visit_date).getTime()) /
+                                86_400_000,
+                            )
+                          : null;
+                      return (
+                        <li key={v.id} className="group relative flex gap-3 pb-5 last:pb-0">
+                          {/* Linha do tempo */}
+                          <span
+                            aria-hidden
+                            className="absolute top-3 bottom-0 left-1.25 w-0.5 bg-separator group-last:hidden"
+                          />
+                          <span
+                            aria-hidden
+                            className="relative mt-1.5 size-3 shrink-0 rounded-full border-2 border-pool bg-surface"
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+                              <div>
+                                <p className="font-semibold text-foreground">
+                                  {format(parseISO(v.visit_date), "dd/MM/yyyy", { locale: ptBR })}
+                                  <span className="ml-2 text-xs font-normal text-muted">
+                                    {format(parseISO(v.visit_date), "EEEE", { locale: ptBR })}
+                                  </span>
+                                </p>
+                                <p className="text-xs text-muted">
+                                  {techName(v.pool_tech_id)}
+                                  {gap !== null && ` · ${daysLabel(gap)} depois da anterior`}
+                                </p>
+                              </div>
+                              <div className="flex gap-1">
+                                <Tooltip delay={300} closeDelay={0}>
+                                  <Tooltip.Trigger>
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="ghost"
+                                      className="rounded-full text-muted hover:text-accent"
+                                      aria-label={`Editar visita de ${formatDate(v.visit_date)}`}
+                                      onPress={() => onVisitChange(v.id)}
+                                    >
+                                      <Pencil className="size-4" />
+                                    </Button>
+                                  </Tooltip.Trigger>
+                                  <Tooltip.Content>Editar visita</Tooltip.Content>
+                                </Tooltip>
+                                <Tooltip delay={300} closeDelay={0}>
+                                  <Tooltip.Trigger>
+                                    <Button
+                                      isIconOnly
+                                      size="sm"
+                                      variant="ghost"
+                                      className="rounded-full text-muted hover:text-danger"
+                                      aria-label={`Excluir visita de ${formatDate(v.visit_date)}`}
+                                      onPress={() => setVisitToDelete(v)}
+                                    >
+                                      <TrashBin className="size-4" />
+                                    </Button>
+                                  </Tooltip.Trigger>
+                                  <Tooltip.Content>Excluir visita</Tooltip.Content>
+                                </Tooltip>
+                              </div>
+                            </div>
+                            {v.services.length > 0 && (
+                              <ul className="mt-2 flex flex-wrap gap-1.5">
+                                {v.services.map((s) => (
+                                  <li
+                                    key={s}
+                                    className="rounded-full bg-pool-mist px-2.5 py-0.5 text-xs font-medium text-pool-deep"
+                                  >
+                                    {s === "outro" && v.service_other
+                                      ? v.service_other
+                                      : SERVICE_LABELS[s]}
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                            {v.notes && (
+                              <p className="mt-2 rounded-lg bg-sun/15 px-3 py-2 text-sm whitespace-pre-line text-amber-950">
+                                <span className="font-semibold">Obs.:</span> {v.notes}
+                              </p>
+                            )}
+                            <p className="mt-1.5 text-[11px] text-muted">
+                              Registrada em {formatDateTime(v.created_at)}
                             </p>
                           </div>
-                          <div className="flex gap-1">
-                            <Tooltip delay={300} closeDelay={0}>
-                              <Tooltip.Trigger>
-                                <Button
-                                  isIconOnly
-                                  size="sm"
-                                  variant="ghost"
-                                  className="rounded-full text-muted hover:text-accent"
-                                  aria-label={`Editar visita de ${formatDate(v.visit_date)}`}
-                                  onPress={() => onVisitChange(v.id)}
-                                >
-                                  <Pencil className="size-4" />
-                                </Button>
-                              </Tooltip.Trigger>
-                              <Tooltip.Content>Editar visita</Tooltip.Content>
-                            </Tooltip>
-                            <Tooltip delay={300} closeDelay={0}>
-                              <Tooltip.Trigger>
-                                <Button
-                                  isIconOnly
-                                  size="sm"
-                                  variant="ghost"
-                                  className="rounded-full text-muted hover:text-danger"
-                                  aria-label={`Excluir visita de ${formatDate(v.visit_date)}`}
-                                  onPress={() => setVisitToDelete(v)}
-                                >
-                                  <TrashBin className="size-4" />
-                                </Button>
-                              </Tooltip.Trigger>
-                              <Tooltip.Content>Excluir visita</Tooltip.Content>
-                            </Tooltip>
-                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </Card>
+
+              {/* Casos de atraso */}
+              <Card className="animate-admin-rise gap-3 p-4 sm:p-5" style={stagger(4)}>
+                <h2 className="font-display text-base font-semibold text-foreground">
+                  Casos de atraso
+                </h2>
+                {casesQuery.isError ? (
+                  <p className="text-sm text-danger">{describeDbError(casesQuery.error)}</p>
+                ) : casesQuery.isPending ? (
+                  <Skeleton className="h-14 rounded-xl" />
+                ) : casesQuery.data.length === 0 ? (
+                  <p className="py-3 text-sm text-muted">Nenhum caso de atraso registrado.</p>
+                ) : (
+                  <ul className="flex flex-col divide-y divide-separator">
+                    {casesQuery.data.map((c) => (
+                      <li key={c.id} className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <LateCaseChip status={c.status} />
+                          <span className="text-sm font-medium">
+                            Atrasado desde {formatDate(c.late_since)}
+                          </span>
+                          <span className="text-xs text-muted">· {techName(c.pool_tech_id)}</span>
                         </div>
-                        {v.services.length > 0 && (
-                          <ul className="mt-2 flex flex-wrap gap-1.5">
-                            {v.services.map((s) => (
-                              <li
-                                key={s}
-                                className="rounded-full bg-pool-mist px-2.5 py-0.5 text-xs font-medium text-pool-deep"
-                              >
-                                {s === "outro" && v.service_other
-                                  ? v.service_other
-                                  : SERVICE_LABELS[s]}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
-                        {v.notes && (
-                          <p className="mt-2 rounded-lg bg-sun/15 px-3 py-2 text-sm whitespace-pre-line text-amber-950">
-                            <span className="font-semibold">Obs.:</span> {v.notes}
+                        {c.reason && (
+                          <p className="text-sm text-muted">
+                            Motivo: {LATE_REASON_LABELS[c.reason]}
+                            {c.reason_text && ` — ${c.reason_text}`}
                           </p>
                         )}
-                        <p className="mt-1.5 text-[11px] text-muted">
-                          Registrada em {formatDateTime(v.created_at)}
-                        </p>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ol>
-            )}
-          </Card>
+                        {c.closed_at && (
+                          <p className="text-xs text-muted">
+                            Fechado em {formatDateTime(c.closed_at)}
+                          </p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            </div>
+          </div>
+        </Tabs.Panel>
+      </Tabs>
 
-          {/* Casos de atraso */}
-          <Card className="animate-admin-rise gap-3 p-4 sm:p-5" style={stagger(4)}>
-            <h2 className="font-display text-base font-semibold text-foreground">
-              Casos de atraso
-            </h2>
-            {casesQuery.isError ? (
-              <p className="text-sm text-danger">{describeDbError(casesQuery.error)}</p>
-            ) : casesQuery.isPending ? (
-              <Skeleton className="h-14 rounded-xl" />
-            ) : casesQuery.data.length === 0 ? (
-              <p className="py-3 text-sm text-muted">Nenhum caso de atraso registrado.</p>
-            ) : (
-              <ul className="flex flex-col divide-y divide-separator">
-                {casesQuery.data.map((c) => (
-                  <li key={c.id} className="flex flex-col gap-1 py-3 first:pt-0 last:pb-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <LateCaseChip status={c.status} />
-                      <span className="text-sm font-medium">
-                        Atrasado desde {formatDate(c.late_since)}
-                      </span>
-                      <span className="text-xs text-muted">· {techName(c.pool_tech_id)}</span>
-                    </div>
-                    {c.reason && (
-                      <p className="text-sm text-muted">
-                        Motivo: {LATE_REASON_LABELS[c.reason]}
-                        {c.reason_text && ` — ${c.reason_text}`}
-                      </p>
-                    )}
-                    {c.closed_at && (
-                      <p className="text-xs text-muted">Fechado em {formatDateTime(c.closed_at)}</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-        </div>
-      </div>
-
+      {/* Pop-ups fora do Tabs: dentro dele o React Aria os duplicaria. */}
+      <FinanceDialogs
+        client={client}
+        dialog={financeDialog}
+        onClose={() => setFinanceDialog(null)}
+      />
       <ClientDrawer
         isOpen={editing}
         client={client}

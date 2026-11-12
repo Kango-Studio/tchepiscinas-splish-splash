@@ -46,9 +46,25 @@ export type Client = {
   partnership_terms: string | null;
   notes: string | null;
   legacy_id: number | null;
+  // Financeiro (migration 20261112120000_financeiro.sql).
+  forma_pagamento: PaymentMethod | null;
+  dia_vencimento: number | null;
+  etapa_onboarding: OnboardingStage;
   created_at: string;
   updated_at: string;
 };
+
+export const PAYMENT_METHODS = ["cartao", "pix", "pix_automatico", "boleto"] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+
+export const ONBOARDING_STAGES = [
+  "venda_fechada",
+  "kit_pago",
+  "aguardando_link",
+  "link_enviado",
+  "ativo",
+] as const;
+export type OnboardingStage = (typeof ONBOARDING_STAGES)[number];
 
 export type Visit = {
   id: string;
