@@ -731,8 +731,9 @@ function PaymentForm({ client, onClose }: { client: ClientRow; onClose: () => vo
                 <Input variant="secondary" />
                 {!fieldState.error && (
                   <p className="text-xs text-muted">
-                    A mensalidade é gerada sozinha todo mês, a partir deste mês, enquanto o cliente
-                    estiver ativo. Mês passado gera as mensalidades desde lá. Vazio = não gera.
+                    A mensalidade é lançada sozinha todo mês, no dia de vencimento, enquanto o
+                    cliente estiver ativo. A do mês que vem já fica na lista para dar baixa. Mês
+                    passado lança as mensalidades desde lá. Vazio = não lança.
                   </p>
                 )}
                 <FieldError>{fieldState.error?.message}</FieldError>

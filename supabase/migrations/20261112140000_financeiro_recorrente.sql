@@ -3,7 +3,8 @@
 -- alterado. Pode rodar mais de uma vez.
 --
 -- A mensalidade se repete todo mês, do mês "mensalidade_desde" até o mês
--- atual, enquanto o cliente estiver ativo. O painel chama gerar_mensalidades()
+-- que vem (o próximo vencimento já fica lançado para dar baixa), enquanto o
+-- cliente estiver ativo. O painel chama gerar_mensalidades()
 -- ao abrir (não depende de tarefa agendada).
 -- - Um mês que já tem mensalidade (inclusive cancelada) não é gerado de novo.
 -- - Valor = valor do cliente (custom_price) ou o padrão do plano, no momento
@@ -76,7 +77,9 @@ begin
   join public.plans p on p.id = c.plan_id
   cross join lateral (
     select g::date as mes
-    from generate_series(c.mensalidade_desde, current_month, interval '1 month') g
+    -- Até o mês que vem: o próximo vencimento já fica lançado.
+    from generate_series(c.mensalidade_desde, (current_month + interval '1 month')::date,
+                         interval '1 month') g
   ) m
   where c.active
     and c.billing_type = 'pago'
