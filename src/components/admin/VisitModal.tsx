@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import {
   differenceInCalendarDays,
   differenceInHours,
@@ -296,6 +296,14 @@ function VisitFormBody({
   // Mudou cliente ou data: o aviso de visita repetida não vale mais.
   const clearSameDay = () => setSameDay(null);
 
+  // Aviso e erro ficam no fim do formulário, que rola: sem isso aparecem fora
+  // da tela e parece que o Salvar não fez nada.
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (sameDay || submitError)
+      feedbackRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [sameDay, submitError]);
+
   const busy = isSubmitting || saveVisit.isPending;
   const f = selectedClient?.frequency;
 
@@ -519,55 +527,57 @@ function VisitFormBody({
             )}
           />
 
+          <div ref={feedbackRef} className="flex scroll-mb-4 flex-col gap-5 empty:hidden">
+            {sameDay && (
+              <Alert status="warning" className="animate-admin-rise">
+                <Alert.Indicator />
+                <Alert.Content>
+                  <Alert.Title>
+                    Já existe visita de {selectedClient?.name ?? "este cliente"} em{" "}
+                    {formatDate(getValues("visit_date"))}
+                  </Alert.Title>
+                  <Alert.Description>
+                    <ul className="mt-1 flex flex-col gap-0.5 text-sm">
+                      {sameDay.visits.map((v) => (
+                        <li key={v.id}>
+                          {techName(v.pool_tech_id) ?? "Piscineiro"} · registrada em{" "}
+                          {formatDateTime(v.created_at)}
+                        </li>
+                      ))}
+                    </ul>
+                    <span className="mt-1 block text-xs">
+                      Cada visita conta no fechamento do piscineiro.
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="mt-2"
+                      isPending={busy}
+                      onPress={() => {
+                        void handleSubmit((values) => save(values, sameDay.mode, true))();
+                      }}
+                    >
+                      {({ isPending }) => (
+                        <PendingLabel isPending={isPending}>
+                          É outra visita, salvar mesmo assim
+                        </PendingLabel>
+                      )}
+                    </Button>
+                  </Alert.Description>
+                </Alert.Content>
+              </Alert>
+            )}
+
+            {submitError && (
+              <StatusAlert
+                status="danger"
+                title="Não foi possível salvar"
+                description={submitError}
+              />
+            )}
+          </div>
+
           {!visit && onEditRecent && <RecentVisits data={data} onOpen={onEditRecent} />}
-
-          {sameDay && (
-            <Alert status="warning" className="animate-admin-rise">
-              <Alert.Indicator />
-              <Alert.Content>
-                <Alert.Title>
-                  Já existe visita de {selectedClient?.name ?? "este cliente"} em{" "}
-                  {formatDate(getValues("visit_date"))}
-                </Alert.Title>
-                <Alert.Description>
-                  <ul className="mt-1 flex flex-col gap-0.5 text-sm">
-                    {sameDay.visits.map((v) => (
-                      <li key={v.id}>
-                        {techName(v.pool_tech_id) ?? "Piscineiro"} · registrada em{" "}
-                        {formatDateTime(v.created_at)}
-                      </li>
-                    ))}
-                  </ul>
-                  <span className="mt-1 block text-xs">
-                    Cada visita conta no fechamento do piscineiro.
-                  </span>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    className="mt-2"
-                    isPending={busy}
-                    onPress={() => {
-                      void handleSubmit((values) => save(values, sameDay.mode, true))();
-                    }}
-                  >
-                    {({ isPending }) => (
-                      <PendingLabel isPending={isPending}>
-                        É outra visita, salvar mesmo assim
-                      </PendingLabel>
-                    )}
-                  </Button>
-                </Alert.Description>
-              </Alert.Content>
-            </Alert>
-          )}
-
-          {submitError && (
-            <StatusAlert
-              status="danger"
-              title="Não foi possível salvar"
-              description={submitError}
-            />
-          )}
         </form>
       </Modal.Body>
       {/* No celular os dois botões de salvar dividem a linha; fechar fica no X. */}
