@@ -1,4 +1,6 @@
 import { useMemo, useState } from "react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import {
   Button,
   Card,
@@ -82,6 +84,17 @@ export function FinancePage() {
   const [linkTarget, setLinkTarget] = useState<LinkSentTarget>(null);
   const [refillTarget, setRefillTarget] = useState<RefillTarget>(null);
   const today = todayISO();
+  const month = today.slice(0, 7);
+  const monthLabel = format(new Date(`${today}T12:00:00`), "MMMM 'de' yyyy", { locale: ptBR });
+  const activeClients = data.rows.filter((client) => client.active).length;
+  const newClients = data.rows.filter(
+    (client) => format(new Date(client.created_at), "yyyy-MM") === month,
+  ).length;
+  const kitsSold = pending.data?.kits.length ?? 0;
+  const kitsSoldThisMonth = (pending.data?.kits ?? []).filter(
+    (kit) => kit.data_compra.slice(0, 7) === month,
+  );
+  const kitSalesValueThisMonth = kitsSoldThisMonth.reduce((total, kit) => total + kit.valor_total, 0);
 
   const alerts = useMemo(
     () =>
@@ -143,6 +156,11 @@ export function FinancePage() {
           </Card>
         ) : isPending ? (
           <div className="skeleton--shimmer flex flex-col gap-4" aria-busy="true">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} animationType="none" className="h-32 rounded-2xl" />
+              ))}
+            </div>
             <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Skeleton key={i} animationType="none" className="h-20 rounded-2xl" />
@@ -154,6 +172,32 @@ export function FinancePage() {
           </div>
         ) : (
           <>
+            <section
+              aria-label="Indicadores de clientes e vendas"
+              className="animate-admin-rise grid grid-cols-1 gap-3 sm:grid-cols-3"
+              style={stagger(1)}
+            >
+              {[
+                { label: "Clientes ativos", value: activeClients, detail: "Clientes com cadastro ativo" },
+                {
+                  label: "Kits vendidos",
+                  value: kitsSold,
+                  subtitle: `Valor vendido em kits no mês: ${formatMoney(kitSalesValueThisMonth)}`,
+                  detail: `Quantidade total registrada · Valor de ${monthLabel}, incluindo parcelas futuras`,
+                },
+                { label: "Novos clientes do mês", value: newClients, detail: `Cadastrados em ${monthLabel}` },
+              ].map(({ label, value, subtitle, detail }) => (
+                <Card key={label} className="gap-1 border border-separator p-4 sm:p-5">
+                  <h2 className="text-sm font-medium text-muted">{label}</h2>
+                  <p className="font-display text-3xl font-semibold text-pool-deep tabular-nums">
+                    {value.toLocaleString("pt-BR")}
+                  </p>
+                  {subtitle && <p className="text-sm font-medium text-pool-deep">{subtitle}</p>}
+                  <p className="text-xs text-muted">{detail}</p>
+                </Card>
+              ))}
+            </section>
+
             {/* Resumo */}
             <div
               className="animate-admin-rise grid grid-cols-2 gap-3 lg:grid-cols-5"
