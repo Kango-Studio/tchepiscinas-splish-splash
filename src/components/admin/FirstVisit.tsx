@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Modal } from "@heroui/react";
 import type { Lead } from "@/lib/leads/schema";
+import { describeFirstVisitError } from "@/lib/leads/first-visit-error";
 import { formatMoney } from "@/lib/visits/schema";
 import { useClients, usePlans, usePoolTechs } from "./visits-api";
 import {
@@ -14,7 +15,7 @@ import {
 } from "./first-visit-api";
 import { todayISO } from "./filters";
 import { formatDate, stopCardEvents } from "./ui";
-import { describeDbError } from "./leads-api";
+import { describeDbError, useUpdateStage } from "./leads-api";
 
 const fieldClass = "w-full rounded-lg border border-border bg-surface p-2 text-foreground";
 
@@ -31,6 +32,9 @@ export function FirstVisitDialog({
 }) {
   const clients = useClients();
   const sales = useSales();
+  const reopen = useUpdateStage();
+  const [reopenedLead, setReopenedLead] = useState<Lead | null>(null);
+  const currentLead = reopenedLead ?? lead;
   const existing = sale ?? sales.data?.sales.find((s) => s.lead_id === lead.id);
   const error = clients.error || sales.error;
   return (
@@ -44,12 +48,66 @@ export function FirstVisitDialog({
             </div>
           ) : clients.isPending || sales.isPending ? (
             <p className="p-5">Carregando agendamento…</p>
+          ) : existing?.confirmed_at ? (
+            <div className="flex flex-col gap-4 p-5">
+              <Modal.Heading>Primeira visita já confirmada</Modal.Heading>
+              <p>
+                A primeira visita de {currentLead.name} foi confirmada em{" "}
+                {formatDate(existing.confirmed_date)}. A contratação e os lembretes existentes foram
+                preservados.
+              </p>
+              <Button variant="secondary" onPress={onClose}>
+                Fechar
+              </Button>
+            </div>
+          ) : currentLead.stage === "fechado" ? (
+            <div className="flex flex-col gap-4 p-5">
+              <Modal.Heading>Reabrir para agendar primeira visita</Modal.Heading>
+              <p>
+                {currentLead.name} já está em Fechado e ainda não tem uma primeira visita agendada.
+                Reabra a venda em Valor enviado para preencher o agendamento.
+              </p>
+              <p className="text-sm text-muted">
+                O lead só irá para Aguardando primeira visita depois de salvar o formulário.
+              </p>
+              {reopen.error && (
+                <p role="alert" className="text-danger">
+                  {describeFirstVisitError(reopen.error)}
+                </p>
+              )}
+              <div className="flex justify-end gap-2">
+                <Button variant="secondary" onPress={onClose} isDisabled={reopen.isPending}>
+                  Cancelar
+                </Button>
+                <Button
+                  isPending={reopen.isPending}
+                  onPress={() =>
+                    reopen.mutate(
+                      {
+                        id: currentLead.id,
+                        stage: "orcamento_enviado",
+                        previous: currentLead.stage,
+                      },
+                      { onSuccess: setReopenedLead },
+                    )
+                  }
+                >
+                  Reabrir e agendar
+                </Button>
+              </div>
+            </div>
           ) : confirm && !existing ? (
             <p className="p-5" role="alert">
               Agende a primeira visita antes de confirmar.
             </p>
           ) : (
-            <VisitForm lead={lead} sale={existing} confirm={confirm} onClose={onClose} />
+            <VisitForm
+              key={currentLead.id + currentLead.stage}
+              lead={currentLead}
+              sale={existing}
+              confirm={confirm}
+              onClose={onClose}
+            />
           )}
         </Modal.Dialog>
       </Modal.Container>
@@ -157,7 +215,7 @@ function VisitForm({
             });
           onClose();
         } catch (e) {
-          setError(describeDbError(e));
+          setError(describeFirstVisitError(e));
         }
       }}
     >

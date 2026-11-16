@@ -83,6 +83,13 @@ begin
  assert (select stage='fechado' from public.leads where id=old_lead);
  assert not exists(select 1 from public.lead_sales where lead_id=old_lead);
 
+ -- Caso da tela: fechado sem agendamento, plano de R$ 397 e sem cobrança.
+ -- Só a ação explícita de reabrir permite agendar, sem alterar outros fechados.
+ update public.leads set stage='orcamento_enviado' where id=old_lead;
+ perform public.schedule_first_visit(old_lead,payload || jsonb_build_object('client_id',null,'items',array['plano'],'agreed_value',397,'service_chargeable',false));
+ assert (select stage='aguardando_primeira_visita' from public.leads where id=old_lead);
+ assert (select agreed_value=397 and not service_chargeable from public.lead_sales where lead_id=old_lead);
+
  -- Serviço sem cobrança não gera lembrete de pagamento.
  insert into public.leads(name,whatsapp) values('Serviço gratuito','5551977777777') returning id into free_lead;
  perform public.schedule_first_visit(free_lead,payload || jsonb_build_object('items',array['servico'],'agreed_value',0));
