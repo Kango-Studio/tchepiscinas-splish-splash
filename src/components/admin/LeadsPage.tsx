@@ -24,6 +24,8 @@ import { LeadKanban } from "./LeadKanban";
 import { LeadTable } from "./LeadTable";
 import { LeadModal, type LeadModalState } from "./LeadModal";
 import { PrintImportModal } from "./PrintImportModal";
+import { FirstVisitDialog } from "./FirstVisit";
+import { useSales } from "./first-visit-api";
 import { PendingLabel } from "./ui";
 
 export type LeadsView = "kanban" | "lista";
@@ -41,6 +43,9 @@ export function LeadsPage({
   onLeadChange: (id: string | undefined) => void;
 }) {
   const leadsQuery = useLeads();
+  const sales = useSales();
+  const [visitLead, setVisitLead] = useState<Lead | null>(null);
+  const [confirmVisit, setConfirmVisit] = useState(false);
   const updateStage = useUpdateStage();
   const [filters, setFilters] = useState<LeadFilters>(EMPTY_FILTERS);
   // Cadastro (manual ou por print) não vai para a URL; editar vai.
@@ -80,8 +85,20 @@ export function LeadsPage({
     else setCreating({ mode: "closed" });
   };
   const moveLead = useCallback(
-    (lead: Lead, stage: LeadStage) =>
-      updateStage.mutate({ id: lead.id, stage, previous: lead.stage }),
+    (lead: Lead, stage: LeadStage) => {
+      if (
+        stage === "aguardando_primeira_visita" ||
+        (stage === "fechado" &&
+          (lead.stage === "aguardando_primeira_visita" ||
+            lead.interest === "manutencao_recorrente" ||
+            lead.interest === "limpeza_avulsa"))
+      ) {
+        setConfirmVisit(stage === "fechado" && lead.stage === "aguardando_primeira_visita");
+        setVisitLead(lead);
+        return;
+      }
+      updateStage.mutate({ id: lead.id, stage, previous: lead.stage });
+    },
     [updateStage],
   );
 
@@ -226,6 +243,14 @@ export function LeadsPage({
       {/* Fora do Tabs: o React Aria renderiza os filhos do Tabs duas vezes (uma
           numa árvore oculta para montar as abas). Overlays ali dentro ficavam
           duplicados, um bloqueava o outro e qualquer clique fechava o pop-up. */}
+      {visitLead && (
+        <FirstVisitDialog
+          lead={visitLead}
+          sale={sales.data?.sales.find((s) => s.lead_id === visitLead.id)}
+          confirm={confirmVisit}
+          onClose={() => setVisitLead(null)}
+        />
+      )}
       <LeadModal state={modal} onClose={closeModal} onOpenLead={openLead} />
 
       <PrintImportModal

@@ -326,6 +326,7 @@ const FLOW_STYLE: Record<string, { fill: string; ink: string }> = {
   em_atendimento: { fill: "#4DB8EC", ink: "text-white" },
   proposta_enviada: { fill: "#2E9FDB", ink: "text-white" },
   orcamento_enviado: { fill: "#0077BE", ink: "text-white" },
+  aguardando_primeira_visita: { fill: "#ea580c", ink: "text-white" },
   fechado: { fill: "#005A94", ink: "text-white" },
 };
 const LOST_FILL = "#94A3B8";

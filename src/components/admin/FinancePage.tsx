@@ -43,6 +43,8 @@ import {
 } from "./finance-dialogs";
 import { useClientRows } from "./visits-ui";
 import { PendingLabel } from "./ui";
+import { VisitPendingPanel } from "./VisitPendingPanel";
+import { useSales } from "./first-visit-api";
 import type { Charge } from "@/lib/finance/schema";
 
 const stagger = (i: number) => ({ "--i": i }) as React.CSSProperties;
@@ -79,6 +81,7 @@ type Filter = "todas" | AlertColor;
 export function FinancePage() {
   const data = useClientRows();
   const pending = usePendingFinance();
+  const sales = useSales();
   const [filter, setFilter] = useState<Filter>("todas");
   const [payCharge, setPayCharge] = useState<Charge | null>(null);
   const [linkTarget, setLinkTarget] = useState<LinkSentTarget>(null);
@@ -94,7 +97,10 @@ export function FinancePage() {
   const kitsSoldThisMonth = (pending.data?.kits ?? []).filter(
     (kit) => kit.data_compra.slice(0, 7) === month,
   );
-  const kitSalesValueThisMonth = kitsSoldThisMonth.reduce((total, kit) => total + kit.valor_total, 0);
+  const kitSalesValueThisMonth = kitsSoldThisMonth.reduce(
+    (total, kit) => total + kit.valor_total,
+    0,
+  );
 
   const alerts = useMemo(
     () =>
@@ -104,19 +110,32 @@ export function FinancePage() {
             charges: pending.data.charges,
             kits: pending.data.kits,
             today,
-          })
+          }).filter(
+            (alert) =>
+              alert.kind !== "link_pendente" ||
+              !sales.data?.sales.some(
+                (sale) =>
+                  sale.client_id === alert.client.id &&
+                  !!sale.confirmed_at &&
+                  sales.data?.tasks.some(
+                    (task) => task.lead_id === sale.lead_id && task.kind === "pagamento",
+                  ),
+              ),
+          )
         : [],
-    [pending.data, data.rows, today],
+    [pending.data, data.rows, today, sales.data],
   );
+  const financeAlerts = alerts.filter((a) => a.kind !== "link_pendente");
   const counts = {
-    red: alerts.filter((a) => a.color === "red").length,
-    yellow: alerts.filter((a) => a.color === "yellow").length,
-    blue: alerts.filter((a) => a.color === "blue").length,
+    red: financeAlerts.filter((a) => a.color === "red").length,
+    yellow: financeAlerts.filter((a) => a.color === "yellow").length,
+    blue: financeAlerts.filter((a) => a.color === "blue").length,
   };
   const open = pending.data?.charges ?? [];
   const totalOpen = open.reduce((s, c) => s + c.valor, 0);
   const totalLate = open.filter((c) => c.situacao === "atrasado").reduce((s, c) => s + c.valor, 0);
-  const shown = filter === "todas" ? alerts : alerts.filter((a) => a.color === filter);
+  const legacyLinks = alerts.filter((a) => a.kind === "link_pendente");
+  const shown = financeAlerts.filter((a) => filter === "todas" || a.color === filter);
 
   const error = data.error ?? pending.error;
   const isPending = data.isPending || pending.isPending;
@@ -134,6 +153,10 @@ export function FinancePage() {
           </p>
         </div>
 
+        <VisitPendingPanel
+          legacy={legacyLinks}
+          onLegacySend={(a) => setLinkTarget({ client: a.client, charge: a.charge })}
+        />
         {error ? (
           <Card className="animate-admin-rise border border-danger/30">
             <Card.Content className="items-center gap-3 py-10 text-center">
@@ -178,14 +201,22 @@ export function FinancePage() {
               style={stagger(1)}
             >
               {[
-                { label: "Clientes ativos", value: activeClients, detail: "Clientes com cadastro ativo" },
+                {
+                  label: "Clientes ativos",
+                  value: activeClients,
+                  detail: "Clientes com cadastro ativo",
+                },
                 {
                   label: "Kits vendidos",
                   value: kitsSold,
                   subtitle: `Valor vendido em kits no mês: ${formatMoney(kitSalesValueThisMonth)}`,
                   detail: `Quantidade total registrada · Valor de ${monthLabel}, incluindo parcelas futuras`,
                 },
-                { label: "Novos clientes do mês", value: newClients, detail: `Cadastrados em ${monthLabel}` },
+                {
+                  label: "Novos clientes do mês",
+                  value: newClients,
+                  detail: `Cadastrados em ${monthLabel}`,
+                },
               ].map(({ label, value, subtitle, detail }) => (
                 <Card key={label} className="gap-1 border border-separator p-4 sm:p-5">
                   <h2 className="text-sm font-medium text-muted">{label}</h2>
@@ -256,7 +287,7 @@ export function FinancePage() {
                       <ToggleButton key={k} id={k} size="sm">
                         {i > 0 && <ToggleButtonGroup.Separator />}
                         {k === "todas"
-                          ? `Todas (${alerts.length})`
+                          ? `Todas (${financeAlerts.length})`
                           : `${COLOR_STYLES[k].label} (${counts[k]})`}
                       </ToggleButton>
                     ))}

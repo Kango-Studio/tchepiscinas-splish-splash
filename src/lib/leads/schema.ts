@@ -8,6 +8,7 @@ export const LEAD_STAGES = [
   "em_atendimento",
   "proposta_enviada",
   "orcamento_enviado",
+  "aguardando_primeira_visita",
   "fechado",
   "perdido",
 ] as const;
@@ -38,6 +39,7 @@ export const STAGE_LABELS: Record<LeadStage, string> = {
   em_atendimento: "Aguardando endereço",
   proposta_enviada: "Proposta enviada",
   orcamento_enviado: "Valor enviado",
+  aguardando_primeira_visita: "Aguardando primeira visita",
   fechado: "Fechado",
   perdido: "Perdido",
 };

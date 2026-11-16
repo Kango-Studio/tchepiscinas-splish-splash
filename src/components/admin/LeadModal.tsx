@@ -55,6 +55,8 @@ import {
 } from "./ui";
 import { isOverdue } from "./filters";
 import { PRINT_INSTRUCTIONS, type PrintPrefill } from "./PrintImportModal";
+import { FirstVisitCard, FirstVisitDialog } from "./FirstVisit";
+import { useSales } from "./first-visit-api";
 import { FollowupTracker } from "./FollowupCheckpoints";
 
 export type LeadModalState =
@@ -314,6 +316,9 @@ function LeadFormPanel({
   onDirtyChange: (dirty: boolean) => void;
 }) {
   const isEdit = !!lead;
+  const sales = useSales();
+  const [visitLead, setVisitLead] = useState<Lead | null>(null);
+  const [confirmVisit, setConfirmVisit] = useState(false);
   const createLead = useCreateLead();
   const updateLead = useUpdateLead();
   const deleteLead = useDeleteLead();
@@ -377,12 +382,25 @@ function LeadFormPanel({
       if (found.length > 0) return; // mostra o aviso e espera confirmação
     }
     try {
+      const visitFlow =
+        (values.stage === "aguardando_primeira_visita" && lead?.stage !== values.stage) ||
+        (values.stage === "fechado" &&
+          lead?.stage !== "fechado" &&
+          (lead?.stage === "aguardando_primeira_visita" ||
+            values.interest === "manutencao_recorrente" ||
+            values.interest === "limpeza_avulsa"));
+      const savedValues = visitFlow
+        ? { ...values, stage: lead?.stage ?? ("novo" as LeadStage) }
+        : values;
+      setConfirmVisit(values.stage === "fechado" && lead?.stage === "aguardando_primeira_visita");
       if (lead) {
-        const saved = await updateLead.mutateAsync({ id: lead.id, values });
+        const saved = await updateLead.mutateAsync({ id: lead.id, values: savedValues });
         reset(toFormInput(saved));
+        if (visitFlow) setVisitLead(saved);
       } else {
-        await createLead.mutateAsync(values);
-        onClose();
+        const saved = await createLead.mutateAsync(savedValues);
+        if (visitFlow) setVisitLead(saved);
+        else onClose();
       }
     } catch (error) {
       setSubmitError(describeDbError(error));
@@ -405,6 +423,18 @@ function LeadFormPanel({
 
   return (
     <>
+      {visitLead && (
+        <FirstVisitDialog
+          lead={visitLead}
+          sale={sales.data?.sales.find((s) => s.lead_id === visitLead.id)}
+          confirm={confirmVisit}
+          onClose={() => {
+            setVisitLead(null);
+            onClose();
+          }}
+        />
+      )}
+      {lead && <FirstVisitCard lead={lead} />}
       <Modal.Header className="border-b border-separator pb-4">
         {lead ? (
           <div className="flex flex-col gap-3 pr-8 md:flex-row md:items-end md:justify-between">

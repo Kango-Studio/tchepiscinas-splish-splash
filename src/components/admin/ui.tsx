@@ -19,6 +19,11 @@ export const STAGE_STYLES: Record<LeadStage, { dot: string; chip: string; column
     chip: "bg-sun/25 text-amber-900",
     column: "bg-amber-50/70",
   },
+  aguardando_primeira_visita: {
+    dot: "bg-orange-500",
+    chip: "bg-orange-100 text-orange-900",
+    column: "bg-orange-50",
+  },
   fechado: {
     dot: "bg-emerald-500",
     chip: "bg-emerald-100 text-emerald-800",

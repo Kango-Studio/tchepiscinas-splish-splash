@@ -24,6 +24,7 @@ import {
 } from "@/lib/leads/schema";
 import { isOverdue, todayISO } from "./filters";
 import { LeadWhatsAppButton, STAGE_STYLES, formatDate, stopCardEvents } from "./ui";
+import { FirstVisitCard } from "./FirstVisit";
 import { FollowupDots } from "./FollowupCheckpoints";
 
 type Props = {
@@ -327,6 +328,7 @@ function LeadCardView({
         </p>
       )}
 
+      {!overlay && <FirstVisitCard lead={lead} />}
       {!overlay && onMove && (
         <div className="mt-2.5" {...stopCardEvents}>
           <Select
