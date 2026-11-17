@@ -117,6 +117,39 @@ begin
  perform public.confirm_first_visit(free_lead,today);
  update public.clients set link_enviado_em=today where id=client;
  assert (select sent_date=today from public.sale_link_tasks where lead_id=free_lead and kind='pagamento');
+
+ -- Confirmação de plano sem cliente: cria o cadastro e registra a visita uma vez.
+ payload := payload || jsonb_build_object('client_id',null,'items',array['plano','kit'],
+   'agreed_value',597,'service_chargeable',true);
+ perform public.schedule_first_visit(old_lead,payload);
+ perform public.confirm_first_visit(old_lead,today-1);
+ perform public.confirm_first_visit(old_lead,today);
+ select client_id into strict client from public.lead_sales where lead_id=old_lead;
+ assert (select active and name='Fechado antigo' and whatsapp='5551988888888'
+   and plan_id=plan and pool_tech_id=tech and custom_price is null
+   and etapa_onboarding='aguardando_link' and primeira_visita_em=today-1
+   from public.clients where id=client);
+ assert (select count(*)=1 and bool_and(visit_date=today-1 and pool_tech_id=tech)
+   from public.visits where client_id=client);
+ assert (select count(*)=initial_clients+1 from public.clients);
+ assert (select count(*)=initial_charges from public.cobrancas);
+ perform public.mark_sale_link_sent(old_lead,'pagamento',today);
+ assert (select link_enviado_em=today from public.clients where id=client);
+
+ -- Reutiliza o cadastro quando a confirmação encontra o mesmo WhatsApp.
+ insert into public.leads(name,whatsapp) values('Mesmo contato','5551988888888') returning id into lead;
+ perform public.schedule_first_visit(lead,payload);
+ perform public.confirm_first_visit(lead,today);
+ assert (select client_id=client from public.lead_sales where lead_id=lead);
+ assert (select count(*)=initial_clients+1 from public.clients);
+ assert (select count(*)=initial_visits+1 from public.visits);
+
+ -- Venda avulsa sem plano não cria cadastro recorrente.
+ insert into public.leads(name,whatsapp) values('Avulso novo','5551933333333') returning id into lead;
+ perform public.schedule_first_visit(lead,payload || jsonb_build_object('items',array['servico'],'plan_id',null));
+ perform public.confirm_first_visit(lead,today);
+ assert (select client_id is null from public.lead_sales where lead_id=lead);
+ assert (select count(*)=initial_clients+1 from public.clients);
  raise notice 'OK: estimativa, revisão obrigatória, reagendamento, atraso, confirmação, envio parcial, idempotência, fechamento direto e integração financeira';
 end $$;
 

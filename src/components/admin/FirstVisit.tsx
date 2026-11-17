@@ -235,7 +235,10 @@ function VisitForm({
             {saleSummary(sale)} · {formatMoney(Number(sale.agreed_value))}
           </p>
           {sale.items.includes("plano") && (
-            <p>Plano: {plans.data?.find((p) => p.id === sale.plan_id)?.name}</p>
+            <>
+              <p>Plano: {plans.data?.find((p) => p.id === sale.plan_id)?.name}</p>
+              <p className="text-sm">A confirmação vincula a venda a um cadastro em Clientes.</p>
+            </>
           )}
           <p className="text-sm">
             {sale.service_chargeable &&
