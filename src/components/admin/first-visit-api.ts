@@ -46,12 +46,41 @@ export function useSales() {
     },
   });
 }
+
+export function useClientSales(clientId: string) {
+  return useQuery({
+    queryKey: ["admin", "sales", "client", clientId],
+    queryFn: async () => {
+      const { data, error } = await getSupabase()
+        .from("lead_sales")
+        .select("lead_id,items,confirmed_date")
+        .eq("client_id", clientId)
+        .not("confirmed_date", "is", null)
+        .overlaps("items", ["kit", "produtos"])
+        .order("confirmed_date", { ascending: false });
+      if (error) throw error;
+      return data as Pick<Sale, "lead_id" | "items" | "confirmed_date">[];
+    },
+  });
+}
+
 type Action =
   | {
       action: "schedule_first_visit";
       args: { p_lead_id: string; p_values: Record<string, unknown> };
     }
   | { action: "confirm_first_visit"; args: { p_lead_id: string; p_date: string } }
+  | {
+      action: "confirm_first_visit_with_finance";
+      args: {
+        p_lead_id: string;
+        p_date: string;
+        p_kit_value: number | null;
+        p_kit_installments: number;
+        p_products_value: number | null;
+        p_due_date: string | null;
+      };
+    }
   | { action: "mark_sale_link_sent"; args: { p_lead_id: string; p_kind: string; p_date: string } };
 export function useSaleAction() {
   const qc = useQueryClient();

@@ -42,6 +42,7 @@ import {
 import { currentMonth, monthLabel } from "@/lib/visits/frequency";
 import { ActiveSwitch, FREQUENCY_STYLES, NumberInput, OptionSelect } from "./visits-ui";
 import { PendingLabel, StatusAlert } from "./ui";
+import { ManagerWhatsAppSetting } from "./PaymentLinks";
 
 const stagger = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
@@ -122,6 +123,10 @@ export function SettingsPage() {
         </h1>
         <p className="text-sm text-muted">Planos, piscineiros e valor pago por visita.</p>
       </div>
+
+      <Card id="whatsapp-gerente" className="scroll-mt-4 gap-3 p-4 sm:p-5">
+        <ManagerWhatsAppSetting />
+      </Card>
 
       {/* Planos */}
       <Card className="animate-admin-rise gap-4 p-4 sm:p-5" style={stagger(1)}>

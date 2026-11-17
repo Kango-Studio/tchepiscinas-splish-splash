@@ -23,7 +23,7 @@ import { ArrowUpRightFromSquare, Check, CircleXmark, Pencil, Plus } from "@gravi
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { ONBOARDING_STAGES, PAYMENT_METHODS, clientPrice, formatMoney } from "@/lib/visits/schema";
 import { STAGE_DATE_FIELD, STAGE_LABELS, STAGE_STATUS, stageIndex } from "@/lib/finance/onboarding";
-import { LinkSentDialog, OnboardingDialog } from "./finance-dialogs";
+import { OnboardingDialog } from "./finance-dialogs";
 import {
   CHARGE_STATUS_LABELS,
   CHARGE_TYPE_LABELS,
@@ -42,6 +42,7 @@ import {
   type ChargeFormInput,
   type ChargeFormValues,
   type ChargeStatus,
+  type ChargeType,
   type KitFormInput,
   type KitFormValues,
   type KitPurchase,
@@ -60,6 +61,8 @@ import {
 } from "./finance-api";
 import { NumberInput, OptionSelect, type ClientRow } from "./visits-ui";
 import { PendingLabel, StatusAlert, formatDate } from "./ui";
+import { useClientSales } from "./first-visit-api";
+import { PaymentLinkActions, PaymentLinksDialog, type PaymentLinkDialog } from "./PaymentLinks";
 
 const stagger = (i: number) => ({ "--i": i }) as React.CSSProperties;
 
@@ -68,11 +71,11 @@ const stagger = (i: number) => ({ "--i": i }) as React.CSSProperties;
 export type FinanceDialog =
   | { kind: "payment" }
   | { kind: "kit" }
-  | { kind: "charge"; charge?: Charge }
+  | { kind: "charge"; charge?: Charge; initialType?: ChargeType }
   | { kind: "pay"; charge: Charge }
   | { kind: "cancel"; charge: Charge }
   | { kind: "onboarding" }
-  | { kind: "link"; charge?: Charge }
+  | PaymentLinkDialog
   | null;
 
 const STATUS_STYLES: Record<ChargeStatus, string> = {
@@ -126,22 +129,58 @@ export function ClientFinanceTab({
 }) {
   const chargesQuery = useClientCharges(client.id);
   const kitsQuery = useClientKits(client.id);
+  const salesQuery = useClientSales(client.id);
   const charges = useMemo(() => chargesQuery.data ?? [], [chargesQuery.data]);
+  const showPaymentLinks =
+    client.etapa_onboarding !== "ativo" ||
+    charges.some(
+      (charge) =>
+        ["mensalidade", "kit", "produtos"].includes(charge.tipo) && charge.status !== "cancelado",
+    );
+  const initialKit = kitsQuery.data?.reduce<KitPurchase | undefined>(
+    (first, kit) =>
+      !first ||
+      kit.data_compra < first.data_compra ||
+      (kit.data_compra === first.data_compra && kit.created_at < first.created_at)
+        ? kit
+        : first,
+    undefined,
+  );
+  const kitPaidDate = initialKit
+    ? charges
+        .filter((charge) => charge.kit_compra_id === initialKit.id && charge.status === "pago")
+        .map((charge) => charge.data_pagamento)
+        .sort()[0]
+    : null;
+  const kitStatus =
+    kitsQuery.isError || chargesQuery.isError
+      ? "Status indisponível"
+      : kitsQuery.isPending || chargesQuery.isPending
+        ? "Consultando pagamentos"
+        : initialKit
+          ? "Pagamento pendente"
+          : "Nenhuma compra registrada";
 
   return (
     <div className="grid items-start gap-4 lg:grid-cols-3">
       <div className="flex flex-col gap-4">
         <OnboardingCard
           client={client}
-          onEdit={() => onOpen({ kind: "onboarding" })}
-          onLinkSent={() =>
-            onOpen({
-              kind: "link",
-              charge: charges
-                .filter((c) => c.tipo === "mensalidade" && isOpenCharge(c))
-                .sort((a, b) => a.vencimento.localeCompare(b.vencimento))[0],
-            })
+          kitPaidDate={kitPaidDate ?? null}
+          kitStatus={kitStatus}
+          paymentLinks={
+            showPaymentLinks && (
+              <PaymentLinkActions
+                client={client}
+                charges={charges}
+                chargesLoaded={chargesQuery.isSuccess}
+                kits={kitsQuery.data ?? []}
+                onOpen={onOpen}
+                onNewCharge={() => onOpen({ kind: "charge", initialType: "mensalidade" })}
+              />
+            )
           }
+          onEdit={() => onOpen({ kind: "onboarding" })}
         />
         <PaymentCard client={client} onEdit={() => onOpen({ kind: "payment" })} />
         <KitsCard
@@ -152,6 +191,21 @@ export function ClientFinanceTab({
         />
       </div>
       <div className="lg:col-span-2">
+        {!!salesQuery.data?.length && (
+          <Card className="mb-4 gap-2 p-4 sm:p-5">
+            <h2 className="font-display text-base font-semibold">Itens da venda</h2>
+            <ul className="space-y-1 text-sm">
+              {salesQuery.data.map((sale) => (
+                <li key={sale.lead_id}>
+                  {sale.items.includes("kit") && "Kit de produtos"}
+                  {sale.items.includes("kit") && sale.items.includes("produtos") && " + "}
+                  {sale.items.includes("produtos") && "Produtos avulsos"}
+                  <span className="text-muted"> · {formatDate(sale.confirmed_date)}</span>
+                </li>
+              ))}
+            </ul>
+          </Card>
+        )}
         <ChargesCard
           charges={charges}
           isPending={chargesQuery.isPending}
@@ -166,14 +220,22 @@ export function ClientFinanceTab({
 // Esteira do cliente novo: as 5 etapas com a data de cada uma.
 function OnboardingCard({
   client,
+  kitPaidDate,
+  kitStatus,
+  paymentLinks,
   onEdit,
-  onLinkSent,
 }: {
   client: ClientRow;
+  kitPaidDate: string | null;
+  kitStatus: string;
+  paymentLinks: React.ReactNode;
   onEdit: () => void;
-  onLinkSent: () => void;
 }) {
-  const current = stageIndex(client.etapa_onboarding);
+  const stage =
+    client.etapa_onboarding === "kit_pago" && !kitPaidDate
+      ? "venda_fechada"
+      : client.etapa_onboarding;
+  const current = stageIndex(stage);
   const hasDates = ONBOARDING_STAGES.some((s) => client[STAGE_DATE_FIELD[s]]);
 
   // Cliente antigo (já ativo, sem datas): só uma linha.
@@ -188,6 +250,9 @@ function OnboardingCard({
           </Button>
         </div>
         <p className="text-sm text-muted">Cliente ativo (cadastrado antes da esteira).</p>
+        {paymentLinks && (
+          <div className="mt-2 rounded-xl bg-surface-secondary p-3">{paymentLinks}</div>
+        )}
       </Card>
     );
   }
@@ -203,15 +268,15 @@ function OnboardingCard({
       </div>
       <ol className="flex flex-col">
         {ONBOARDING_STAGES.map((s, i) => {
-          const date = client[STAGE_DATE_FIELD[s]];
-          const done = i <= current;
+          const date = s === "kit_pago" ? kitPaidDate : client[STAGE_DATE_FIELD[s]];
+          const done = s === "kit_pago" ? !!kitPaidDate : i <= current;
           const isCurrent = i === current;
           return (
             <li key={s} className="group relative flex gap-3 pb-3 last:pb-0">
               <span
                 aria-hidden
                 className={`absolute top-4 bottom-0 left-2.25 w-0.5 group-last:hidden ${
-                  i < current ? "bg-emerald-400" : "bg-separator"
+                  done && i < current ? "bg-emerald-400" : "bg-separator"
                 }`}
               />
               <span
@@ -229,24 +294,19 @@ function OnboardingCard({
                   {STAGE_LABELS[s]}
                 </p>
                 <p className="text-xs text-muted">
-                  {date ? formatDate(date) : done ? "sem data" : "—"}
+                  {date ? formatDate(date) : s === "kit_pago" ? kitStatus : done ? "sem data" : "—"}
                 </p>
               </div>
             </li>
           );
         })}
       </ol>
-      {client.etapa_onboarding !== "ativo" && (
+      {(client.etapa_onboarding !== "ativo" || paymentLinks) && (
         <div className="flex flex-col gap-2 rounded-xl bg-surface-secondary p-3">
           <p className="text-sm">
-            Agora: <span className="font-semibold">{STAGE_STATUS[client.etapa_onboarding]}</span>
+            Agora: <span className="font-semibold">{STAGE_STATUS[stage]}</span>
           </p>
-          {client.etapa_onboarding === "aguardando_link" && (
-            <Button size="sm" onPress={onLinkSent}>
-              <Check className="size-4" />
-              Marcar link enviado
-            </Button>
-          )}
+          {paymentLinks}
         </div>
       )}
     </Card>
@@ -608,6 +668,7 @@ export function FinanceDialogs({
                 key={dialog.charge?.id ?? "new"}
                 client={client}
                 charge={dialog.charge}
+                initialType={dialog.initialType}
                 onClose={onClose}
               />
             )}
@@ -617,10 +678,9 @@ export function FinanceDialogs({
       <PayDialog charge={dialog?.kind === "pay" ? dialog.charge : null} onClose={onClose} />
       <CancelDialog charge={dialog?.kind === "cancel" ? dialog.charge : null} onClose={onClose} />
       <OnboardingDialog client={client} isOpen={dialog?.kind === "onboarding"} onClose={onClose} />
-      <LinkSentDialog
-        target={dialog?.kind === "link" ? { client, charge: dialog.charge } : null}
-        onClose={onClose}
-      />
+      {dialog?.kind === "payment-links" && (
+        <PaymentLinksDialog client={client} dialog={dialog} onClose={onClose} />
+      )}
     </>
   );
 }
@@ -1091,10 +1151,12 @@ function KitForm({ client, onClose }: { client: ClientRow; onClose: () => void }
 function ChargeForm({
   client,
   charge,
+  initialType,
   onClose,
 }: {
   client: ClientRow;
   charge?: Charge;
+  initialType?: ChargeType;
   onClose: () => void;
 }) {
   const saveCharge = useSaveCharge();
@@ -1123,9 +1185,8 @@ function ChargeForm({
           observacao: charge.observacao ?? "",
         }
       : {
-          // Mensalidades são geradas sozinhas: o tipo é escolhido a cada lançamento.
-          tipo: undefined,
-          valor: undefined,
+          tipo: initialType,
+          valor: initialType === "mensalidade" ? (price ?? undefined) : undefined,
           vencimento: today,
           status: "pendente",
           link_pagamento: "",

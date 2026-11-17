@@ -150,7 +150,35 @@ begin
  perform public.confirm_first_visit(lead,today);
  assert (select client_id is null from public.lead_sales where lead_id=lead);
  assert (select count(*)=initial_clients+1 from public.clients);
- raise notice 'OK: estimativa, revisão obrigatória, reagendamento, atraso, confirmação, envio parcial, idempotência, fechamento direto e integração financeira';
+
+ -- Plano com kit e produtos: a confirmação cria lançamentos pendentes uma única vez.
+ insert into public.leads(name,whatsapp) values('Venda com produtos','5551922222222') returning id into lead;
+ perform public.schedule_first_visit(lead,payload || jsonb_build_object('items',array['plano','kit','produtos']));
+ rejected := false;
+ begin perform public.confirm_first_visit_with_finance(lead,today,0.01,3,45,today+5);
+ exception when raise_exception then rejected:=true; end;
+ assert rejected;
+ assert (select confirmed_at is null and client_id is null from public.lead_sales where lead_id=lead);
+ perform public.confirm_first_visit_with_finance(lead,today,200,3,45,today+5);
+ perform public.confirm_first_visit_with_finance(lead,today,200,3,45,today+5);
+ select client_id into strict client from public.lead_sales where lead_id=lead;
+ assert (select count(*)=1 and bool_and(valor_total=200 and parcelas=3 and data_compra=today)
+   from public.kit_compras where cliente_id=client);
+ assert (select count(*)=3 and sum(valor)=200 and bool_and(status='pendente')
+   from public.cobrancas where cliente_id=client and tipo='kit');
+ assert (select count(*)=1 and bool_and(valor=45 and status='pendente' and vencimento=today+5)
+   from public.cobrancas where cliente_id=client and tipo='produtos');
+ assert (select count(*)=2 from public.sale_link_tasks where lead_id=lead);
+ assert (select count(*)=initial_charges+4 from public.cobrancas);
+
+ -- Itens inclusos na venda ficam registrados no histórico, sem cobrança separada.
+ insert into public.leads(name,whatsapp) values('Kit incluso','5551911111111') returning id into lead;
+ perform public.schedule_first_visit(lead,payload);
+ perform public.confirm_first_visit_with_finance(lead,today,0,1,null,null);
+ assert (select client_id is not null and confirmed_at is not null and 'kit'=any(items)
+   from public.lead_sales where lead_id=lead);
+ assert (select count(*)=initial_charges+4 from public.cobrancas);
+ raise notice 'OK: confirmação, vínculos, lançamentos financeiros e idempotência';
 end $$;
 
 set local role authenticated;

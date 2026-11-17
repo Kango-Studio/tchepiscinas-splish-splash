@@ -154,7 +154,15 @@ function VisitForm({
     sale?.service_chargeable ?? matched?.billing_type !== "parceria",
   );
   const [actual, setActual] = useState(todayISO());
+  const [kitValue, setKitValue] = useState("");
+  const [installments, setInstallments] = useState(1);
+  const [productsValue, setProductsValue] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [error, setError] = useState("");
+  const financeItems = confirm && !!(sale?.client_id || sale?.plan_id);
+  const hasKit = financeItems && items.includes("kit");
+  const hasProducts = financeItems && items.includes("produtos");
+  const hasCharge = (hasKit && Number(kitValue) > 0) || (hasProducts && Number(productsValue) > 0);
   const loading = clients.isPending || plans.isPending || techs.isPending;
   const loadError = clients.error || plans.error || techs.error;
   const chooseClient = (id: string) => {
@@ -180,7 +188,7 @@ function VisitForm({
   };
   return (
     <form
-      className="flex flex-col gap-4 p-5"
+      className="min-h-0 space-y-4 overflow-y-auto p-5"
       onSubmit={async (event) => {
         event.preventDefault();
         setError("");
@@ -189,7 +197,19 @@ function VisitForm({
           return;
         }
         try {
-          if (confirm)
+          if (confirm && (hasKit || hasProducts))
+            await save.mutateAsync({
+              action: "confirm_first_visit_with_finance",
+              args: {
+                p_lead_id: lead.id,
+                p_date: actual,
+                p_kit_value: hasKit ? Number(kitValue) : null,
+                p_kit_installments: installments,
+                p_products_value: hasProducts ? Number(productsValue) : null,
+                p_due_date: hasCharge ? dueDate || actual : null,
+              },
+            });
+          else if (confirm)
             await save.mutateAsync({
               action: "confirm_first_visit",
               args: { p_lead_id: lead.id, p_date: actual },
@@ -267,6 +287,71 @@ function VisitForm({
               onChange={(e) => setActual(e.target.value)}
             />
           </label>
+          {(hasKit || hasProducts) && (
+            <fieldset className="flex flex-col gap-2">
+              <legend className="font-medium">Lançamentos no Financeiro</legend>
+              <p className="text-sm text-muted">
+                Informe o valor separado de cada item. Use R$ 0,00 para um item incluído na venda
+                sem cobrança separada.
+              </p>
+              {hasKit && (
+                <label>
+                  Valor do kit (R$)
+                  <input
+                    className={fieldClass}
+                    type="number"
+                    min="0"
+                    max="99999999.99"
+                    step="0.01"
+                    required
+                    value={kitValue}
+                    onChange={(e) => setKitValue(e.target.value)}
+                  />
+                </label>
+              )}
+              {hasKit && Number(kitValue) > 0 && (
+                <label>
+                  Parcelas do kit
+                  <select
+                    className={fieldClass}
+                    value={installments}
+                    onChange={(e) => setInstallments(Number(e.target.value))}
+                  >
+                    <option value={1}>1 parcela</option>
+                    <option value={2}>2 parcelas</option>
+                    <option value={3}>3 parcelas</option>
+                  </select>
+                </label>
+              )}
+              {hasProducts && (
+                <label>
+                  Valor dos produtos avulsos (R$)
+                  <input
+                    className={fieldClass}
+                    type="number"
+                    min="0"
+                    max="99999999.99"
+                    step="0.01"
+                    required
+                    value={productsValue}
+                    onChange={(e) => setProductsValue(e.target.value)}
+                  />
+                </label>
+              )}
+              {hasCharge && (
+                <label>
+                  Primeiro vencimento
+                  <input
+                    className={fieldClass}
+                    type="date"
+                    required
+                    value={dueDate || actual}
+                    onChange={(e) => setDueDate(e.target.value)}
+                  />
+                </label>
+              )}
+            </fieldset>
+          )}
         </>
       ) : (
         <>
